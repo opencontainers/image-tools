@@ -25,6 +25,7 @@ import (
 	"github.com/opencontainers/image-tools/image"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"golang.org/x/net/context"
 )
 
 // gitCommit will be the hash that the binary was built from
@@ -33,7 +34,6 @@ var gitCommit = ""
 
 // supported validation types
 var validateTypes = []string{
-	image.TypeImageLayout,
 	image.TypeImage,
 	image.TypeManifest,
 	image.TypeManifestList,
@@ -81,7 +81,7 @@ func newValidateCmd(stdout, stderr *log.Logger) *cobra.Command {
 
 	cmd.Flags().StringSliceVar(
 		&v.refs, "ref", nil,
-		`A set of refs pointing to the manifests to be validated. Each reference must be present in the "refs" subdirectory of the image. Only applicable if type is image or imageLayout.`,
+		`A set of refs pointing to the manifests to be validated. Each reference must be present in the "refs" subdirectory of the image. Only applicable if type is image.`,
 	)
 
 	cmd.Flags().BoolVar(
@@ -107,9 +107,11 @@ func (v *validateCmd) Run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	ctx := context.Background()
+
 	var exitcode int
 	for _, arg := range args {
-		err := v.validatePath(arg)
+		err := v.validatePath(ctx, arg)
 
 		if err == nil {
 			v.stdout.Printf("%s: OK", arg)
@@ -139,7 +141,7 @@ func (v *validateCmd) Run(cmd *cobra.Command, args []string) {
 	os.Exit(exitcode)
 }
 
-func (v *validateCmd) validatePath(name string) error {
+func (v *validateCmd) validatePath(ctx context.Context, name string) error {
 	var (
 		err error
 		typ = v.typ
@@ -152,10 +154,8 @@ func (v *validateCmd) validatePath(name string) error {
 	}
 
 	switch typ {
-	case image.TypeImageLayout:
-		return image.ValidateLayout(name, v.refs, v.stdout)
 	case image.TypeImage:
-		return image.Validate(name, v.refs, v.stdout)
+		return image.Validate(ctx, name, v.refs, v.stdout)
 	}
 
 	f, err := os.Open(name)
