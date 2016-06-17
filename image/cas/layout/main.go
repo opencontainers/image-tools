@@ -24,17 +24,18 @@ import (
 	"strings"
 
 	"github.com/opencontainers/image-tools/image/cas"
+	"golang.org/x/net/context"
 )
 
 // NewEngine instantiates an engine with the appropriate backend (tar,
 // HTTP, ...).
-func NewEngine(path string) (engine cas.Engine, err error) {
+func NewEngine(ctx context.Context, path string) (engine cas.Engine, err error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewTarEngine(file)
+	return NewTarEngine(ctx, file)
 }
 
 // blobPath returns the PATH to the DIGEST blob.  SEPARATOR selects

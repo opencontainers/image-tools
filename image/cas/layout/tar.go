@@ -22,6 +22,7 @@ import (
 	"os"
 
 	"github.com/opencontainers/image-tools/image/cas"
+	"github.com/opencontainers/image-tools/image/layout"
 	"golang.org/x/net/context"
 )
 
@@ -31,9 +32,14 @@ type TarEngine struct {
 }
 
 // NewTarEngine returns a new TarEngine.
-func NewTarEngine(file ReadWriteSeekCloser) (engine cas.Engine, err error) {
-	engine = &TarEngine{
+func NewTarEngine(ctx context.Context, file ReadWriteSeekCloser) (eng cas.Engine, err error) {
+	engine := &TarEngine{
 		file: file,
+	}
+
+	err = layout.CheckTarVersion(ctx, engine.file)
+	if err != nil {
+		return nil, err
 	}
 
 	return engine, nil
