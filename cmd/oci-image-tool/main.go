@@ -52,6 +52,7 @@ func main() {
 		validateCommand,
 		unpackCommand,
 		createCommand,
+		casCommand,
 	}
 
 	if err := app.Run(os.Args); err != nil {
