@@ -60,7 +60,7 @@ func (state *listCmd) Run(cmd *cobra.Command, args []string) {
 func (state *listCmd) run() (err error) {
 	ctx := context.Background()
 
-	engine, err := layout.NewEngine(state.path)
+	engine, err := layout.NewEngine(ctx, state.path)
 	if err != nil {
 		return err
 	}
