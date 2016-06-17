@@ -27,7 +27,6 @@ import (
 
 // supported autodetection types
 const (
-	TypeImageLayout  = "imageLayout"
 	TypeImage        = "image"
 	TypeManifest     = "manifest"
 	TypeManifestList = "manifestList"
@@ -43,7 +42,7 @@ func Autodetect(path string) (string, error) {
 	}
 
 	if fi.IsDir() {
-		return TypeImageLayout, nil
+		return TypeImage, nil
 	}
 
 	f, err := os.Open(path)

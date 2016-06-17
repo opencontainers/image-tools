@@ -18,23 +18,24 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
-	"crypto/sha256"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/opencontainers/image-spec/specs-go"
 	"github.com/opencontainers/image-spec/specs-go/v1"
+	cas "github.com/opencontainers/image-tools/image/cas"
+	caslayout "github.com/opencontainers/image-tools/image/cas/layout"
+	imagelayout "github.com/opencontainers/image-tools/image/layout"
+	refslayout "github.com/opencontainers/image-tools/image/refs/layout"
+	"golang.org/x/net/context"
 )
 
 const (
 	refTag = "latest"
-
-	layoutStr = `{"imageLayoutVersion": "1.0.0"}`
 
 	configStr = `{
     "created": "2015-10-31T22:22:56.015925234Z",
@@ -91,8 +92,6 @@ const (
 )
 
 var (
-	refStr = `{"digest":"<manifest_digest>","mediaType":"application/vnd.oci.image.manifest.v1+json","size":<manifest_size>}`
-
 	manifestStr = `{
     "annotations": null,
     "config": {
@@ -118,214 +117,106 @@ type tarContent struct {
 	b      []byte
 }
 
-type imageLayout struct {
-	rootDir  string
-	layout   string
-	ref      string
-	manifest string
-	config   string
-	tarList  []tarContent
-}
-
 func TestValidateLayout(t *testing.T) {
+	ctx := context.Background()
+
 	root, err := ioutil.TempDir("", "oci-test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(root)
 
-	il := imageLayout{
-		rootDir:  root,
-		layout:   layoutStr,
-		ref:      refTag,
-		manifest: manifestStr,
-		config:   configStr,
-		tarList: []tarContent{
-			tarContent{&tar.Header{Name: "test", Size: 4, Mode: 0600}, []byte("test")},
-		},
-	}
-
-	// create image layout bundle
-	err = createImageLayoutBundle(il)
+	err = imagelayout.CreateDir(ctx, root)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = ValidateLayout(root, []string{refTag}, nil)
+	casEngine, err := caslayout.NewEngine(ctx, root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer casEngine.Close()
+
+	refsEngine, err := refslayout.NewEngine(ctx, root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer refsEngine.Close()
+
+	layer, err := createTarBlob(ctx, casEngine, []tarContent{
+		tarContent{&tar.Header{Name: "test", Size: 4, Mode: 0600}, []byte("test")},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	digest, err := casEngine.Put(ctx, strings.NewReader(configStr))
+	config := specs.Descriptor{
+		Digest: digest,
+		MediaType: v1.MediaTypeImageConfig,
+		Size: int64(len(configStr)),
+	}
+
+	_manifest := manifestStr
+	_manifest = strings.Replace(_manifest, "<config_digest>", config.Digest, 1)
+	_manifest = strings.Replace(_manifest, "<config_size>", strconv.FormatInt(config.Size, 10), 1)
+	_manifest = strings.Replace(_manifest, "<layer_digest>", layer.Digest, 1)
+	_manifest = strings.Replace(_manifest, "<layer_size>", strconv.FormatInt(layer.Size, 10), 1)
+	digest, err = casEngine.Put(ctx, strings.NewReader(_manifest))
+	manifest := specs.Descriptor{
+		Digest: digest,
+		MediaType: v1.MediaTypeImageManifest,
+		Size: int64(len(_manifest)),
+	}
+
+	err = refsEngine.Put(ctx, refTag, &manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = Validate(ctx, root, []string{refTag}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-func createImageLayoutBundle(il imageLayout) error {
-	err := os.MkdirAll(filepath.Join(il.rootDir, "blobs", "sha256"), 0700)
-	if err != nil {
-		return err
-	}
-
-	err = os.MkdirAll(filepath.Join(il.rootDir, "refs"), 0700)
-	if err != nil {
-		return err
-	}
-
-	// create image layout file
-	err = createLayoutFile(il.rootDir)
-	if err != nil {
-		return err
-	}
-
-	// create image layer blob file.
-	desc, err := createImageLayerFile(il.rootDir, il.tarList)
-	if err != nil {
-		return err
-	}
-	il.manifest = strings.Replace(il.manifest, "<layer_digest>", desc.Digest, 1)
-	il.manifest = strings.Replace(il.manifest, "<layer_size>", strconv.FormatInt(desc.Size, 10), 1)
-
-	desc, err = createConfigFile(il.rootDir, il.config)
-	if err != nil {
-		return err
-	}
-	il.manifest = strings.Replace(il.manifest, "<config_digest>", desc.Digest, 1)
-	il.manifest = strings.Replace(il.manifest, "<config_size>", strconv.FormatInt(desc.Size, 10), 1)
-
-	// create manifest blob file
-	desc, err = createManifestFile(il.rootDir, il.manifest)
-	if err != nil {
-		return err
-	}
-
-	return createRefFile(il.rootDir, il.ref, desc)
-}
-
-func createLayoutFile(root string) error {
-	layoutPath := filepath.Join(root, "oci-layout")
-	f, err := os.Create(layoutPath)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	_, err = io.Copy(f, bytes.NewBuffer([]byte(layoutStr)))
-	return err
-}
-
-func createRefFile(root, ref string, mft descriptor) error {
-	refpath := filepath.Join(root, "refs", ref)
-	f, err := os.Create(refpath)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	refStr = strings.Replace(refStr, "<manifest_digest>", mft.Digest, -1)
-	refStr = strings.Replace(refStr, "<manifest_size>", strconv.FormatInt(mft.Size, 10), -1)
-	_, err = io.Copy(f, bytes.NewBuffer([]byte(refStr)))
-	return err
-}
-
-func createManifestFile(root, str string) (descriptor, error) {
-	name := filepath.Join(root, "blobs", "sha256", "test-manifest")
-	f, err := os.Create(name)
-	if err != nil {
-		return descriptor{}, err
-	}
-	defer f.Close()
-
-	_, err = io.Copy(f, bytes.NewBuffer([]byte(str)))
-	if err != nil {
-		return descriptor{}, err
-	}
-
-	return createHashedBlob(name)
-}
-
-func createConfigFile(root, config string) (descriptor, error) {
-	name := filepath.Join(root, "blobs", "sha256", "test-config")
-	f, err := os.Create(name)
-	if err != nil {
-		return descriptor{}, err
-	}
-	defer f.Close()
-
-	_, err = io.Copy(f, bytes.NewBuffer([]byte(config)))
-	if err != nil {
-		return descriptor{}, err
-	}
-
-	return createHashedBlob(name)
-}
-
-func createImageLayerFile(root string, list []tarContent) (descriptor, error) {
-	name := filepath.Join(root, "blobs", "sha256", "test-layer")
-	err := createTarBlob(name, list)
-	if err != nil {
-		return descriptor{}, err
-	}
-
-	desc, err := createHashedBlob(name)
-	if err != nil {
-		return descriptor{}, err
-	}
-
-	desc.MediaType = v1.MediaTypeImageLayer
-	return desc, nil
-}
-
-func createTarBlob(name string, list []tarContent) error {
-	file, err := os.Create(name)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	gzipWriter := gzip.NewWriter(file)
+func createTarBlob(ctx context.Context, engine cas.Engine, list []tarContent) (descriptor *specs.Descriptor, err error) {
+	var buffer bytes.Buffer
+	gzipWriter := gzip.NewWriter(&buffer)
 	defer gzipWriter.Close()
 	tarWriter := tar.NewWriter(gzipWriter)
 	defer tarWriter.Close()
 
 	for _, content := range list {
 		if err = tarWriter.WriteHeader(content.header); err != nil {
-			return err
+			return nil, err
 		}
 		if _, err = io.Copy(tarWriter, bytes.NewReader(content.b)); err != nil {
-			return err
+			return nil, err
 		}
 	}
-	return nil
-}
 
-func createHashedBlob(name string) (descriptor, error) {
-	desc, err := newDescriptor(name)
+	err = tarWriter.Close()
 	if err != nil {
-		return descriptor{}, err
+		return nil, err
 	}
 
-	// Rename the file to hashed-digest name.
-	err = os.Rename(name, filepath.Join(filepath.Dir(name), desc.Digest))
+	err = gzipWriter.Close()
 	if err != nil {
-		return descriptor{}, err
+		return nil, err
 	}
 
-	//Normalize the hashed digest.
-	desc.Digest = "sha256:" + desc.Digest
-
-	return desc, nil
-}
-
-func newDescriptor(name string) (descriptor, error) {
-	file, err := os.Open(name)
-	if err != nil {
-		return descriptor{}, err
-	}
-	defer file.Close()
-
-	// generate sha256 hash
-	hash := sha256.New()
-	size, err := io.Copy(hash, file)
-	if err != nil {
-		return descriptor{}, err
+	var desc = specs.Descriptor{
+		MediaType: v1.MediaTypeImageLayer,
+		Size: int64(buffer.Len()),
 	}
 
-	return descriptor{
-		Digest: fmt.Sprintf("%x", hash.Sum(nil)),
-		Size:   size,
-	}, nil
+	digest, err := engine.Put(ctx, &buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	desc.Digest = digest
+
+	return &desc, nil
 }

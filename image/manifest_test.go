@@ -18,14 +18,18 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
-	"crypto/sha256"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/opencontainers/image-spec/specs-go"
+	"github.com/opencontainers/image-spec/specs-go/v1"
+	caslayout "github.com/opencontainers/image-tools/image/cas/layout"
+	imagelayout "github.com/opencontainers/image-tools/image/layout"
+	"golang.org/x/net/context"
 )
 
 func TestUnpackLayerDuplicateEntries(t *testing.T) {
@@ -66,53 +70,38 @@ func TestUnpackLayerDuplicateEntries(t *testing.T) {
 }
 
 func TestUnpackLayer(t *testing.T) {
+	ctx := context.Background()
+
 	tmp1, err := ioutil.TempDir("", "test-layer")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmp1)
-	err = os.MkdirAll(filepath.Join(tmp1, "blobs", "sha256"), 0700)
-	if err != nil {
-		t.Fatal(err)
-	}
-	tarfile := filepath.Join(tmp1, "blobs", "sha256", "test.tar")
-	f, err := os.Create(tarfile)
+
+	path := filepath.Join(tmp1, "image.tar")
+	err = imagelayout.CreateTarFile(ctx, path)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	gw := gzip.NewWriter(f)
-	tw := tar.NewWriter(gw)
-
-	tw.WriteHeader(&tar.Header{Name: "test", Size: 4, Mode: 0600})
-	io.Copy(tw, bytes.NewReader([]byte("test")))
-	tw.Close()
-	gw.Close()
-	f.Close()
-
-	// generate sha256 hash
-	h := sha256.New()
-	file, err := os.Open(tarfile)
+	engine, err := caslayout.NewEngine(ctx, path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer file.Close()
-	_, err = io.Copy(h, file)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.Rename(tarfile, filepath.Join(tmp1, "blobs", "sha256", fmt.Sprintf("%x", h.Sum(nil))))
+	defer engine.Close()
+
+	layer, err := createTarBlob(ctx, engine, []tarContent{
+		tarContent{&tar.Header{Name: "test", Size: 4, Mode: 0600}, []byte("test")},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	testManifest := manifest{
-		Layers: []descriptor{descriptor{
-			MediaType: "application/vnd.oci.image.layer.tar+gzip",
-			Digest:    fmt.Sprintf("sha256:%s", fmt.Sprintf("%x", h.Sum(nil))),
-		}},
+	testManifest := v1.Manifest{
+		Layers: []specs.Descriptor{*layer},
 	}
-	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
+
+	err = unpackManifest(ctx, &testManifest, engine, filepath.Join(tmp1, "rootfs"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -124,56 +113,38 @@ func TestUnpackLayer(t *testing.T) {
 }
 
 func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {
+	ctx := context.Background()
+
 	// generate a tar file has duplicate entry which will failed on unpacking
 	tmp1, err := ioutil.TempDir("", "test-layer")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmp1)
-	err = os.MkdirAll(filepath.Join(tmp1, "blobs", "sha256"), 0700)
-	if err != nil {
-		t.Fatal(err)
-	}
-	tarfile := filepath.Join(tmp1, "blobs", "sha256", "test.tar")
-	f, err := os.Create(tarfile)
+
+	err = imagelayout.CreateDir(ctx, tmp1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	gw := gzip.NewWriter(f)
-	tw := tar.NewWriter(gw)
-
-	tw.WriteHeader(&tar.Header{Name: "test", Size: 4, Mode: 0600})
-	io.Copy(tw, bytes.NewReader([]byte("test")))
-	tw.WriteHeader(&tar.Header{Name: "test", Size: 5, Mode: 0600})
-	io.Copy(tw, bytes.NewReader([]byte("test1")))
-	tw.Close()
-	gw.Close()
-	f.Close()
-
-	// generate sha256 hash
-	h := sha256.New()
-	file, err := os.Open(tarfile)
+	engine, err := caslayout.NewEngine(ctx, tmp1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer file.Close()
-	_, err = io.Copy(h, file)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = os.Rename(tarfile, filepath.Join(tmp1, "blobs", "sha256", fmt.Sprintf("%x", h.Sum(nil))))
+	defer engine.Close()
+
+	layer, err := createTarBlob(ctx, engine, []tarContent{
+		tarContent{&tar.Header{Name: "test", Size: 4, Mode: 0600}, []byte("test")},
+		tarContent{&tar.Header{Name: "test", Size: 5, Mode: 0600}, []byte("test1")},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	testManifest := manifest{
-		Layers: []descriptor{descriptor{
-			MediaType: "application/vnd.oci.image.layer.tar+gzip",
-			Digest:    fmt.Sprintf("sha256:%s", fmt.Sprintf("%x", h.Sum(nil))),
-		}},
+	testManifest := v1.Manifest{
+		Layers: []specs.Descriptor{*layer},
 	}
-	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
+	err = unpackManifest(ctx, &testManifest, engine, filepath.Join(tmp1, "rootfs"))
 	if err != nil && !strings.Contains(err.Error(), "duplicate entry for") {
 		t.Fatal(err)
 	}
