@@ -15,11 +15,11 @@
 package layout
 
 import (
-	"archive/tar"
 	"errors"
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/opencontainers/image-tools/image/cas"
 	"github.com/opencontainers/image-tools/image/layout"
@@ -58,30 +58,12 @@ func (engine *TarEngine) Get(ctx context.Context, digest string) (reader io.Read
 		return nil, err
 	}
 
-	_, err = engine.file.Seek(0, os.SEEK_SET)
+	_, tarReader, err := layout.TarEntryByName(ctx, engine.file, targetName)
 	if err != nil {
 		return nil, err
 	}
 
-	tarReader := tar.NewReader(engine.file)
-	for {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
-
-		header, err := tarReader.Next()
-		if err == io.EOF {
-			return nil, os.ErrNotExist
-		} else if err != nil {
-			return nil, err
-		}
-
-		if header.Name == targetName {
-			return ioutil.NopCloser(tarReader), nil
-		}
-	}
+	return ioutil.NopCloser(tarReader), nil
 }
 
 // Delete removes a blob from the store.
