@@ -1,5 +1,6 @@
 /oci-cas
 /oci-create-runtime-bundle
+/oci-image-init
 /oci-image-validate
 /oci-refs
 /oci-unpack

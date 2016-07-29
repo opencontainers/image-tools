@@ -7,6 +7,7 @@ EPOCH_TEST_COMMIT ?= v0.2.0
 TOOLS := \
 	oci-cas \
 	oci-create-runtime-bundle \
+	oci-image-init \
 	oci-image-validate \
 	oci-refs \
 	oci-unpack
