@@ -27,6 +27,7 @@ func main() {
 		Short: "Name-based reference manipulation",
 	}
 
+	cmd.AddCommand(newPutCmd())
 	cmd.AddCommand(newGetCmd())
 	cmd.AddCommand(newListCmd())
 
