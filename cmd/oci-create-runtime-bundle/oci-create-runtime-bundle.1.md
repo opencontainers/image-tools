@@ -36,7 +36,7 @@ $ cd busybox-bundle && sudo runc run busybox
 ```
 
 # SEE ALSO
-**runc**(1), **skopeo**(1)
+**oci-image-tools**(7), **runc**(1), **skopeo**(1)
 
 # HISTORY
 Sept 2016, Originally compiled by Antonio Murdaca (runcom at redhat dot com)
