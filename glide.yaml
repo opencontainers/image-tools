@@ -1,0 +1,14 @@
+package: github.com/opencontainers/image-tools
+import:
+- package: github.com/opencontainers/image-spec
+  version: 7e6e2f76d6a11cdcb3f3e334e3f12179a0f37dad
+  subpackages:
+  - schema
+  - specs-go/v1
+- package: github.com/opencontainers/runtime-spec
+  version: ~1.0.0-rc1
+  subpackages:
+  - specs-go
+- package: github.com/pkg/errors
+  version: ~0.7.1
+- package: github.com/spf13/cobra

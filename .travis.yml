@@ -1,0 +1,24 @@
+language: go
+go:
+  - 1.6
+  - 1.7
+
+sudo: required
+
+before_script:
+  - export PATH=$HOME/gopath/bin:$PATH
+
+before_install:
+  - make install.tools
+  - go get -u github.com/alecthomas/gometalinter
+  - gometalinter --install --update
+  - go get -t -d ./...
+
+install: true
+
+script:
+  - make .gitvalidation
+  - make lint
+  - make check-license
+  - make test
+  - make tools
