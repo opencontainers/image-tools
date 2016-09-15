@@ -20,19 +20,19 @@ import (
 	"os"
 	"strings"
 
-	"github.com/opencontainers/image-spec/image"
 	"github.com/opencontainers/image-spec/schema"
+	"github.com/opencontainers/image-tools/image"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 // supported validation types
 var validateTypes = []string{
-	typeImageLayout,
-	typeImage,
-	typeManifest,
-	typeManifestList,
-	typeConfig,
+	image.TypeImageLayout,
+	image.TypeImage,
+	image.TypeManifest,
+	image.TypeManifestList,
+	image.TypeConfig,
 }
 
 type validateCmd struct {
@@ -42,6 +42,17 @@ type validateCmd struct {
 	refs   []string
 }
 
+func main() {
+	stdout := log.New(os.Stdout, "", 0)
+	stderr := log.New(os.Stderr, "", 0)
+
+	cmd := newValidateCmd(stdout, stderr)
+	if err := cmd.Execute(); err != nil {
+		stderr.Println(err)
+		os.Exit(1)
+	}
+}
+
 func newValidateCmd(stdout, stderr *log.Logger) *cobra.Command {
 	v := &validateCmd{
 		stdout: stdout,
@@ -49,7 +60,7 @@ func newValidateCmd(stdout, stderr *log.Logger) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:   "validate FILE...",
+		Use:   "oci-image-validate FILE...",
 		Short: "Validate one or more image files",
 		Run:   v.Run,
 	}
@@ -118,15 +129,15 @@ func (v *validateCmd) validatePath(name string) error {
 	)
 
 	if typ == "" {
-		if typ, err = autodetect(name); err != nil {
+		if typ, err = image.Autodetect(name); err != nil {
 			return errors.Wrap(err, "unable to determine type")
 		}
 	}
 
 	switch typ {
-	case typeImageLayout:
+	case image.TypeImageLayout:
 		return image.ValidateLayout(name, v.refs, v.stdout)
-	case typeImage:
+	case image.TypeImage:
 		return image.Validate(name, v.refs, v.stdout)
 	}
 
@@ -137,11 +148,11 @@ func (v *validateCmd) validatePath(name string) error {
 	defer f.Close()
 
 	switch typ {
-	case typeManifest:
+	case image.TypeManifest:
 		return schema.MediaTypeManifest.Validate(f)
-	case typeManifestList:
+	case image.TypeManifestList:
 		return schema.MediaTypeManifestList.Validate(f)
-	case typeConfig:
+	case image.TypeConfig:
 		return schema.MediaTypeImageConfig.Validate(f)
 	}
 

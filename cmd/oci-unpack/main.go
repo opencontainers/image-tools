@@ -20,34 +20,44 @@ import (
 	"os"
 	"strings"
 
-	"github.com/opencontainers/image-spec/image"
+	"github.com/opencontainers/image-tools/image"
 	"github.com/spf13/cobra"
 )
 
-// supported bundle types
-var bundleTypes = []string{
-	typeImageLayout,
-	typeImage,
+// supported unpack types
+var unpackTypes = []string{
+	image.TypeImageLayout,
+	image.TypeImage,
 }
 
-type bundleCmd struct {
+type unpackCmd struct {
 	stdout *log.Logger
 	stderr *log.Logger
-	typ    string // the type to bundle, can be empty string
+	typ    string // the type to unpack, can be empty string
 	ref    string
-	root   string
 }
 
-func newBundleCmd(stdout, stderr *log.Logger) *cobra.Command {
-	v := &bundleCmd{
+func main() {
+	stdout := log.New(os.Stdout, "", 0)
+	stderr := log.New(os.Stderr, "", 0)
+
+	cmd := newUnpackCmd(stdout, stderr)
+	if err := cmd.Execute(); err != nil {
+		stderr.Println(err)
+		os.Exit(1)
+	}
+}
+
+func newUnpackCmd(stdout, stderr *log.Logger) *cobra.Command {
+	v := &unpackCmd{
 		stdout: stdout,
 		stderr: stderr,
 	}
 
 	cmd := &cobra.Command{
-		Use:   "create-runtime-bundle [src] [dest]",
-		Short: "Create an OCI image runtime bundle",
-		Long:  `Creates an OCI image runtime bundle at the destination directory [dest] from an OCI image present at [src].`,
+		Use:   "unpack [src] [dest]",
+		Short: "Unpack an image or image source layout",
+		Long:  `Unpack the OCI image .tar file or OCI image layout directory present at [src] to the destination directory [dest].`,
 		Run:   v.Run,
 	}
 
@@ -55,25 +65,19 @@ func newBundleCmd(stdout, stderr *log.Logger) *cobra.Command {
 		&v.typ, "type", "",
 		fmt.Sprintf(
 			`Type of the file to unpack. If unset, oci-image-tool will try to auto-detect the type. One of "%s"`,
-			strings.Join(bundleTypes, ","),
+			strings.Join(unpackTypes, ","),
 		),
 	)
 
 	cmd.Flags().StringVar(
 		&v.ref, "ref", "v1.0",
-		`The ref pointing to the manifest of the OCI image. This must be present in the "refs" subdirectory of the image.`,
-	)
-
-	cmd.Flags().StringVar(
-		&v.root, "rootfs", "rootfs",
-		`A directory representing the root filesystem of the container in the OCI runtime bundle.
-It is strongly recommended to keep the default value.`,
+		`The ref pointing to the manifest to be unpacked. This must be present in the "refs" subdirectory of the image.`,
 	)
 
 	return cmd
 }
 
-func (v *bundleCmd) Run(cmd *cobra.Command, args []string) {
+func (v *unpackCmd) Run(cmd *cobra.Command, args []string) {
 	if len(args) != 2 {
 		v.stderr.Print("both src and dest must be provided")
 		if err := cmd.Usage(); err != nil {
@@ -82,13 +86,8 @@ func (v *bundleCmd) Run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	if _, err := os.Stat(args[1]); os.IsNotExist(err) {
-		v.stderr.Printf("destination path %s does not exist", args[1])
-		os.Exit(1)
-	}
-
 	if v.typ == "" {
-		typ, err := autodetect(args[0])
+		typ, err := image.Autodetect(args[0])
 		if err != nil {
 			v.stderr.Printf("%q: autodetection failed: %v", args[0], err)
 			os.Exit(1)
@@ -98,11 +97,11 @@ func (v *bundleCmd) Run(cmd *cobra.Command, args []string) {
 
 	var err error
 	switch v.typ {
-	case typeImageLayout:
-		err = image.CreateRuntimeBundleLayout(args[0], args[1], v.ref, v.root)
+	case image.TypeImageLayout:
+		err = image.UnpackLayout(args[0], args[1], v.ref)
 
-	case typeImage:
-		err = image.CreateRuntimeBundle(args[0], args[1], v.ref, v.root)
+	case image.TypeImage:
+		err = image.Unpack(args[0], args[1], v.ref)
 	}
 
 	if err != nil {

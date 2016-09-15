@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package image
 
 import (
 	"encoding/json"
@@ -27,23 +27,23 @@ import (
 
 // supported autodetection types
 const (
-	typeImageLayout  = "imageLayout"
-	typeImage        = "image"
-	typeManifest     = "manifest"
-	typeManifestList = "manifestList"
-	typeConfig       = "config"
+	TypeImageLayout  = "imageLayout"
+	TypeImage        = "image"
+	TypeManifest     = "manifest"
+	TypeManifestList = "manifestList"
+	TypeConfig       = "config"
 )
 
-// autodetect detects the validation type for the given path
+// Autodetect detects the validation type for the given path
 // or an error if the validation type could not be resolved.
-func autodetect(path string) (string, error) {
+func Autodetect(path string) (string, error) {
 	fi, err := os.Stat(path)
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to access path") // err from os.Stat includes path name
 	}
 
 	if fi.IsDir() {
-		return typeImageLayout, nil
+		return TypeImageLayout, nil
 	}
 
 	f, err := os.Open(path)
@@ -61,10 +61,10 @@ func autodetect(path string) (string, error) {
 
 	switch mimeType {
 	case "application/x-gzip":
-		return typeImage, nil
+		return TypeImage, nil
 
 	case "application/octet-stream":
-		return typeImage, nil
+		return TypeImage, nil
 
 	case "text/plain; charset=utf-8":
 		// might be a JSON file, will be handled below
@@ -98,14 +98,14 @@ func autodetect(path string) (string, error) {
 
 	switch {
 	case header.MediaType == string(schema.MediaTypeManifest):
-		return typeManifest, nil
+		return TypeManifest, nil
 
 	case header.MediaType == string(schema.MediaTypeManifestList):
-		return typeManifestList, nil
+		return TypeManifestList, nil
 
 	case header.MediaType == "" && header.SchemaVersion == 0 && header.Config != nil:
 		// config files don't have mediaType/schemaVersion header
-		return typeConfig, nil
+		return TypeConfig, nil
 	}
 
 	return "", errors.New("unknown media type")

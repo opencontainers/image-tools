@@ -15,6 +15,7 @@ for d in $(find . -type d -not -iwholename '*.git*' -a -not -iname '.tool' -a -n
 		--exclude='.*_test\.go:.*error return value not checked.*\(errcheck\)$' \
 		--exclude='duplicate of.*_test.go.*\(dupl\)$' \
 		--exclude='schema/fs.go' \
+		--exclude='duplicate of.*main.go.*\(dupl\)$' \
 		--disable=aligncheck \
 		--disable=gotype \
 		--disable=gas \
