@@ -1,4 +1,4 @@
-# image-tools
+# image-tools [![Build Status](https://travis-ci.org/opencontainers/image-tools.svg?branch=master)](https://travis-ci.org/opencontainers/image-tools)
 
 `image-tools` is a collection of tools for working with the [OCI image format specification](https://github.com/opencontainers/image-spec).
 
