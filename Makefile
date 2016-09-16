@@ -4,6 +4,10 @@ export GO15VENDOREXPERIMENT
 COMMIT=$(shell git rev-parse HEAD 2> /dev/null || true)
 
 EPOCH_TEST_COMMIT ?= v0.2.0
+TOOLS := \
+	oci-create-runtime-bundle \
+	oci-image-validate \
+	oci-unpack
 
 default: help
 
@@ -20,10 +24,10 @@ check-license:
 	@echo "checking license headers"
 	@./.tool/check-license
 
-tools:
-	go build -ldflags "-X main.gitCommit=${COMMIT}" ./cmd/oci-create-runtime-bundle
-	go build -ldflags "-X main.gitCommit=${COMMIT}" ./cmd/oci-unpack
-	go build -ldflags "-X main.gitCommit=${COMMIT}" ./cmd/oci-image-validate
+tools: $(TOOLS)
+
+oci-%: cmd/oci-%/main.go
+	go build -ldflags "-X main.gitCommit=${COMMIT}" ./cmd/$@
 
 lint:
 	@echo "checking lint"
@@ -69,10 +73,7 @@ install.tools: .install.gitvalidation .install.glide .install.glide-vc .install.
 	gometalinter --install --update
 
 clean:
-	rm -rf *~ $(OUTPUT_DIRNAME)
-	rm -f oci-create-runtime-bundle
-	rm -f oci-unpack
-	rm -f oci-image-validate
+	rm -rf *~ $(OUTPUT_DIRNAME) $(TOOLS)
 
 .PHONY: \
 	tools \
