@@ -206,17 +206,7 @@ func CheckTarVersion(ctx context.Context, reader io.ReadSeeker) (err error) {
 		return err
 	}
 
-	decoder := json.NewDecoder(tarReader)
-	var version ImageLayoutVersion
-	err = decoder.Decode(&version)
-	if err != nil {
-		return err
-	}
-	if version.Version != "1.0.0" {
-		return fmt.Errorf("unrecognized imageLayoutVersion: %q", version.Version)
-	}
-
-	return nil
+	return CheckVersion(ctx, tarReader)
 }
 
 // CreateTarFile creates a new image-layout tar file at the given path.

@@ -28,19 +28,24 @@ oci-cas \- Content-addressable storage manipulation
   Write a blob to the store.
   See **oci-cas-put**(1) for full documentation on the **put** command.
 
+**delete**
+  Remove a blob from the store.
+  See **oci-cas-delete**(1) for full documentation on the **delete** command.
+
 # EXAMPLES
 
 ```
-$ oci-image-init image-layout image.tar
-$ echo hello | oci-cas put image.tar
+$ oci-image-init image-layout image
+$ echo hello | oci-cas put image
 sha256:5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03
-$ oci-cas get image.tar sha256:5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03
+$ oci-cas get image sha256:5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03
 hello
+$ oci-cas delete image sha256:5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03
 ```
 
 # SEE ALSO
 
-**oci-image-tools**(7), **oci-cas-get**(1), **oci-cas-put**(1), **oci-image-init**(1)
+**oci-image-tools**(7), **oci-cas-get**(1), **oci-cas-put**(1), **oci-cas-delete**(1), **oci-image-init**(1)
 
 # HISTORY
 

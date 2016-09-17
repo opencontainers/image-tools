@@ -20,7 +20,7 @@ oci-refs-list \- Return available names from the store
 
 # SEE ALSO
 
-**oci-refs**(1), **oci-refs-get**(1), **oci-refs-put**(1)
+**oci-refs**(1), **oci-refs-get**(1), **oci-refs-put**(1), **oci-refs-delete**(1)
 
 # HISTORY
 

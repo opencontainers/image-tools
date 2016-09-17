@@ -20,7 +20,7 @@ oci-cas-put \- Write a blob to the store
 
 # SEE ALSO
 
-**oci-cas**(1), **oci-cas-get**(1)
+**oci-cas**(1), **oci-cas-get**(1), **oci-cas-delete**(1)
 
 # HISTORY
 

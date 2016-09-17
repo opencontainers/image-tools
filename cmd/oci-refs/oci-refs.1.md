@@ -32,23 +32,28 @@ oci-refs \- Name-based reference manipulation
   Write a reference to the store.
   See **oci-refs-put**(1) for full documentation on the **put** command.
 
+**delete**
+  Remove a reference from the store.
+  See **oci-refs-delete**(1) for full documentation on the **delete** command.
+
 # EXAMPLES
 
 ```
-$ oci-image-init image-layout image.tar
-$ DIGEST=$(echo hello | oci-cas put image.tar)
+$ oci-image-init image-layout image
+$ DIGEST=$(echo hello | oci-cas put image)
 $ SIZE=$(echo hello | wc -c)
 $ printf '{"mediaType": "text/plain", "digest": "%s", "size": %d}' "${DIGEST}" "${SIZE}" |
->   oci-refs put image.tar greeting
-$ oci-refs list image.tar
+>   oci-refs put image greeting
+$ oci-refs list image
 greeting
-$ oci-refs get image.tar greeting
+$ oci-refs get image greeting
 {"mediaType":"text/plain","digest":"sha256:5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03","size":6}
+$ oci-refs delete image greeting
 ```
 
 # SEE ALSO
 
-**oci-image-tools**(7), **oci-cas-put**(1), **oci-refs-get**(1), **oci-refs-list**(1), **oci-refs-put**(1)
+**oci-image-tools**(7), **oci-cas-put**(1), **oci-refs-get**(1), **oci-refs-list**(1), **oci-refs-put**(1), **oci-refs-delete**(1)
 
 # HISTORY
 
