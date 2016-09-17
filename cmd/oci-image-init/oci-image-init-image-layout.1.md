@@ -18,6 +18,11 @@ oci-image-init-image-layout \- Initialize an OCI image-layout repository
 **--help**
   Print usage statement
 
+**--type**
+  Select the image-layout backend.
+  Choices: dir, tar.
+  Defaults to dir.
+
 # SEE ALSO
 
 **oci-image-init**(1), **oci-cas**(1), ***oci-refs**(1)

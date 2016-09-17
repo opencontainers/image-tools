@@ -19,7 +19,9 @@
 package layout
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/opencontainers/image-tools/image/refs"
 	"golang.org/x/net/context"
@@ -28,10 +30,22 @@ import (
 // NewEngine instantiates an engine with the appropriate backend (tar,
 // HTTP, ...).
 func NewEngine(ctx context.Context, path string) (engine refs.Engine, err error) {
-	file, err := os.OpenFile(path, os.O_RDWR, 0)
-	if err != nil {
-		return nil, err
+	engine, err = NewDirEngine(ctx, path)
+	if err == nil {
+		return engine, err
 	}
 
-	return NewTarEngine(ctx, file)
+	file, err := os.OpenFile(path, os.O_RDWR, 0)
+	if err == nil {
+		return NewTarEngine(ctx, file)
+	}
+
+	return nil, fmt.Errorf("unrecognized engine at %q", path)
+}
+
+// refPath returns the PATH to the NAME reference.  SEPARATOR selects
+// the path separator used between components.
+func refPath(name string, separator string) (path string, err error) {
+	components := []string{".", "refs", name}
+	return strings.Join(components, separator), nil
 }

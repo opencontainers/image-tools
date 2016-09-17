@@ -20,7 +20,7 @@ oci-cas-get \- Retrieve a blob from the store
 
 # SEE ALSO
 
-**oci-cas**(1), **oci-cas-put**(1)
+**oci-cas**(1), **oci-cas-put**(1), **oci-cas-delete**(1)
 
 # HISTORY
 

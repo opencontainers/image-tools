@@ -20,7 +20,7 @@ oci-refs-put \- Write a reference to the store
 
 # SEE ALSO
 
-**oci-refs**(1), **oci-refs-get**(1), **oci-refs-list**(1)
+**oci-refs**(1), **oci-refs-get**(1), **oci-refs-list**(1), **oci-refs-delete**(1)
 
 # HISTORY
 

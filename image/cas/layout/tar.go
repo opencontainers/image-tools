@@ -23,7 +23,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"strings"
 
 	"github.com/opencontainers/image-tools/image/cas"
 	"github.com/opencontainers/image-tools/image/layout"
@@ -64,7 +63,11 @@ func (engine *TarEngine) Put(ctx context.Context, reader io.Reader) (digest stri
 
 	_, err = engine.Get(ctx, digest)
 	if err == os.ErrNotExist {
-		targetName := fmt.Sprintf("./blobs/%s/%s", algorithm, hexHash)
+		var targetName string
+		targetName, err = blobPath(digest, "/")
+		if err != nil {
+			return "", err
+		}
 		reader = bytes.NewReader(data)
 		err = layout.WriteTarEntryByName(ctx, engine.file, targetName, reader, &size)
 		if err != nil {
@@ -79,14 +82,10 @@ func (engine *TarEngine) Put(ctx context.Context, reader io.Reader) (digest stri
 
 // Get returns a reader for retrieving a blob from the store.
 func (engine *TarEngine) Get(ctx context.Context, digest string) (reader io.ReadCloser, err error) {
-	fields := strings.SplitN(digest, ":", 2)
-	if len(fields) != 2 {
-		return nil, fmt.Errorf("invalid digest: %q, %v", digest, fields)
+	targetName, err := blobPath(digest, "/")
+	if err != nil {
+		return nil, err
 	}
-	algorithm := fields[0]
-	hash := fields[1]
-
-	targetName := fmt.Sprintf("./blobs/%s/%s", algorithm, hash)
 
 	_, tarReader, err := layout.TarEntryByName(ctx, engine.file, targetName)
 	if err != nil {

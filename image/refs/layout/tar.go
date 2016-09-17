@@ -19,7 +19,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -59,13 +58,19 @@ func (engine *TarEngine) Put(ctx context.Context, name string, descriptor *specs
 
 	size := int64(len(data))
 	reader := bytes.NewReader(data)
-	targetName := fmt.Sprintf("./refs/%s", name)
+	targetName, err := refPath(name, "/")
+	if err != nil {
+		return err
+	}
 	return imagelayout.WriteTarEntryByName(ctx, engine.file, targetName, reader, &size)
 }
 
 // Get returns a reference from the store.
 func (engine *TarEngine) Get(ctx context.Context, name string) (descriptor *specs.Descriptor, err error) {
-	targetName := fmt.Sprintf("./refs/%s", name)
+	targetName, err := refPath(name, "/")
+	if err != nil {
+		return nil, err
+	}
 
 	_, tarReader, err := imagelayout.TarEntryByName(ctx, engine.file, targetName)
 	if err != nil {
@@ -90,7 +95,10 @@ func (engine *TarEngine) List(ctx context.Context, prefix string, size int, from
 		return nil
 	}
 
-	pathPrefix := fmt.Sprintf("./refs/%s", prefix)
+	pathPrefix, err := refPath(prefix, "/")
+	if err != nil {
+		return nil
+	}
 
 	tarReader := tar.NewReader(engine.file)
 	for {

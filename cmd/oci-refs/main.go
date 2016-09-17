@@ -30,6 +30,7 @@ func main() {
 	cmd.AddCommand(newPutCmd())
 	cmd.AddCommand(newGetCmd())
 	cmd.AddCommand(newListCmd())
+	cmd.AddCommand(newDeleteCmd())
 
 	err := cmd.Execute()
 	if err != nil {

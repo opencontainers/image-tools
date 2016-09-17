@@ -20,7 +20,7 @@ oci-refs-get \- Retrieve a reference from the store
 
 # SEE ALSO
 
-**oci-refs**(1), **oci-refs-list**(1), **oci-refs-put**(1)
+**oci-refs**(1), **oci-refs-list**(1), **oci-refs-put**(1), **oci-refs-delete**(1)
 
 # HISTORY
 

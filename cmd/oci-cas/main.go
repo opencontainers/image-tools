@@ -29,6 +29,7 @@ func main() {
 
 	cmd.AddCommand(newGetCmd())
 	cmd.AddCommand(newPutCmd())
+	cmd.AddCommand(newDeleteCmd())
 
 	err := cmd.Execute()
 	if err != nil {

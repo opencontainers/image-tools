@@ -18,59 +18,55 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/opencontainers/image-tools/image/layout"
+	"github.com/opencontainers/image-tools/image/cas/layout"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/context"
 )
 
-type imageLayout struct {
-	backend string
+type deleteCmd struct {
+	path   string
+	digest string
 }
 
-func newImageLayoutCmd() *cobra.Command {
-	state := &imageLayout{
-		backend: "dir",
-	}
+func newDeleteCmd() *cobra.Command {
+	state := &deleteCmd{}
 
-	cmd := &cobra.Command{
-		Use:   "image-layout PATH",
-		Short: "Initialize an OCI image-layout repository",
+	return &cobra.Command{
+		Use:   "delete PATH DIGEST",
+		Short: "Remove a blob from from the store",
 		Run:   state.Run,
 	}
-
-	cmd.Flags().StringVar(
-		&state.backend, "type", "dir",
-		"Select the image-backend.  Choices: dir, tar.  Defaults to dir.",
-	)
-
-	return cmd
 }
 
-func (state *imageLayout) Run(cmd *cobra.Command, args []string) {
-	var err error
-	if len(args) != 1 {
-		if err = cmd.Usage(); err != nil {
+func (state *deleteCmd) Run(cmd *cobra.Command, args []string) {
+	if len(args) != 2 {
+		fmt.Fprintln(os.Stderr, "both PATH and DIGEST must be provided")
+		if err := cmd.Usage(); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
 		os.Exit(1)
 	}
 
-	path := args[0]
+	state.path = args[0]
+	state.digest = args[1]
 
-	ctx := context.Background()
-
-	switch state.backend {
-	case "dir":
-		err = layout.CreateDir(ctx, path)
-	case "tar":
-		err = layout.CreateTarFile(ctx, path)
-	default:
-		err = fmt.Errorf("unrecognized type: %q", state.backend)
-	}
+	err := state.run()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
 	os.Exit(0)
+}
+
+func (state *deleteCmd) run() (err error) {
+	ctx := context.Background()
+
+	engine, err := layout.NewEngine(ctx, state.path)
+	if err != nil {
+		return err
+	}
+	defer engine.Close()
+
+	return engine.Delete(ctx, state.digest)
 }

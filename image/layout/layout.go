@@ -15,8 +15,36 @@
 // Package layout defines utility code shared by refs/layout and cas/layout.
 package layout
 
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+
+	"golang.org/x/net/context"
+)
+
+// EntryPath is a template for helpers that convert from ref or blob
+// names to image-layout paths.
+type EntryPath func(entry string, separator string) (path string, err error)
+
 // ImageLayoutVersion represents the oci-version content for the image
 // layout format.
 type ImageLayoutVersion struct {
 	Version string `json:"imageLayoutVersion"`
+}
+
+// CheckVersion checks an oci-layout reader and returns an error if it
+// has unrecognized content.
+func CheckVersion(ctx context.Context, reader io.Reader) (err error) {
+	decoder := json.NewDecoder(reader)
+	var version ImageLayoutVersion
+	err = decoder.Decode(&version)
+	if err != nil {
+		return err
+	}
+	if version.Version != "1.0.0" {
+		return fmt.Errorf("unrecognized imageLayoutVersion: %q", version.Version)
+	}
+
+	return nil
 }

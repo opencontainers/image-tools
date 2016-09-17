@@ -19,7 +19,9 @@
 package layout
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/opencontainers/image-tools/image/cas"
 	"golang.org/x/net/context"
@@ -28,10 +30,29 @@ import (
 // NewEngine instantiates an engine with the appropriate backend (tar,
 // HTTP, ...).
 func NewEngine(ctx context.Context, path string) (engine cas.Engine, err error) {
-	file, err := os.OpenFile(path, os.O_RDWR, 0)
-	if err != nil {
-		return nil, err
+	engine, err = NewDirEngine(ctx, path)
+	if err == nil {
+		return engine, err
 	}
 
-	return NewTarEngine(ctx, file)
+	file, err := os.OpenFile(path, os.O_RDWR, 0)
+	if err == nil {
+		return NewTarEngine(ctx, file)
+	}
+
+	return nil, fmt.Errorf("unrecognized engine at %q", path)
+}
+
+// blobPath returns the PATH to the DIGEST blob.  SEPARATOR selects
+// the path separator used between components.
+func blobPath(digest string, separator string) (path string, err error) {
+	fields := strings.SplitN(digest, ":", 2)
+	if len(fields) != 2 {
+		return "", fmt.Errorf("invalid digest: %q, %v", digest, fields)
+	}
+	algorithm := fields[0]
+	hash := fields[1]
+
+	components := []string{".", "blobs", algorithm, hash}
+	return strings.Join(components, separator), nil
 }

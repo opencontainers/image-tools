@@ -79,7 +79,7 @@ func TestUnpackLayer(t *testing.T) {
 	defer os.RemoveAll(tmp1)
 
 	path := filepath.Join(tmp1, "image.tar")
-	err = imagelayout.CreateTarFile(ctx, path)
+	err = imagelayout.CreateDir(ctx, path)
 	if err != nil {
 		t.Fatal(err)
 	}
