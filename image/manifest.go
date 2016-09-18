@@ -51,7 +51,7 @@ func findManifest(w walker, d *descriptor) (*manifest, error) {
 			return errors.Wrapf(err, "%s: error reading manifest", path)
 		}
 
-		if err := schema.MediaTypeManifest.Validate(bytes.NewReader(buf)); err != nil {
+		if err := ValidateManifestMediaType(bytes.NewReader(buf)); err != nil {
 			return errors.Wrapf(err, "%s: manifest validation failed", path)
 		}
 
@@ -239,4 +239,34 @@ loop:
 		}
 	}
 	return nil
+}
+
+// ValidateManifestMediaType validate the manifest schema media-type
+// and its descendants fields media type, such as config and layers,
+// to make sure they match to spec definition, or returns an error if
+// the validation failed.
+func ValidateManifestMediaType(r io.Reader) error {
+	header := v1.Manifest{}
+
+	buf, err := ioutil.ReadAll(r)
+	if err != nil {
+		return errors.Wrapf(err, "error reading the io stream")
+	}
+
+	err = json.Unmarshal(buf, &header)
+	if err != nil {
+		return errors.Wrap(err, "manifest format mismatch")
+	}
+
+	if header.Config.MediaType != string(v1.MediaTypeImageConfig) {
+		return fmt.Errorf("illegal config mediaType: %s", header.Config.MediaType)
+	}
+
+	for _, layer := range header.Layers {
+		if layer.MediaType != string(v1.MediaTypeImageLayer) {
+			return fmt.Errorf("illegal layer mediaType: %s", layer.MediaType)
+		}
+	}
+
+	return schema.MediaTypeManifest.Validate(bytes.NewReader(buf))
 }
