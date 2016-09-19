@@ -20,9 +20,14 @@ import (
 	"os"
 	"strings"
 
+	specs "github.com/opencontainers/image-spec/specs-go"
 	"github.com/opencontainers/image-tools/image"
 	"github.com/spf13/cobra"
 )
+
+// gitCommit will be the hash that the binary was built from
+// and will be populated by the Makefile
+var gitCommit = ""
 
 // supported bundle types
 var bundleTypes = []string{
@@ -31,11 +36,12 @@ var bundleTypes = []string{
 }
 
 type bundleCmd struct {
-	stdout *log.Logger
-	stderr *log.Logger
-	typ    string // the type to bundle, can be empty string
-	ref    string
-	root   string
+	stdout  *log.Logger
+	stderr  *log.Logger
+	typ     string // the type to bundle, can be empty string
+	ref     string
+	root    string
+	version bool
 }
 
 func main() {
@@ -81,10 +87,20 @@ func newBundleCmd(stdout, stderr *log.Logger) *cobra.Command {
 It is strongly recommended to keep the default value.`,
 	)
 
+	cmd.Flags().BoolVar(
+		&v.version, "version", false,
+		`Print version information and exit`,
+	)
 	return cmd
 }
 
 func (v *bundleCmd) Run(cmd *cobra.Command, args []string) {
+	if v.version {
+		v.stdout.Printf("commit: %s", gitCommit)
+		v.stdout.Printf("spec: %s", specs.Version)
+		os.Exit(0)
+
+	}
 	if len(args) != 2 {
 		v.stderr.Print("both src and dest must be provided")
 		if err := cmd.Usage(); err != nil {
