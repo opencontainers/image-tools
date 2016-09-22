@@ -105,28 +105,14 @@ func (d *descriptor) validate(w walker, mts []string) error {
 	if !found {
 		return fmt.Errorf("invalid descriptor MediaType %q", d.MediaType)
 	}
-	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-		if info.IsDir() {
-			return nil
-		}
 
-		filename, err := filepath.Rel(filepath.Join("blobs", d.algo()), filepath.Clean(path))
-		if err != nil || d.hash() != filename {
-			return nil
-		}
-
-		if err := d.validateContent(r); err != nil {
-			return err
-		}
-		return errEOW
-	}); err {
-	case nil:
-		return fmt.Errorf("%s: not found", d.Digest)
-	case errEOW:
-		return nil
-	default:
-		return errors.Wrapf(err, "%s: validation failed", d.Digest)
+	rc, err := w.Get(*d)
+	if err != nil {
+		return err
 	}
+	defer rc.Close()
+
+	return d.validateContent(rc)
 }
 
 func (d *descriptor) validateContent(r io.Reader) error {
