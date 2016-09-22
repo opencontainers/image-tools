@@ -26,7 +26,7 @@ check-license:
 
 tools: $(TOOLS)
 
-oci-%: cmd/oci-%/main.go
+$(TOOLS): oci-%:
 	go build -ldflags "-X main.gitCommit=${COMMIT}" ./cmd/$@
 
 lint:
@@ -77,6 +77,7 @@ clean:
 
 .PHONY: \
 	tools \
+	$(TOOLS) \
 	check-license \
 	clean \
 	lint \
