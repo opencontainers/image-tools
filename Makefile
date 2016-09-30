@@ -8,6 +8,7 @@ TOOLS := \
 	oci-create-runtime-bundle \
 	oci-image-validate \
 	oci-unpack
+DESTDIR ?= /usr/bin/
 
 default: help
 
@@ -19,6 +20,7 @@ help:
 	@echo " * 'lint' - Execute the source code linter"
 	@echo " * 'test' - Execute the unit tests"
 	@echo " * 'update-deps' - Update vendored dependencies"
+	@echo " * 'install' - Install the binaries into system path"
 
 check-license:
 	@echo "checking license headers"
@@ -43,6 +45,9 @@ update-deps:
 	glide-vc --only-code --no-tests
 	# see http://sed.sourceforge.net/sed1line.txt
 	find vendor -type f -exec sed -i -e :a -e '/^\n*$$/{$$d;N;ba' -e '}' "{}" \;
+
+install:
+	install -D -m 755 -t ${DESTDIR} ${TOOLS}
 
 .PHONY: .gitvalidation
 
@@ -81,4 +86,5 @@ clean:
 	check-license \
 	clean \
 	lint \
-	test
+	test \
+	install
