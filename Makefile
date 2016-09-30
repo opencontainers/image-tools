@@ -8,8 +8,8 @@ default: help
 help:
 	@echo "Usage: make <target>"
 	@echo
-	@echo " * 'tools' - build the oci image tools binaries"
-	@echo " * 'check-license' - check license headers in source files"
+	@echo " * 'tools' - Build the oci image tools binaries"
+	@echo " * 'check-license' - Check license headers in source files"
 	@echo " * 'lint' - Execute the source code linter"
 	@echo " * 'test' - Execute the unit tests"
 	@echo " * 'update-deps' - Update vendored dependencies"
