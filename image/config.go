@@ -53,6 +53,10 @@ func findConfig(w walker, d *descriptor) (*config, error) {
 		if err := json.Unmarshal(buf, &c); err != nil {
 			return err
 		}
+		// check if the rootfs type is 'layers'
+		if c.RootFS.Type != "layers" {
+			return fmt.Errorf("'%s' is an unknown rootfs type, MUST be 'layers'", c.RootFS.Type)
+		}
 		return errEOW
 	}); err {
 	case nil:
