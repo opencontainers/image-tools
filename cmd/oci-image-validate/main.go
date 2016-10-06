@@ -21,10 +21,15 @@ import (
 	"strings"
 
 	"github.com/opencontainers/image-spec/schema"
+	specs "github.com/opencontainers/image-spec/specs-go"
 	"github.com/opencontainers/image-tools/image"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
+
+// gitCommit will be the hash that the binary was built from
+// and will be populated by the Makefile
+var gitCommit = ""
 
 // supported validation types
 var validateTypes = []string{
@@ -36,10 +41,11 @@ var validateTypes = []string{
 }
 
 type validateCmd struct {
-	stdout *log.Logger
-	stderr *log.Logger
-	typ    string // the type to validate, can be empty string
-	refs   []string
+	stdout  *log.Logger
+	stderr  *log.Logger
+	typ     string // the type to validate, can be empty string
+	refs    []string
+	version bool
 }
 
 func main() {
@@ -78,10 +84,21 @@ func newValidateCmd(stdout, stderr *log.Logger) *cobra.Command {
 		`A set of refs pointing to the manifests to be validated. Each reference must be present in the "refs" subdirectory of the image. Only applicable if type is image or imageLayout.`,
 	)
 
+	cmd.Flags().BoolVar(
+		&v.version, "version", false,
+		`Print version information and exit`,
+	)
+
 	return cmd
 }
 
 func (v *validateCmd) Run(cmd *cobra.Command, args []string) {
+	if v.version {
+		v.stdout.Printf("commit: %s", gitCommit)
+		v.stdout.Printf("spec: %s", specs.Version)
+		os.Exit(0)
+	}
+
 	if len(args) < 1 {
 		v.stderr.Printf("no files specified")
 		if err := cmd.Usage(); err != nil {

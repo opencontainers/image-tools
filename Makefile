@@ -1,6 +1,8 @@
 GO15VENDOREXPERIMENT=1
 export GO15VENDOREXPERIMENT
 
+COMMIT=$(shell git rev-parse HEAD 2> /dev/null || true)
+
 EPOCH_TEST_COMMIT ?= v0.2.0
 
 default: help
@@ -19,9 +21,9 @@ check-license:
 	@./.tool/check-license
 
 tools:
-	go build ./cmd/oci-create-runtime-bundle
-	go build ./cmd/oci-unpack
-	go build ./cmd/oci-image-validate
+	go build -ldflags "-X main.gitCommit=${COMMIT}" ./cmd/oci-create-runtime-bundle
+	go build -ldflags "-X main.gitCommit=${COMMIT}" ./cmd/oci-unpack
+	go build -ldflags "-X main.gitCommit=${COMMIT}" ./cmd/oci-image-validate
 
 lint:
 	@echo "checking lint"
