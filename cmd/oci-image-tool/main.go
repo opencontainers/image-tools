@@ -20,6 +20,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/opencontainers/image-tools/version"
+	image_spec "github.com/opencontainers/image-spec/specs-go"
+	runtime_spec "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/urfave/cli"
 )
 
@@ -35,6 +37,7 @@ func main() {
 	} else {
 		app.Version = version.Version
 	}
+	app.Description = fmt.Sprintf("Tools for working with OCI images.  Currently supported specifications are:\n\n   * OCI Image Format Specification: %s\n   * OCI Runtime Specification: %s", image_spec.Version, runtime_spec.Version)
 	app.Usage = "OCI (Open Container Initiative) image tools"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
