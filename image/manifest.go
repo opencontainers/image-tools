@@ -88,7 +88,24 @@ func (m *manifest) validate(w walker) error {
 	return nil
 }
 
-func (m *manifest) unpack(w walker, dest string) error {
+func (m *manifest) unpack(w walker, dest string) (retErr error) {
+	// error out if the dest directory is not empty
+	s, err := ioutil.ReadDir(dest)
+	if err != nil && !os.IsNotExist(err) {
+		return errors.Wrap(err, "unable to open file") // err contains dest
+	}
+	if len(s) > 0 {
+		return fmt.Errorf("%s is not empty", dest)
+	}
+	defer func() {
+		// if we encounter error during unpacking
+		// clean up the partially-unpacked destination
+		if retErr != nil {
+			if err := os.RemoveAll(dest); err != nil {
+				fmt.Printf("Error: failed to remove partially-unpacked destination %v", err)
+			}
+		}
+	}()
 	for _, d := range m.Layers {
 		if d.MediaType != string(schema.MediaTypeImageLayer) {
 			continue
