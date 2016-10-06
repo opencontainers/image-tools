@@ -35,15 +35,17 @@ type walkFunc func(path string, _ os.FileInfo, _ io.Reader) error
 // calling walk for each file or directory in the tree.
 type walker interface {
 	walk(walkFunc) error
+	reader
 }
 
 type tarWalker struct {
 	r io.ReadSeeker
+	tarReader
 }
 
 // newTarWalker returns a Walker that walks through .tar files.
-func newTarWalker(r io.ReadSeeker) walker {
-	return &tarWalker{r}
+func newTarWalker(tarFile string, r io.ReadSeeker) walker {
+	return &tarWalker{r, tarReader{name: tarFile}}
 }
 
 func (w *tarWalker) walk(f walkFunc) error {
@@ -82,12 +84,13 @@ func (eofReader) Read(_ []byte) (int, error) {
 
 type pathWalker struct {
 	root string
+	layoutReader
 }
 
 // newPathWalker returns a Walker that walks through directories
 // starting at the given root path. It does not follow symlinks.
 func newPathWalker(root string) walker {
-	return &pathWalker{root}
+	return &pathWalker{root, layoutReader{root: root}}
 }
 
 func (w *pathWalker) walk(f walkFunc) error {

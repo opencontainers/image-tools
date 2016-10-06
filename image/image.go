@@ -40,7 +40,7 @@ func Validate(tarFile string, refs []string, out *log.Logger) error {
 	}
 	defer f.Close()
 
-	return validate(newTarWalker(f), refs, out)
+	return validate(newTarWalker(tarFile, f), refs, out)
 }
 
 var validRefMediaTypes = []string{
@@ -111,7 +111,7 @@ func Unpack(tarFile, dest, ref string) error {
 	}
 	defer f.Close()
 
-	return unpack(newTarWalker(f), dest, ref)
+	return unpack(newTarWalker(tarFile, f), dest, ref)
 }
 
 func unpack(w walker, dest, refName string) error {
@@ -153,7 +153,7 @@ func CreateRuntimeBundle(tarFile, dest, ref, root string) error {
 	}
 	defer f.Close()
 
-	return createRuntimeBundle(newTarWalker(f), dest, ref, root)
+	return createRuntimeBundle(newTarWalker(tarFile, f), dest, ref, root)
 }
 
 func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
