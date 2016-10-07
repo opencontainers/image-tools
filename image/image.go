@@ -133,7 +133,7 @@ func unpack(w walker, dest, refName string) error {
 		return err
 	}
 
-	return m.unpack(w, dest)
+	return unpackLayerList(w, m.Layers, dest)
 }
 
 // CreateRuntimeBundleLayout walks through the file tree given by src and
@@ -180,7 +180,7 @@ func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
 		return err
 	}
 
-	err = m.unpack(w, filepath.Join(dest, rootfs))
+	err = unpackLayerList(w, m.Layers, filepath.Join(dest, rootfs))
 	if err != nil {
 		return err
 	}
