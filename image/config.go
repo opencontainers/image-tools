@@ -18,9 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -37,35 +35,29 @@ func findConfig(w walker, d *descriptor) (*config, error) {
 	var c config
 	cpath := filepath.Join("blobs", d.algo(), d.hash())
 
-	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-		if info.IsDir() || filepath.Clean(path) != cpath {
-			return nil
-		}
-		buf, err := ioutil.ReadAll(r)
-		if err != nil {
-			return errors.Wrapf(err, "%s: error reading config", path)
-		}
-
-		if err := schema.MediaTypeImageConfig.Validate(bytes.NewReader(buf)); err != nil {
-			return errors.Wrapf(err, "%s: config validation failed", path)
-		}
-
-		if err := json.Unmarshal(buf, &c); err != nil {
-			return err
-		}
-		// check if the rootfs type is 'layers'
-		if c.RootFS.Type != "layers" {
-			return fmt.Errorf("%q is an unknown rootfs type, MUST be 'layers'", c.RootFS.Type)
-		}
-		return errEOW
-	}); err {
-	case nil:
-		return nil, fmt.Errorf("%s: config not found", cpath)
-	case errEOW:
-		return &c, nil
-	default:
+	r, err := w.Get(*d)
+	if err != nil {
 		return nil, err
 	}
+
+	buf, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, errors.Wrapf(err, "%s: error reading config", cpath)
+	}
+
+	if err := schema.MediaTypeImageConfig.Validate(bytes.NewReader(buf)); err != nil {
+		return nil, errors.Wrapf(err, "%s: config validation failed", cpath)
+	}
+
+	if err := json.Unmarshal(buf, &c); err != nil {
+		return nil, err
+	}
+	// check if the rootfs type is 'layers'
+	if c.RootFS.Type != "layers" {
+		return nil, fmt.Errorf("%q is an unknown rootfs type, MUST be 'layers'", c.RootFS.Type)
+	}
+
+	return &c, nil
 }
 
 func (c *config) runtimeSpec(rootfs string) (*specs.Spec, error) {
