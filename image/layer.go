@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 )
 
+// CreateLayer cretes filesystem changset from child and parent
 func CreateLayer(child, parent, dest string) error {
 	arch, err := Diff(child, parent)
 	if err != nil {

@@ -58,16 +58,6 @@ func (c changesByPath) Less(i, j int) bool { return c[i].Path < c[j].Path }
 func (c changesByPath) Len() int           { return len(c) }
 func (c changesByPath) Swap(i, j int)      { c[j], c[i] = c[i], c[j] }
 
-// Gnu tar and the go tar writer don't have sub-second mtime
-// precision, which is problematic when we apply changes via tar
-// files, we handle this by comparing for exact times, *or* same
-// second count and either a or b having exactly 0 nanoseconds
-func sameFsTime(a, b time.Time) bool {
-	return a == b ||
-		(a.Unix() == b.Unix() &&
-			(a.Nanosecond() == 0 || b.Nanosecond() == 0))
-}
-
 func sameFsTimeSpec(a, b syscall.Timespec) bool {
 	return a.Sec == b.Sec &&
 		(a.Nsec == b.Nsec || a.Nsec == 0 || b.Nsec == 0)
@@ -158,7 +148,7 @@ func (info *FileInfo) addChanges(oldInfo *FileInfo, changes *[]Change) {
 			// breaks down is if some code intentionally hides a change by setting
 			// back mtime
 			if statDifferent(oldStat, newStat) ||
-				bytes.Compare(oldChild.capability, newChild.capability) != 0 {
+				!bytes.Equal(oldChild.capability, newChild.capability) {
 				change := Change{
 					Path: newChild.path(),
 					Kind: ChangeModify,
@@ -218,7 +208,12 @@ func ChangesDirs(newDir, oldDir string) ([]Change, error) {
 		if err != nil {
 			return nil, err
 		}
-		defer os.Remove(emptyDir)
+		defer func() {
+			err := os.Remove(emptyDir)
+			if err != nil {
+				logrus.Debugf("Failed to remove emptyDir: %v", err)
+			}
+		}()
 		oldDir = emptyDir
 	}
 	oldRoot, newRoot, err := collectFileInfoForChanges(oldDir, newDir)

@@ -23,6 +23,7 @@ import (
 	"strings"
 )
 
+// TarAppender used for pack a directory
 type TarAppender struct {
 	TarWriter *tar.Writer
 	Buffer    *bufio.Writer
@@ -46,6 +47,7 @@ func canonicalTarName(name string, isDir bool) (string, error) {
 	return name, nil
 }
 
+// AddTarFile adds file to tar
 func (ta *TarAppender) AddTarFile(path, name string) error {
 	fi, err := os.Lstat(path)
 	if err != nil {

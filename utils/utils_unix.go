@@ -37,13 +37,13 @@ func setHeaderForSpecialDevice(hdr *tar.Header, ta *TarAppender, name string, st
 		return
 	}
 
-	inode = uint64(s.Ino)
+	inode = s.Ino
 
 	// Currently go does not fill in the major/minors
 	if s.Mode&syscall.S_IFBLK != 0 ||
 		s.Mode&syscall.S_IFCHR != 0 {
-		hdr.Devmajor = int64(major(uint64(s.Rdev)))
-		hdr.Devminor = int64(minor(uint64(s.Rdev)))
+		hdr.Devmajor = int64(major(s.Rdev))
+		hdr.Devminor = int64(minor(s.Rdev))
 	}
 
 	return

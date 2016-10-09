@@ -103,10 +103,10 @@ func (w *filewalker) walk(path string, i1, i2 os.FileInfo) (err error) {
 	// Register these nodes with the return trees, unless we're still at the
 	// (already-created) roots:
 	if path != "/" {
-		if err := walkchunk(path, i1, w.dir1, w.root1); err != nil {
+		if err = walkchunk(path, i1, w.dir1, w.root1); err != nil {
 			return err
 		}
-		if err := walkchunk(path, i2, w.dir2, w.root2); err != nil {
+		if err = walkchunk(path, i2, w.dir2, w.root2); err != nil {
 			return err
 		}
 	}
@@ -314,12 +314,4 @@ func statDifferent(oldStat *utils.StatT, newStat *utils.StatT) bool {
 
 func (info *FileInfo) isDir() bool {
 	return info.parent == nil || info.stat.Mode()&syscall.S_IFDIR != 0
-}
-
-func getIno(fi os.FileInfo) uint64 {
-	return uint64(fi.Sys().(*syscall.Stat_t).Ino)
-}
-
-func hasHardlinks(fi os.FileInfo) bool {
-	return fi.Sys().(*syscall.Stat_t).Nlink > 1
 }
