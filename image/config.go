@@ -64,19 +64,42 @@ func findConfig(w walker, d *descriptor) (*config, error) {
 	}
 }
 
-func (c *config) validate(w walk) error {
+func (c *config) validate() error {
 
 	// check if the rootfs type is 'layers'
 	if c.RootFS.Type != "layers" {
-		return errors.New("%q is an unknown rootfs type, MUST be 'layers'", c.RootFS.Type)
+		return fmt.Errorf("%q is an unknown rootfs type, MUST be 'layers'", c.RootFS.Type)
 	}
 
-	for _, d = range c.RootFs.DiffIDs {
-		h := sha256.New()
-		DiffIds := "sha256" + hex.EncodeToString(h.Sum(nil))
+	//check os and architecture
+	if err := c.checkPlatform(); err != nil {
+		return err
+	}
+	return nil
+}
 
-		if DiffIds != d {
-			return errors.New("DiffIDs mismatch")
+func (c *config) checkPlatform() error {
+	validCombins := map[string][]string{
+		"darwin":    {"386", "amd64", "arm", "arm64"},
+		"dragonfly": {"amd64"},
+		"freebsd":   {"386", "amd64", "arm"},
+		"linux":     {"386", "amd64", "arm", "arm64", "ppc64", "ppc64le", "mips64", "mips64le"},
+		"netbsd":    {"386", "amd64", "arm"},
+		"openbsd":   {"386", "amd64", "arm"},
+		"plan9":     {"386", "amd64"},
+		"solaris":   {"amd64"},
+		"windows":   {"386", "amd64"}}
+	for os, archs := range validCombins {
+		if os == c.OS {
+			for _, arch := range archs {
+				if arch == c.Architecture {
+					return nil
+				}
+			}
+			return fmt.Errorf("Combination of %q and %q is invalid.", c.OS, c.Architecture)
+		}
+	}
+	return fmt.Errorf("Operation system %q of the bundle is not supported yet.", c.OS)
 }
 
 func (c *config) runtimeSpec(rootfs string) (*specs.Spec, error) {

@@ -84,7 +84,7 @@ func validate(w walker, refs []string, out *log.Logger) error {
 			return err
 		}
 
-		if err := m.validate(w); err != nil {
+		if err = m.validate(w); err != nil {
 			return err
 		}
 
@@ -93,7 +93,7 @@ func validate(w walker, refs []string, out *log.Logger) error {
 			return err
 		}
 
-		if err := c.validate(w); err != nil {
+		if err = c.validate(); err != nil {
 			return err
 		}
 
@@ -187,6 +187,10 @@ func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
 
 	c, err := findConfig(w, &m.Config)
 	if err != nil {
+		return err
+	}
+
+	if err = c.validate(); err != nil {
 		return err
 	}
 
