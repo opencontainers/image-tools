@@ -53,10 +53,6 @@ func findConfig(w walker, d *descriptor) (*config, error) {
 		if err := json.Unmarshal(buf, &c); err != nil {
 			return err
 		}
-		// check if the rootfs type is 'layers'
-		if c.RootFS.Type != "layers" {
-			return fmt.Errorf("%q is an unknown rootfs type, MUST be 'layers'", c.RootFS.Type)
-		}
 		return errEOW
 	}); err {
 	case nil:
@@ -66,6 +62,21 @@ func findConfig(w walker, d *descriptor) (*config, error) {
 	default:
 		return nil, err
 	}
+}
+
+func (c *config) validate(w walk) error {
+
+	// check if the rootfs type is 'layers'
+	if c.RootFS.Type != "layers" {
+		return errors.New("%q is an unknown rootfs type, MUST be 'layers'", c.RootFS.Type)
+	}
+
+	for _, d = range c.RootFs.DiffIDs {
+		h := sha256.New()
+		DiffIds := "sha256" + hex.EncodeToString(h.Sum(nil))
+
+		if DiffIds != d {
+			return errors.New("DiffIDs mismatch")
 }
 
 func (c *config) runtimeSpec(rootfs string) (*specs.Spec, error) {

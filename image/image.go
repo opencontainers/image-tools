@@ -87,6 +87,16 @@ func validate(w walker, refs []string, out *log.Logger) error {
 		if err := m.validate(w); err != nil {
 			return err
 		}
+
+		c, err := findConfig(w, &m.Config)
+		if err != nil {
+			return err
+		}
+
+		if err := c.validate(w); err != nil {
+			return err
+		}
+
 		if out != nil {
 			out.Printf("reference %q: OK", ref)
 		}
