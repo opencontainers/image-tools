@@ -92,8 +92,7 @@ func TestCreateFilesystemChangeset(t *testing.T) {
 	}
 	modifiedfiles := map[string]func(string) error{
 		"bin/app": func(path string) error {
-			err := ioutil.WriteFile(path, []byte(fmt.Sprintf("Hello world")), 0755)
-			return err
+			return ioutil.WriteFile(path, []byte(fmt.Sprintf("Hello world")), 0755)
 		},
 	}
 
@@ -175,13 +174,13 @@ func createFilesystem(path string, files map[string]bool, modify map[string]func
 }
 
 func verify(m1 map[string]bool, m2 map[string]bool) error {
-	for f, _ := range m1 {
+	for f := range m1 {
 		if _, ok := m2[f]; !ok {
 			return fmt.Errorf("expected file %v not exist", f)
 		}
 	}
 
-	for f, _ := range m2 {
+	for f := range m2 {
 		if _, ok := m1[f]; !ok {
 			return fmt.Errorf("%v is not an expected file", f)
 		}
