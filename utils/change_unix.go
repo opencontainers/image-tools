@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package image
+package utils
 
 import (
 	"bytes"
@@ -22,8 +22,6 @@ import (
 	"sort"
 	"syscall"
 	"unsafe"
-
-	"github.com/opencontainers/image-tools/utils"
 )
 
 // walker is used to implement collectFileInfoForChanges on linux. Where this
@@ -87,12 +85,12 @@ func walkchunk(path string, fi os.FileInfo, dir string, root *FileInfo) error {
 		parent:   parent,
 	}
 	cpath := filepath.Join(dir, path)
-	stat, err := utils.FromStatT(fi.Sys().(*syscall.Stat_t))
+	stat, err := FromStatT(fi.Sys().(*syscall.Stat_t))
 	if err != nil {
 		return err
 	}
 	info.stat = stat
-	info.capability, _ = utils.Lgetxattr(cpath, "security.capability") // lgetxattr(2): fs access
+	info.capability, _ = Lgetxattr(cpath, "security.capability") // lgetxattr(2): fs access
 	parent.children[info.name] = info
 	return nil
 }
@@ -298,7 +296,7 @@ func clen(n []byte) int {
 	return len(n)
 }
 
-func statDifferent(oldStat *utils.StatT, newStat *utils.StatT) bool {
+func statDifferent(oldStat *StatT, newStat *StatT) bool {
 	// Don't look at size for dirs, its not a good measure of change
 	if oldStat.Mode() != newStat.Mode() ||
 		oldStat.UID() != newStat.UID() ||

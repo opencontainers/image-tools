@@ -19,6 +19,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/opencontainers/image-tools/utils"
 )
 
 // CreateLayer cretes filesystem changset from child and parent
@@ -43,12 +45,12 @@ func CreateLayer(child, parent, dest string) error {
 
 // Diff produces an archive of the changes between the specified
 // layer and its parent layer which may be "".
-func Diff(child, parent string) (arch io.ReadCloser, err error) {
-	changes, err := ChangesDirs(child, parent)
+func Diff(child, parent string) (rc io.ReadCloser, err error) {
+	changes, err := utils.ChangesDirs(child, parent)
 	if err != nil {
 		return nil, err
 	}
-	archive, err := exportChanges(child, changes)
+	archive, err := utils.ExportChanges(child, changes)
 	if err != nil {
 		return nil, err
 	}

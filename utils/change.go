@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package image
+package utils
 
 import (
 	"archive/tar"
@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/opencontainers/image-tools/utils"
 )
 
 // ChangeType represents the change type.
@@ -67,7 +66,7 @@ func sameFsTimeSpec(a, b syscall.Timespec) bool {
 type FileInfo struct {
 	parent     *FileInfo
 	name       string
-	stat       *utils.StatT
+	stat       *StatT
 	children   map[string]*FileInfo
 	capability []byte
 	added      bool
@@ -225,16 +224,16 @@ func ChangesDirs(newDir, oldDir string) ([]Change, error) {
 }
 
 // ExportChanges produces an Archive from the provided changes, relative to dir.
-func exportChanges(dir string, changes []Change) (io.ReadCloser, error) {
+func ExportChanges(dir string, changes []Change) (io.ReadCloser, error) {
 	reader, writer := io.Pipe()
 	go func() {
-		ta := &utils.TarAppender{
+		ta := &TarAppender{
 			TarWriter: tar.NewWriter(writer),
-			Buffer:    utils.BufioWriter32KPool.Get(nil),
+			Buffer:    BufioWriter32KPool.Get(nil),
 			SeenFiles: make(map[uint64]string),
 		}
 		// this buffer is needed for the duration of this piped stream
-		defer utils.BufioWriter32KPool.Put(ta.Buffer)
+		defer BufioWriter32KPool.Put(ta.Buffer)
 
 		sort.Sort(changesByPath(changes))
 
