@@ -195,11 +195,27 @@ loop:
 			continue loop
 		}
 
+		if hdr.Typeflag != tar.TypeDir {
+			err = os.RemoveAll(path)
+			if err != nil && !os.IsNotExist(err) {
+				return err
+			}
+		}
+
 		switch hdr.Typeflag {
 		case tar.TypeDir:
-			if fi, err := os.Lstat(path); !(err == nil && fi.IsDir()) {
-				if err2 := os.MkdirAll(path, info.Mode()); err2 != nil {
-					return errors.Wrap(err2, "error creating directory")
+			fi, err := os.Lstat(path)
+			if err != nil && !os.IsNotExist(err) {
+				return err
+			}
+			if os.IsNotExist(err) || !fi.IsDir() {
+				err = os.RemoveAll(path)
+				if err != nil && !os.IsNotExist(err) {
+					return err
+				}
+				err = os.MkdirAll(path, info.Mode())
+				if err != nil {
+					return err
 				}
 			}
 
