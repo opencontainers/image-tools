@@ -6,6 +6,7 @@ oci-unpack \- Unpack an image or image source layout
 
 # SYNOPSIS
 **oci-unpack** [src] [dest] [flags]
+**oci-unpack** [--help|--version]
 
 # DESCRIPTION
 `oci-unpack` validates an application/vnd.oci.image.manifest.v1+json and unpacks its layered filesystem to `dest`.
@@ -19,6 +20,9 @@ oci-unpack \- Unpack an image or image source layout
 
 **--type**
   Type of the file to unpack. If unset, oci-unpack will try to auto-detect the type. One of "imageLayout,image"
+
+**--version**
+  Print version information and exit.
 
 # EXAMPLES
 ```
