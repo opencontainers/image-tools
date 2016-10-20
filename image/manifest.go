@@ -33,8 +33,10 @@ import (
 )
 
 type manifest struct {
-	Config descriptor   `json:"config"`
-	Layers []descriptor `json:"layers"`
+	SchemaVersion int          `json:"schemaVersion"`
+	MediaType     string       `json:"mediaType"`
+	Config        descriptor   `json:"config"`
+	Layers        []descriptor `json:"layers"`
 }
 
 func findManifest(w walker, d *descriptor) (*manifest, error) {
@@ -75,6 +77,14 @@ func findManifest(w walker, d *descriptor) (*manifest, error) {
 }
 
 func (m *manifest) validate(w walker) error {
+	if m.SchemaVersion != 2 {
+		return fmt.Errorf("%d is an incorrect schemaVersion value, MUST be '2'", m.SchemaVersion)
+	}
+
+	if m.MediaType != string(schema.MediaTypeManifest) {
+		return fmt.Errorf("%q is an incorrect Manifest mediaType value, MUST be '%q'", m.MediaType, string(schema.MediaTypeManifest))
+	}
+
 	if err := m.Config.validate(w, []string{v1.MediaTypeImageConfig}); err != nil {
 		return errors.Wrap(err, "config validation failed")
 	}
