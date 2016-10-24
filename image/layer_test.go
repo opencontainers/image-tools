@@ -56,7 +56,7 @@ func TestCreateFilesystemChangeset(t *testing.T) {
 	}
 	// create base layer
 	tarfile := filepath.Join(tmp1, "base.tar")
-	err = CreateLayer(basepath, "", tarfile)
+	err = createLayer(basepath, "", tarfile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +103,7 @@ func TestCreateFilesystemChangeset(t *testing.T) {
 
 	// create layer diff
 	tarfile1 := filepath.Join(tmp1, "base.s1.tar")
-	err = CreateLayer(snapshot1path, basepath, tarfile1)
+	err = createLayer(snapshot1path, basepath, tarfile1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,6 +131,22 @@ func TestCreateFilesystemChangeset(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func createLayer(child, parent, dest string) error {
+	filename := filepath.Clean(dest)
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	out, err := CreateLayer(child, parent)
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(f, out)
+	return err
 }
 
 func createFilesystem(path string, files map[string]bool, modify map[string]func(string) error) error {

@@ -8,7 +8,7 @@ oci-create-layer \- Create filesystem changeset
 **oci-create-layer** [child] [parent] [flags]
 
 # DESCRIPTION
-`oci-create-layer` creates a filesystem changeset from two layers. It compares child with parent and generates a filsystem diff, pack the diff into a uncompressed tar archive. The output tar archive name is the child name with .tar suffix by default, use `--dest` to specify a custom one.
+`oci-create-layer` creates a filesystem changeset from two layers. It compares child with parent and generates a filsystem diff, pack the diff into a uncompressed tar archive. The default output is stdout, use `--dest` to specify a custom one.
 
 # OPTIONS
 **--help**
@@ -19,7 +19,7 @@ The dest specify a particular filename where the layer write to
 
 # EXAMPLES
 ```
-$ oci-create-layer rootfs-1-s rootfs-1
+$ oci-create-layer --dest rootfs-1-s.tar rootfs-1-s rootfs-1
 $ ls
 rootfs-1  rootfs-1-s  rootfs-1-s.tar
 

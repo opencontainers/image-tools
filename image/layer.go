@@ -15,37 +15,13 @@
 package image
 
 import (
-	"fmt"
 	"io"
-	"os"
-	"path/filepath"
 
 	"github.com/opencontainers/image-tools/utils"
 )
 
 // CreateLayer cretes filesystem changset from child and parent
-func CreateLayer(child, parent, dest string) error {
-	arch, err := Diff(child, parent)
-	if err != nil {
-		return err
-	}
-	defer arch.Close()
-	filename := fmt.Sprintf("%s.tar", filepath.Clean(child))
-	if dest != "" {
-		filename = filepath.Clean(dest)
-	}
-	f, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	_, err = io.Copy(f, arch)
-	return err
-}
-
-// Diff produces an archive of the changes between the specified
-// layer and its parent layer which may be "".
-func Diff(child, parent string) (rc io.ReadCloser, err error) {
+func CreateLayer(child, parent string) (io.ReadCloser, error) {
 	changes, err := utils.ChangesDirs(child, parent)
 	if err != nil {
 		return nil, err

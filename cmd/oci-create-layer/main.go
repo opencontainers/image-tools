@@ -15,31 +15,32 @@
 package main
 
 import (
+	"io"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/opencontainers/image-tools/image"
 	"github.com/spf13/cobra"
 )
 
 type layerCmd struct {
-	stdout *log.Logger
+	stdout io.Writer
 	stderr *log.Logger
 	dest   string
 }
 
 func main() {
-	stdout := log.New(os.Stdout, "", 0)
 	stderr := log.New(os.Stderr, "", 0)
 
-	cmd := newLayerCmd(stdout, stderr)
+	cmd := newLayerCmd(os.Stdout, stderr)
 	if err := cmd.Execute(); err != nil {
 		stderr.Println(err)
 		os.Exit(1)
 	}
 }
 
-func newLayerCmd(stdout, stderr *log.Logger) *cobra.Command {
+func newLayerCmd(stdout io.Writer, stderr *log.Logger) *cobra.Command {
 	v := &layerCmd{
 		stdout: stdout,
 		stderr: stderr,
@@ -66,15 +67,38 @@ func (v *layerCmd) Run(cmd *cobra.Command, args []string) {
 		}
 		os.Exit(1)
 	}
-	var err error
+	var (
+		err error
+		out io.ReadCloser
+	)
 	if len(args) == 1 {
-		err = image.CreateLayer(args[0], "", v.dest)
+		out, err = image.CreateLayer(args[0], "")
 	} else {
-		err = image.CreateLayer(args[0], args[1], v.dest)
+		out, err = image.CreateLayer(args[0], args[1])
 	}
 	if err != nil {
 		v.stderr.Printf("create layer failed: %v", err)
 		os.Exit(1)
+	}
+	if v.dest == "" {
+		_, err := io.Copy(v.stdout, out)
+		if err != nil {
+			v.stderr.Printf("create layer failed: %v", err)
+			os.Exit(1)
+		}
+	} else {
+		filename := filepath.Clean(v.dest)
+		f, err := os.Create(filename)
+		if err != nil {
+			v.stderr.Printf("create layer failed: %v", err)
+			os.Exit(1)
+		}
+		defer f.Close()
+		_, err = io.Copy(f, out)
+		if err != nil {
+			v.stderr.Printf("create layer failed: %v", err)
+			os.Exit(1)
+		}
 	}
 	os.Exit(0)
 }
