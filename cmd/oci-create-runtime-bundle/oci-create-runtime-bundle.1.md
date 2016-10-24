@@ -26,6 +26,9 @@ runtime-spec-compatible `dest/config.json`.
 **--type**
   Type of the file to unpack. If unset, oci-create-runtime-bundle will try to auto-detect the type. One of "imageLayout,image"
 
+**--version**
+  Print version information and exit
+
 # EXAMPLES
 ```
 $ skopeo copy docker://busybox oci:busybox-oci

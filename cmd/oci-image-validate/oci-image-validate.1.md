@@ -25,6 +25,9 @@ oci-image-validate \- Validate one or more image files
 **--type**
   Type of the file to validate. If unset, oci-image-validate will try to auto-detect the type. One of "imageLayout,image,manifest,manifestList,config"
 
+**--version**
+  Print version information and exit
+
 # EXAMPLES
 ```
 $ skopeo copy docker://busybox oci:busybox-oci
