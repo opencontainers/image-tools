@@ -17,6 +17,9 @@ oci-unpack \- Unpack an image or image source layout
 **--ref**
   The ref pointing to the manifest to be unpacked. This must be present in the "refs" subdirectory of the image. (default "v1.0")
 
+**--same-owner**
+  Preserve the owner and group of the layer entries when unpacking the image (default for superuser, but not for ordinary users).
+
 **--type**
   Type of the file to unpack. If unset, oci-unpack will try to auto-detect the type. One of "imageLayout,image"
 

@@ -23,6 +23,9 @@ runtime-spec-compatible `dest/config.json`.
 **--rootfs**
   A directory representing the root filesystem of the container in the OCI runtime bundle. It is strongly recommended to keep the default value. (default "rootfs")
 
+**--same-owner**
+  Preserve the owner and group of the layer entries when unpacking the image (default for superuser, but not for ordinary users).
+
 **--type**
   Type of the file to unpack. If unset, oci-create-runtime-bundle will try to auto-detect the type. One of "imageLayout,image"
 

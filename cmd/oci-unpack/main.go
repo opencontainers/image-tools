@@ -36,11 +36,12 @@ var unpackTypes = []string{
 }
 
 type unpackCmd struct {
-	stdout  *log.Logger
-	stderr  *log.Logger
-	typ     string // the type to unpack, can be empty string
-	ref     string
-	version bool
+	stdout    *log.Logger
+	stderr    *log.Logger
+	typ       string // the type to unpack, can be empty string
+	ref       string
+	sameOwner bool
+	version   bool
 }
 
 func main() {
@@ -79,10 +80,18 @@ func newUnpackCmd(stdout, stderr *log.Logger) *cobra.Command {
 		&v.ref, "ref", "v1.0",
 		`The ref pointing to the manifest to be unpacked. This must be present in the "refs" subdirectory of the image.`,
 	)
+
+	isUserRoot := os.Getuid() == 0
+	cmd.Flags().BoolVar(
+		&v.sameOwner, "same-owner", isUserRoot,
+		`Preserve the owner and group of the layer entries when unpacking the image (default for superuser, but not for ordinary users).`,
+	)
+
 	cmd.Flags().BoolVar(
 		&v.version, "version", false,
 		`Print version information and exit`,
 	)
+
 	return cmd
 }
 
@@ -111,7 +120,7 @@ func (v *unpackCmd) Run(cmd *cobra.Command, args []string) {
 	}
 
 	unpacker := &image.Unpacker{
-		PreserveOwnership: false,
+		PreserveOwnership: v.sameOwner,
 	}
 
 	var err error
