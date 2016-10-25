@@ -12,21 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package specs
+package v1
 
-import "fmt"
-
-const (
-	// VersionMajor is for an API incompatible changes
-	VersionMajor = 1
-	// VersionMinor is for functionality in a backwards-compatible manner
-	VersionMinor = 0
-	// VersionPatch is for backwards-compatible bug fixes
-	VersionPatch = 0
-
-	// VersionDev indicates development branch. Releases will be empty string.
-	VersionDev = "-rc1-dev"
-)
-
-// Version is the specification version that the package types support.
-var Version = fmt.Sprintf("%d.%d.%d%s", VersionMajor, VersionMinor, VersionPatch, VersionDev)
+// ImageLayout is the structure in the "oci-layout" file, found in the root
+// of an OCI Image-layout directory.
+type ImageLayout struct {
+	Version string `json:"imageLayoutVersion"`
+}
