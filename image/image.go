@@ -92,14 +92,44 @@ func validate(w walker, refs []string, out *log.Logger) error {
 			return err
 		}
 
-		m, err := findManifest(w, d)
-		if err != nil {
-			return err
+		if d.MediaType == validRefMediaTypes[0] {
+			m, err := findManifest(w, d)
+			if err != nil {
+				return err
+			}
+
+			if err := m.validate(w); err != nil {
+				return err
+			}
 		}
 
-		if err := m.validate(w); err != nil {
-			return err
+		if d.MediaType == validRefMediaTypes[1] {
+			index, err := findIndex(w, d)
+			if err != nil {
+				return err
+			}
+
+			if err := validateIndex(index, w); err != nil {
+				return err
+			}
+
+			if len(index.Manifests) == 0 {
+				fmt.Println("warning: no manifests found")
+				return nil
+			}
+
+			for _, manifest := range index.Manifests {
+				m, err := findManifest(w, &(manifest.Descriptor))
+				if err != nil {
+					return err
+				}
+
+				if err := m.validate(w); err != nil {
+					return err
+				}
+			}
 		}
+
 		if out != nil {
 			out.Printf("reference %q: OK", ref)
 		}
@@ -147,16 +177,51 @@ func unpack(w walker, dest, refName string) error {
 		return err
 	}
 
-	m, err := findManifest(w, ref)
-	if err != nil {
-		return err
+	if ref.MediaType == validRefMediaTypes[0] {
+		m, err := findManifest(w, ref)
+		if err != nil {
+			return err
+		}
+
+		if err := m.validate(w); err != nil {
+			return err
+		}
+
+		return m.unpack(w, dest)
 	}
 
-	if err = m.validate(w); err != nil {
-		return err
+	if ref.MediaType == validRefMediaTypes[1] {
+		index, err := findIndex(w, ref)
+		if err != nil {
+			return err
+		}
+
+		if err := validateIndex(index, w); err != nil {
+			return err
+		}
+
+		if len(index.Manifests) == 0 {
+			fmt.Println("warning: no manifests found")
+			return nil
+		}
+
+		for _, manifest := range index.Manifests {
+			m, err := findManifest(w, &(manifest.Descriptor))
+			if err != nil {
+				return err
+			}
+
+			if err := m.validate(w); err != nil {
+				return err
+			}
+
+			if err := m.unpack(w, dest); err != nil {
+				return err
+			}
+		}
 	}
 
-	return m.unpack(w, dest)
+	return nil
 }
 
 // CreateRuntimeBundleLayout walks through the file tree given by src and
@@ -199,15 +264,54 @@ func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
 		return err
 	}
 
-	m, err := findManifest(w, ref)
-	if err != nil {
-		return err
+	if ref.MediaType == validRefMediaTypes[0] {
+		m, err := findManifest(w, ref)
+		if err != nil {
+			return err
+		}
+
+		if err := m.validate(w); err != nil {
+			return err
+		}
+
+		return createRuntimebundle(w, m, dest, rootfs)
 	}
 
-	if err = m.validate(w); err != nil {
-		return err
+	if ref.MediaType == validRefMediaTypes[1] {
+		index, err := findIndex(w, ref)
+		if err != nil {
+			return err
+		}
+
+		if err := validateIndex(index, w); err != nil {
+			return err
+		}
+
+		if len(index.Manifests) == 0 {
+			fmt.Println("warning: no manifests found")
+			return nil
+		}
+
+		for _, manifest := range index.Manifests {
+			m, err := findManifest(w, &(manifest.Descriptor))
+			if err != nil {
+				return err
+			}
+
+			if err := m.validate(w); err != nil {
+				return err
+			}
+
+			if err := createRuntimebundle(w, m, dest, rootfs); err != nil {
+				return err
+			}
+		}
 	}
 
+	return nil
+}
+
+func createRuntimebundle(w walker, m *manifest, dest, rootfs string) error {
 	c, err := findConfig(w, &m.Config)
 	if err != nil {
 		return err
