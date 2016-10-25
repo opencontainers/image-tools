@@ -110,13 +110,17 @@ func (v *unpackCmd) Run(cmd *cobra.Command, args []string) {
 		v.typ = typ
 	}
 
+	unpacker := &image.Unpacker{
+		PreserveOwnership: false,
+	}
+
 	var err error
 	switch v.typ {
 	case image.TypeImageLayout:
-		err = image.UnpackLayout(args[0], args[1], v.ref)
+		err = image.UnpackLayout(unpacker, args[0], args[1], v.ref)
 
 	case image.TypeImage:
-		err = image.Unpack(args[0], args[1], v.ref)
+		err = image.Unpack(unpacker, args[0], args[1], v.ref)
 	}
 
 	if err != nil {

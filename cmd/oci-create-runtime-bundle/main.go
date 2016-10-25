@@ -123,13 +123,17 @@ func (v *bundleCmd) Run(cmd *cobra.Command, args []string) {
 		v.typ = typ
 	}
 
+	unpacker := &image.Unpacker{
+		PreserveOwnership: false,
+	}
+
 	var err error
 	switch v.typ {
 	case image.TypeImageLayout:
-		err = image.CreateRuntimeBundleLayout(args[0], args[1], v.ref, v.root)
+		err = image.CreateRuntimeBundleLayout(unpacker, args[0], args[1], v.ref, v.root)
 
 	case image.TypeImage:
-		err = image.CreateRuntimeBundle(args[0], args[1], v.ref, v.root)
+		err = image.CreateRuntimeBundle(unpacker, args[0], args[1], v.ref, v.root)
 	}
 
 	if err != nil {

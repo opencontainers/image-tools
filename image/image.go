@@ -97,24 +97,24 @@ func validate(w walker, refs []string, out *log.Logger) error {
 // UnpackLayout walks through the file tree given by src and, using the layers
 // specified in the manifest pointed to by the given ref, unpacks all layers in
 // the given destination directory or returns an error if the unpacking failed.
-func UnpackLayout(src, dest, ref string) error {
-	return unpack(&unpacker{}, newPathWalker(src), dest, ref)
+func UnpackLayout(u *Unpacker, src, dest, ref string) error {
+	return unpack(u, newPathWalker(src), dest, ref)
 }
 
 // Unpack walks through the given .tar file and, using the layers specified in
 // the manifest pointed to by the given ref, unpacks all layers in the given
 // destination directory or returns an error if the unpacking failed.
-func Unpack(tarFile, dest, ref string) error {
+func Unpack(u *Unpacker, tarFile, dest, ref string) error {
 	f, err := os.Open(tarFile)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
 	}
 	defer f.Close()
 
-	return unpack(&unpacker{}, newTarWalker(tarFile, f), dest, ref)
+	return unpack(u, newTarWalker(tarFile, f), dest, ref)
 }
 
-func unpack(u *unpacker, w walker, dest, refName string) error {
+func unpack(u *Unpacker, w walker, dest, refName string) error {
 	ref, err := findDescriptor(w, refName)
 	if err != nil {
 		return err
@@ -139,24 +139,24 @@ func unpack(u *unpacker, w walker, dest, refName string) error {
 // CreateRuntimeBundleLayout walks through the file tree given by src and
 // creates an OCI runtime bundle in the given destination dest
 // or returns an error if the unpacking failed.
-func CreateRuntimeBundleLayout(src, dest, ref, root string) error {
-	return createRuntimeBundle(&unpacker{}, newPathWalker(src), dest, ref, root)
+func CreateRuntimeBundleLayout(u *Unpacker, src, dest, ref, root string) error {
+	return createRuntimeBundle(u, newPathWalker(src), dest, ref, root)
 }
 
 // CreateRuntimeBundle walks through the given .tar file and
 // creates an OCI runtime bundle in the given destination dest
 // or returns an error if the unpacking failed.
-func CreateRuntimeBundle(tarFile, dest, ref, root string) error {
+func CreateRuntimeBundle(u *Unpacker, tarFile, dest, ref, root string) error {
 	f, err := os.Open(tarFile)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
 	}
 	defer f.Close()
 
-	return createRuntimeBundle(&unpacker{}, newTarWalker(tarFile, f), dest, ref, root)
+	return createRuntimeBundle(u, newTarWalker(tarFile, f), dest, ref, root)
 }
 
-func createRuntimeBundle(u *unpacker, w walker, dest, refName, rootfs string) error {
+func createRuntimeBundle(u *Unpacker, w walker, dest, refName, rootfs string) error {
 	ref, err := findDescriptor(w, refName)
 	if err != nil {
 		return err

@@ -60,7 +60,10 @@ func TestUnpackLayerDuplicateEntries(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmp2)
-	if err := unpackLayer(tmp2, r); err != nil && !strings.Contains(err.Error(), "duplicate entry for") {
+	u := &Unpacker{
+		PreserveOwnership: false,
+	}
+	if err := u.unpackLayer(tmp2, r); err != nil && !strings.Contains(err.Error(), "duplicate entry for") {
 		t.Fatalf("Expected to fail with duplicate entry, got %v", err)
 	}
 }
@@ -112,7 +115,9 @@ func TestUnpackLayer(t *testing.T) {
 			Digest:    fmt.Sprintf("sha256:%s", fmt.Sprintf("%x", h.Sum(nil))),
 		}},
 	}
-	u := &unpacker{}
+	u := &Unpacker{
+		PreserveOwnership: false,
+	}
 	err = u.unpack(testManifest, newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
 	if err != nil {
 		t.Fatal(err)
@@ -174,7 +179,7 @@ func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {
 			Digest:    fmt.Sprintf("sha256:%s", fmt.Sprintf("%x", h.Sum(nil))),
 		}},
 	}
-	u := &unpacker{}
+	u := &Unpacker{}
 	err = u.unpack(testManifest, newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
 	if err != nil && !strings.Contains(err.Error(), "duplicate entry for") {
 		t.Fatal(err)

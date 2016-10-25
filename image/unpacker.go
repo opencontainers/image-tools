@@ -29,13 +29,17 @@ import (
 	"github.com/pkg/errors"
 )
 
-// unpacker is a structure that encapsulates the image layout unpacking
+// Unpacker is a structure that encapsulates the image layout unpacking
 // functionality.
-type unpacker struct{}
+type Unpacker struct {
+	// If set, the ownership of files, directories and symblic links defined in
+	// the layers, will be preserved in the unpacked root file system.
+	PreserveOwnership bool
+}
 
-// unpack finds the blobs of the layers that are specified in the manifest and
+// Unpack finds the blobs of the layers that are specified in the manifest and
 // unpacks them in the specified destination directory.
-func (u *unpacker) unpack(m *manifest, w walker, dest string) (retErr error) {
+func (u *Unpacker) unpack(m *manifest, w walker, dest string) (retErr error) {
 	// error out if the dest directory is not empty
 	s, err := ioutil.ReadDir(dest)
 	if err != nil && !os.IsNotExist(err) {
@@ -53,6 +57,7 @@ func (u *unpacker) unpack(m *manifest, w walker, dest string) (retErr error) {
 			}
 		}
 	}()
+
 	for _, d := range m.Layers {
 		if d.MediaType != string(schema.MediaTypeImageLayer) {
 			continue
@@ -68,7 +73,7 @@ func (u *unpacker) unpack(m *manifest, w walker, dest string) (retErr error) {
 				return nil
 			}
 
-			if err := unpackLayer(dest, r); err != nil {
+			if err := u.unpackLayer(dest, r); err != nil {
 				return errors.Wrap(err, "error extracting layer")
 			}
 
@@ -84,7 +89,9 @@ func (u *unpacker) unpack(m *manifest, w walker, dest string) (retErr error) {
 	return nil
 }
 
-func unpackLayer(dest string, r io.Reader) error {
+// unpackLayer takes a .tar stream and unpacks all its entries in the specified
+// destination directory.
+func (u *Unpacker) unpackLayer(dest string, r io.Reader) error {
 	entries := make(map[string]bool)
 	gz, err := gzip.NewReader(r)
 	if err != nil {
@@ -150,6 +157,10 @@ loop:
 				}
 			}
 
+			if err := u.applyOwnership(path, hdr); err != nil {
+				return err
+			}
+
 		case tar.TypeReg, tar.TypeRegA:
 			f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, info.Mode())
 			if err != nil {
@@ -161,6 +172,10 @@ loop:
 				return errors.Wrap(err, "unable to copy")
 			}
 			f.Close()
+
+			if err := u.applyOwnership(path, hdr); err != nil {
+				return err
+			}
 
 		case tar.TypeLink:
 			target := filepath.Join(dest, hdr.Linkname)
@@ -183,6 +198,11 @@ loop:
 			if err := os.Symlink(hdr.Linkname, path); err != nil {
 				return err
 			}
+
+			if err := u.applyOwnership(path, hdr); err != nil {
+				return err
+			}
+
 		case tar.TypeXGlobalHeader:
 			return nil
 		}
@@ -202,5 +222,17 @@ loop:
 			return errors.Wrap(err, "error changing time")
 		}
 	}
+	return nil
+}
+
+func (u *Unpacker) applyOwnership(path string, hdr *tar.Header) error {
+	if !u.PreserveOwnership {
+		return nil
+	}
+
+	if err := os.Lchown(path, hdr.Uid, hdr.Gid); err != nil {
+		return err
+	}
+
 	return nil
 }
