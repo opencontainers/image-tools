@@ -4,6 +4,7 @@ export GO15VENDOREXPERIMENT
 COMMIT=$(shell git rev-parse HEAD 2> /dev/null || true)
 
 EPOCH_TEST_COMMIT ?= v0.2.0
+PACKAGE := github.com/opencontainers/image-tools
 TOOLS := \
 	oci-create-runtime-bundle \
 	oci-image-validate \
@@ -27,7 +28,7 @@ check-license:
 tools: $(TOOLS)
 
 $(TOOLS): oci-%:
-	go build -ldflags "-X main.gitCommit=${COMMIT}" ./cmd/$@
+	go build -ldflags "-X main.gitCommit=${COMMIT}" $(PACKAGE)/cmd/$@
 
 lint:
 	@echo "checking lint"
