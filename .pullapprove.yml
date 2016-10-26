@@ -6,6 +6,6 @@ signed_off_by:
   required: true
 reviewers:
   teams:
-  - image-spec-maintainers
+  - image-tools-maintainers
   name: default
   required: 2
