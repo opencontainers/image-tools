@@ -103,7 +103,7 @@ var (
     "layers": [
         {
             "digest": "<layer_digest>",
-            "mediaType": "application/vnd.oci.image.layer.tar+gzip",
+            "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
             "size": <layer_size>
         }
     ],
