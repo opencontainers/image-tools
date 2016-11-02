@@ -61,8 +61,6 @@ func Autodetect(path string) (string, error) {
 
 	switch mimeType {
 	case "application/x-gzip":
-		return TypeImage, nil
-
 	case "application/octet-stream":
 		return TypeImage, nil
 
