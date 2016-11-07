@@ -98,7 +98,7 @@ func validate(w walker, refs []string, out *log.Logger) error {
 // specified in the manifest pointed to by the given ref, unpacks all layers in
 // the given destination directory or returns an error if the unpacking failed.
 func UnpackLayout(src, dest, ref string) error {
-	return unpack(newPathWalker(src), dest, ref)
+	return unpack(&unpacker{}, newPathWalker(src), dest, ref)
 }
 
 // Unpack walks through the given .tar file and, using the layers specified in
@@ -111,10 +111,10 @@ func Unpack(tarFile, dest, ref string) error {
 	}
 	defer f.Close()
 
-	return unpack(newTarWalker(tarFile, f), dest, ref)
+	return unpack(&unpacker{}, newTarWalker(tarFile, f), dest, ref)
 }
 
-func unpack(w walker, dest, refName string) error {
+func unpack(u *unpacker, w walker, dest, refName string) error {
 	ref, err := findDescriptor(w, refName)
 	if err != nil {
 		return err
@@ -133,14 +133,14 @@ func unpack(w walker, dest, refName string) error {
 		return err
 	}
 
-	return m.unpack(w, dest)
+	return u.unpack(m, w, dest)
 }
 
 // CreateRuntimeBundleLayout walks through the file tree given by src and
 // creates an OCI runtime bundle in the given destination dest
 // or returns an error if the unpacking failed.
 func CreateRuntimeBundleLayout(src, dest, ref, root string) error {
-	return createRuntimeBundle(newPathWalker(src), dest, ref, root)
+	return createRuntimeBundle(&unpacker{}, newPathWalker(src), dest, ref, root)
 }
 
 // CreateRuntimeBundle walks through the given .tar file and
@@ -153,10 +153,10 @@ func CreateRuntimeBundle(tarFile, dest, ref, root string) error {
 	}
 	defer f.Close()
 
-	return createRuntimeBundle(newTarWalker(tarFile, f), dest, ref, root)
+	return createRuntimeBundle(&unpacker{}, newTarWalker(tarFile, f), dest, ref, root)
 }
 
-func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
+func createRuntimeBundle(u *unpacker, w walker, dest, refName, rootfs string) error {
 	ref, err := findDescriptor(w, refName)
 	if err != nil {
 		return err
@@ -180,7 +180,7 @@ func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
 		return err
 	}
 
-	err = m.unpack(w, filepath.Join(dest, rootfs))
+	err = u.unpack(m, w, filepath.Join(dest, rootfs))
 	if err != nil {
 		return err
 	}

@@ -106,13 +106,14 @@ func TestUnpackLayer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testManifest := manifest{
+	testManifest := &manifest{
 		Layers: []descriptor{descriptor{
 			MediaType: "application/vnd.oci.image.layer.tar+gzip",
 			Digest:    fmt.Sprintf("sha256:%s", fmt.Sprintf("%x", h.Sum(nil))),
 		}},
 	}
-	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
+	u := &unpacker{}
+	err = u.unpack(testManifest, newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,13 +168,14 @@ func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testManifest := manifest{
+	testManifest := &manifest{
 		Layers: []descriptor{descriptor{
 			MediaType: "application/vnd.oci.image.layer.tar+gzip",
 			Digest:    fmt.Sprintf("sha256:%s", fmt.Sprintf("%x", h.Sum(nil))),
 		}},
 	}
-	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
+	u := &unpacker{}
+	err = u.unpack(testManifest, newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
 	if err != nil && !strings.Contains(err.Error(), "duplicate entry for") {
 		t.Fatal(err)
 	}
