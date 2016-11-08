@@ -4,6 +4,7 @@ export GO15VENDOREXPERIMENT
 COMMIT=$(shell git rev-parse HEAD 2> /dev/null || true)
 
 EPOCH_TEST_COMMIT ?= v0.2.0
+GOFLAG=
 TOOLS := \
 	oci-create-runtime-bundle \
 	oci-image-validate \
@@ -14,10 +15,10 @@ default: help
 help:
 	@echo "Usage: make <target>"
 	@echo
-	@echo " * 'tools' - Build the oci image tools binaries"
+	@echo " * 'GOFLAG tools' - Build the oci image tools binaries"
 	@echo " * 'check-license' - Check license headers in source files"
 	@echo " * 'lint' - Execute the source code linter"
-	@echo " * 'test' - Execute the unit tests"
+	@echo " * 'GOFLAG test' - Execute the unit tests"
 	@echo " * 'update-deps' - Update vendored dependencies"
 
 check-license:
@@ -27,14 +28,14 @@ check-license:
 tools: $(TOOLS)
 
 $(TOOLS): oci-%:
-	go build -ldflags "-X main.gitCommit=${COMMIT}" ./cmd/$@
+	go build ${GOFLAG} -ldflags "-X main.gitCommit=${COMMIT}" ./cmd/$@
 
 lint:
 	@echo "checking lint"
 	@./.tool/lint
 
 test:
-	go test -race -cover $(shell go list ./... | grep -v /vendor/)
+	go test -race -cover ${GOFLAG} $(shell go list ./... | grep -v /vendor/)
 
 ## this uses https://github.com/Masterminds/glide and https://github.com/sgotti/glide-vc
 update-deps:
