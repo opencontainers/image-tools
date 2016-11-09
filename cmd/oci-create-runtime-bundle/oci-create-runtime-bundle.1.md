@@ -24,7 +24,7 @@ runtime-spec-compatible `dest/config.json`.
   A directory representing the root filesystem of the container in the OCI runtime bundle. It is strongly recommended to keep the default value. (default "rootfs")
 
 **--type**
-  Type of the file to unpack. If unset, oci-create-runtime-bundle will try to auto-detect the type. One of "imageLayout,image"
+  Type of the file to unpack. If unset, oci-create-runtime-bundle will try to auto-detect the type. One of "image"
 
 # EXAMPLES
 ```
@@ -36,7 +36,7 @@ $ cd busybox-bundle && sudo runc run busybox
 ```
 
 # SEE ALSO
-**runc**(1), **skopeo**(1)
+**oci-image-tools**(7), **runc**(1), **skopeo**(1)
 
 # HISTORY
 Sept 2016, Originally compiled by Antonio Murdaca (runcom at redhat dot com)

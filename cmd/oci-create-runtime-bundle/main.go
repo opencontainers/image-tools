@@ -23,6 +23,7 @@ import (
 	specs "github.com/opencontainers/image-spec/specs-go"
 	"github.com/opencontainers/image-tools/image"
 	"github.com/spf13/cobra"
+	"golang.org/x/net/context"
 )
 
 // gitCommit will be the hash that the binary was built from
@@ -31,7 +32,6 @@ var gitCommit = ""
 
 // supported bundle types
 var bundleTypes = []string{
-	image.TypeImageLayout,
 	image.TypeImage,
 }
 
@@ -109,6 +109,8 @@ func (v *bundleCmd) Run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	ctx := context.Background()
+
 	if _, err := os.Stat(args[1]); os.IsNotExist(err) {
 		v.stderr.Printf("destination path %s does not exist", args[1])
 		os.Exit(1)
@@ -125,11 +127,8 @@ func (v *bundleCmd) Run(cmd *cobra.Command, args []string) {
 
 	var err error
 	switch v.typ {
-	case image.TypeImageLayout:
-		err = image.CreateRuntimeBundleLayout(args[0], args[1], v.ref, v.root)
-
 	case image.TypeImage:
-		err = image.CreateRuntimeBundle(args[0], args[1], v.ref, v.root)
+		err = image.CreateRuntimeBundle(ctx, args[0], args[1], v.ref, v.root)
 	}
 
 	if err != nil {
