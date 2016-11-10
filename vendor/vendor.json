@@ -1,0 +1,28 @@
+{
+	"comment": "",
+	"ignore": "",
+	"package": [
+		{
+			"checksumSHA1": "DeZix5Yc300bYfELeYJi4HVfLRw=",
+			"origin": "github.com/opencontainers/image-tools/vendor/github.com/opencontainers/image-spec/schema",
+			"path": "github.com/opencontainers/image-spec/schema",
+			"revision": "dda124e315cb08f68ccbb1c30810634019268258",
+			"revisionTime": "2016-11-07T08:57:11Z"
+		},
+		{
+			"checksumSHA1": "BZp8hLZMjS0KNXsyO+QKl3BGPUw=",
+			"origin": "github.com/opencontainers/image-tools/vendor/github.com/opencontainers/image-spec/specs-go",
+			"path": "github.com/opencontainers/image-spec/specs-go",
+			"revision": "dda124e315cb08f68ccbb1c30810634019268258",
+			"revisionTime": "2016-11-07T08:57:11Z"
+		},
+		{
+			"checksumSHA1": "vmsyC1PQY3HIGNYI/NtPQWpV8so=",
+			"origin": "github.com/opencontainers/image-tools/vendor/github.com/opencontainers/image-spec/specs-go/v1",
+			"path": "github.com/opencontainers/image-spec/specs-go/v1",
+			"revision": "dda124e315cb08f68ccbb1c30810634019268258",
+			"revisionTime": "2016-11-07T08:57:11Z"
+		}
+	],
+	"rootPath": "github.com/opencontainers/image-tools"
+}
