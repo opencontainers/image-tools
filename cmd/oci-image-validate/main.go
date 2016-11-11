@@ -158,6 +158,10 @@ func (v *validateCmd) validatePath(name string) error {
 		return image.Validate(name, v.refs, v.stdout)
 	}
 
+	if len(v.refs) != 0 {
+		fmt.Printf("WARNING: type %q does not support refs, which are only appropriate if type is image or imageLayout.\n", typ)
+	}
+
 	f, err := os.Open(name)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
