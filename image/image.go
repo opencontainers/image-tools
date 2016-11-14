@@ -57,7 +57,7 @@ func validate(w walker, refs []string, out *log.Logger) error {
 		// TODO(runcom): ugly, we'll need a better way and library
 		// to express log levels.
 		// see https://github.com/opencontainers/image-spec/issues/288
-		out.Print("WARNING: no descriptors found")
+		return fmt.Errorf("no descriptors found")
 	}
 
 	if len(refs) == 0 {
