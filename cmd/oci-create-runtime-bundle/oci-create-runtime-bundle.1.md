@@ -6,6 +6,7 @@ oci-create-runtime-bundle \- Create an OCI runtime bundle
 
 # SYNOPSIS
 **oci-create-runtime-bundle** [src] [dest] [flags]
+**oci-create-runtime-bundle** [--help|--version]
 
 # DESCRIPTION
 `oci-create-runtime-bundle` validates an application/vnd.oci.image.manifest.v1+json and unpacks its layered filesystem to `dest/rootfs`, although the target directory is configurable with `--rootfs`. See **oci-unpack**(1) for more details on this process.
@@ -25,6 +26,9 @@ runtime-spec-compatible `dest/config.json`.
 
 **--type**
   Type of the file to unpack. If unset, oci-create-runtime-bundle will try to auto-detect the type. One of "imageLayout,image"
+
+**--version**
+  Print version information and exit.
 
 # EXAMPLES
 ```
