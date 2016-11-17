@@ -7,7 +7,8 @@ EPOCH_TEST_COMMIT ?= v0.2.0
 TOOLS := \
 	oci-create-runtime-bundle \
 	oci-image-validate \
-	oci-unpack
+	oci-unpack \
+	oci-create-layer
 
 default: help
 

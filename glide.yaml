@@ -12,3 +12,4 @@ import:
 - package: github.com/pkg/errors
   version: ~0.7.1
 - package: github.com/spf13/cobra
+- package: github.com/Sirupsen/logrus
