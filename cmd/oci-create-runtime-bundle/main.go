@@ -130,6 +130,10 @@ func (v *bundleCmd) Run(cmd *cobra.Command, args []string) {
 
 	case image.TypeImage:
 		err = image.CreateRuntimeBundle(args[0], args[1], v.ref, v.root)
+
+	default:
+		err = fmt.Errorf("cannot create %q", v.typ)
+
 	}
 
 	if err != nil {

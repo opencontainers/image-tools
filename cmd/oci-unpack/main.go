@@ -117,6 +117,9 @@ func (v *unpackCmd) Run(cmd *cobra.Command, args []string) {
 
 	case image.TypeImage:
 		err = image.Unpack(args[0], args[1], v.ref)
+
+	default:
+		err = fmt.Errorf("cannot unpack %q", v.typ)
 	}
 
 	if err != nil {
