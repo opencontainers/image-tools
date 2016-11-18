@@ -26,6 +26,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 func TestUnpackLayerDuplicateEntries(t *testing.T) {
@@ -65,7 +67,7 @@ func TestUnpackLayerDuplicateEntries(t *testing.T) {
 	}
 }
 
-func TestUnpackLayer(t *testing.T) {
+func TestUnpackLayerList(t *testing.T) {
 	tmp1, err := ioutil.TempDir("", "test-layer")
 	if err != nil {
 		t.Fatal(err)
@@ -106,13 +108,11 @@ func TestUnpackLayer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testManifest := manifest{
-		Layers: []descriptor{descriptor{
-			MediaType: "application/vnd.oci.image.layer.v1.tar+gzip",
-			Digest:    fmt.Sprintf("sha256:%s", fmt.Sprintf("%x", h.Sum(nil))),
-		}},
-	}
-	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
+	layerList := []descriptor{descriptor{
+		MediaType: v1.MediaTypeImageLayer,
+		Digest:    fmt.Sprintf("sha256:%s", fmt.Sprintf("%x", h.Sum(nil))),
+	}}
+	err = unpackLayerList(newPathWalker(tmp1), layerList, filepath.Join(tmp1, "rootfs"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,13 +167,11 @@ func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testManifest := manifest{
-		Layers: []descriptor{descriptor{
-			MediaType: "application/vnd.oci.image.layer.v1.tar+gzip",
-			Digest:    fmt.Sprintf("sha256:%s", fmt.Sprintf("%x", h.Sum(nil))),
-		}},
-	}
-	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
+	layerList := []descriptor{descriptor{
+		MediaType: v1.MediaTypeImageLayer,
+		Digest:    fmt.Sprintf("sha256:%s", fmt.Sprintf("%x", h.Sum(nil))),
+	}}
+	err = unpackLayerList(newPathWalker(tmp1), layerList, filepath.Join(tmp1, "rootfs"))
 	if err != nil && !strings.Contains(err.Error(), "duplicate entry for") {
 		t.Fatal(err)
 	}
