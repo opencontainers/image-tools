@@ -38,40 +38,34 @@ type manifest struct {
 }
 
 func findManifest(w walker, d *descriptor) (*manifest, error) {
-	var m manifest
-	mpath := filepath.Join("blobs", d.algo(), d.hash())
+	var (
+		m     manifest
+		mpath = filepath.Join("blobs", d.algo(), d.hash())
+	)
 
-	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-		if info.IsDir() || filepath.Clean(path) != mpath {
-			return nil
-		}
-
-		buf, err := ioutil.ReadAll(r)
-		if err != nil {
-			return errors.Wrapf(err, "%s: error reading manifest", path)
-		}
-
-		if err := schema.MediaTypeManifest.Validate(bytes.NewReader(buf)); err != nil {
-			return errors.Wrapf(err, "%s: manifest validation failed", path)
-		}
-
-		if err := json.Unmarshal(buf, &m); err != nil {
-			return err
-		}
-
-		if len(m.Layers) == 0 {
-			return fmt.Errorf("%s: no layers found", path)
-		}
-
-		return errEOW
-	}); err {
-	case nil:
-		return nil, fmt.Errorf("%s: manifest not found", mpath)
-	case errEOW:
-		return &m, nil
-	default:
+	r, err := w.Get(*d)
+	if err != nil {
 		return nil, err
 	}
+
+	buf, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, errors.Wrapf(err, "%s: error reading manifest", mpath)
+	}
+
+	if err := schema.MediaTypeManifest.Validate(bytes.NewReader(buf)); err != nil {
+		return nil, errors.Wrapf(err, "%s: manifest validation failed", mpath)
+	}
+
+	if err := json.Unmarshal(buf, &m); err != nil {
+		return nil, err
+	}
+
+	if len(m.Layers) == 0 {
+		return nil, fmt.Errorf("%s: no layers found", mpath)
+	}
+
+	return &m, nil
 }
 
 func (m *manifest) validate(w walker) error {
