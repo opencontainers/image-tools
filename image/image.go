@@ -84,9 +84,19 @@ func validate(w walker, refs []string, out *log.Logger) error {
 			return err
 		}
 
-		if err := m.validate(w); err != nil {
+		if err = m.validate(w); err != nil {
 			return err
 		}
+
+		c, err := findConfig(w, &m.Config)
+		if err != nil {
+			return err
+		}
+
+		if err = c.validate(); err != nil {
+			return err
+		}
+
 		if out != nil {
 			out.Printf("reference %q: OK", ref)
 		}
@@ -177,6 +187,10 @@ func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
 
 	c, err := findConfig(w, &m.Config)
 	if err != nil {
+		return err
+	}
+
+	if err = c.validate(); err != nil {
 		return err
 	}
 
