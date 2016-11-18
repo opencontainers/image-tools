@@ -87,8 +87,8 @@ func newBundleCmd(stdout, stderr *log.Logger) *cobra.Command {
 It is strongly recommended to keep the default value.`,
 	)
 
-	cmd.Flags().BoolVar(
-		&v.version, "version", false,
+	cmd.Flags().BoolVarP(
+		&v.version, "version", "v", false,
 		`Print version information and exit`,
 	)
 	return cmd

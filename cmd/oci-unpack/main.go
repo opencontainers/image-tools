@@ -79,8 +79,9 @@ func newUnpackCmd(stdout, stderr *log.Logger) *cobra.Command {
 		&v.ref, "ref", "v1.0",
 		`The ref pointing to the manifest to be unpacked. This must be present in the "refs" subdirectory of the image.`,
 	)
-	cmd.Flags().BoolVar(
-		&v.version, "version", false,
+
+	cmd.Flags().BoolVarP(
+		&v.version, "version", "v", false,
 		`Print version information and exit`,
 	)
 	return cmd
