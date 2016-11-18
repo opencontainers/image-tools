@@ -137,7 +137,7 @@ func (v *bundleCmd) Run(cmd *cobra.Command, args []string) {
 	}
 
 	if err != nil {
-		v.stderr.Printf("unpacking failed: %v", err)
+		v.stderr.Printf("creating failed: %v", err)
 		os.Exit(1)
 	}
 
