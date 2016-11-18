@@ -70,7 +70,7 @@ func newUnpackCmd(stdout, stderr *log.Logger) *cobra.Command {
 	cmd.Flags().StringVar(
 		&v.typ, "type", "",
 		fmt.Sprintf(
-			`Type of the file to unpack. If unset, oci-image-tool will try to auto-detect the type. One of "%s"`,
+			`Type of the file to unpack. If unset, oci-unpack will try to auto-detect the type. One of "%s"`,
 			strings.Join(unpackTypes, ","),
 		),
 	)
