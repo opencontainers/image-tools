@@ -89,6 +89,15 @@ func newValidateCmd(stdout, stderr *log.Logger) *cobra.Command {
 		`Print version information and exit`,
 	)
 
+	origHelp := cmd.HelpFunc()
+
+	cmd.SetHelpFunc(func(c *cobra.Command, args []string) {
+		origHelp(c, args)
+		stdout.Println("\nMore information:")
+		stdout.Printf("\treferences\t%s\n", image.SpecURL)
+		stdout.Printf("\tbug report\t%s\n", image.IssuesURL)
+	})
+
 	return cmd
 }
 
