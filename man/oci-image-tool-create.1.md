@@ -18,7 +18,7 @@ runtime-spec-compatible `dest/config.json`.
   Print usage statement
 
 **--ref**=""
-  The ref pointing to the manifest of the OCI image. This must be present in the "refs" subdirectory of the image. (default "v1.0")
+  The ref pointing to the manifest of the OCI image. This must be match 'org.opencontainers.image.ref.name' annotations in index.json. (default "v1.0")
 
 **--rootfs**=""
   A directory representing the root filesystem of the container in the OCI runtime bundle. It is strongly recommended to keep the default value. (default "rootfs")

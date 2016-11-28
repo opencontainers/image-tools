@@ -86,7 +86,7 @@ var unpackCommand = cli.Command{
 		cli.StringFlag{
 			Name:  "ref",
 			Value: "v1.0",
-			Usage: "The ref pointing to the manifest of the OCI image. This must be present in the 'refs' subdirectory of the image.",
+			Usage: "The ref pointing to the manifest of the OCI image. This must be match 'org.opencontainers.image.ref.name' annotations in index.json.",
 		},
 		cli.StringFlag{
 			Name:  "platform",
