@@ -21,4 +21,4 @@ script:
   - make lint
   - make check-license
   - make test
-  - make tools
+  - make tool

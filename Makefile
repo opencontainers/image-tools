@@ -1,25 +1,19 @@
 GO15VENDOREXPERIMENT=1
 export GO15VENDOREXPERIMENT
+PREFIX ?= $(DESTDIR)/usr
+BINDIR ?= $(DESTDIR)/usr/bin
 
-COMMIT=$(shell git rev-parse HEAD 2> /dev/null || true)
-
-EPOCH_TEST_COMMIT ?= v0.2.0
-TOOLS := \
-	oci-create-runtime-bundle \
-	oci-image-validate \
-	oci-unpack
-MAN := $(TOOLS:%=%.1)
 
 default: all
 
 help:
 	@echo "Usage: make <target>"
 	@echo
-	@echo " * 'all' - Build the oci tools and manual pages"
+	@echo " * 'all' - Build the oci tool and manual pages"
+	@echo " * 'tool' - Build the oci tool"
 	@echo " * 'install' - Install binaries and manual pages"
-	@echo " * 'install.tools' - Install tools needed for building this project"
-	@echo " * 'uninstall' - Remove the oci tools and manual pages"
-	@echo " * 'tools' - Build the oci image tools binaries"
+	@echo " * 'install.tools' - Install tool needed for building this project"
+	@echo " * 'uninstall' - Remove the oci tool and manual pages"
 	@echo " * 'man' - Build the oci image manual pages"
 	@echo " * 'check-license' - Check license headers in source files"
 	@echo " * 'lint' - Execute the source code linter"
@@ -31,25 +25,33 @@ check-license:
 	@echo "checking license headers"
 	@./.tool/check-license
 
-tools: $(TOOLS)
+.PHONY: tool
+tool:
+	go build -o oci-image-tool ./cmd/oci-image-tool
 
-man: $(MAN)
 
-all: $(TOOLS) $(MAN)
+all: tool man
 
-$(TOOLS): oci-%:
-	go build -ldflags "-X main.gitCommit=${COMMIT}" ./cmd/$@
+.PHONY: man
+man:
+	go-md2man -in "man/oci-image-tool.1.md" -out "oci-image-tool.1"
+	go-md2man -in "man/oci-image-tool-create.1.md" -out "oci-image-tool-create.1"
+	go-md2man -in "man/oci-image-tool-unpack.1.md" -out "oci-image-tool-unpack.1"
+	go-md2man -in "man/oci-image-tool-validate.1.md" -out "oci-image-tool-validate.1"
 
-.SECONDEXPANSION:
-$(MAN): %.1: cmd/$$*/$$*.1.md
-	go-md2man -in "$<" -out "$@"
 
-install: $(TOOLS) $(MAN)
-	install -m 755 $(TOOLS) /usr/local/bin/
-	install -m 644 $(MAN) /usr/local/share/man/man1
+install: man
+	install -d -m 755 $(BINDIR)
+	install -m 755 oci-image-tool $(BINDIR)
+	install -d -m 755 $(PREFIX)/share/man/man1
+	install -m 644 *.1 $(PREFIX)/share/man/man1
+	install -d -m 755 $(PREFIX)/share/bash-completion/completions
+	install -m 644 completions/bash/oci-image-tool $(PREFIX)/share/bash-completion/completionsn
 
-uninstall: clean
-	rm -f $(MAN:%=/usr/local/share/man/man1/%) $(TOOLS:%=/usr/local/bin/%)
+uninstall:
+	rm -f $(BINDIR)/oci-image-tool
+	rm -f $(PREFIX)/share/man/man1/oci-image-tool*.1
+	rm -f $(PREFIX)/share/bash-completion/completions/oci-image-tool
 
 lint:
 	@echo "checking lint"
@@ -57,6 +59,7 @@ lint:
 
 test:
 	go test -race -cover $(shell go list ./... | grep -v /vendor/)
+
 
 ## this uses https://github.com/Masterminds/glide and https://github.com/sgotti/glide-vc
 update-deps:
@@ -98,12 +101,11 @@ install.tools: .install.gitvalidation .install.glide .install.glide-vc .install.
 	go get github.com/cpuguy83/go-md2man
 
 clean:
-	rm -rf *~ $(OUTPUT_DIRNAME) $(TOOLS) $(MAN)
+	rm -rf oci-image-tool *.1
 
 .PHONY: \
 	all \
-	tools \
-	$(TOOLS) \
+	tool \
 	man \
 	install \
 	uninstall \
