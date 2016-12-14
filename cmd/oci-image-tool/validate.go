@@ -93,6 +93,8 @@ func validatePath(name string) error {
 		}
 	}
 
+	fmt.Printf("auto-detect type of %q is %q\n", name, typ)
+
 	if v.stdout == nil {
 		v.stdout = log.New(os.Stdout, "oci-image-tool: ", 0)
 	}
