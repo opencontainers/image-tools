@@ -20,7 +20,6 @@ oci-image-validate \- Validate one or more image files
   The reference to validate (should point to a manifest).
   Can be specified multiple times to validate multiple references.
   `NAME` must be present in the `refs` subdirectory of the image.
-  Defaults to `v1.0`.
   Only applicable if type is image or imageLayout.
 
 **--type**
