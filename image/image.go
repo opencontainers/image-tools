@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -227,4 +228,52 @@ func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
 	defer f.Close()
 
 	return json.NewEncoder(f).Encode(spec)
+}
+
+//Generate create an image that conforms to the OCI specification on a given path
+func Generate(dest string) error {
+	err := GenerateLayout(dest)
+	if err != nil {
+		return err
+	}
+
+	return Compress(dest)
+}
+
+//GenerateLayout create an imageLayout that conforms to the OCI specification on a given path
+func GenerateLayout(dest string) (retErr error) {
+	// error out if the dest directory is not empty or failed to create the file
+	s, err := ioutil.ReadDir(dest)
+	if err != nil {
+		if os.IsNotExist(err) {
+			if err2 := os.Mkdir(dest, 0755); err2 != nil {
+				return errors.Wrap(err2, "unable to create file")
+			}
+		} else {
+			return errors.Wrap(err, "unable to open file") // err contains dest
+		}
+	}
+	if len(s) > 0 {
+		return fmt.Errorf("%s is not empty", dest)
+	}
+	defer func() {
+		// if we encounter error during generating
+		// clean up the partially-denerated destination
+		if retErr != nil {
+			if err := os.RemoveAll(dest); err != nil {
+				fmt.Printf("Error: failed to remove partially-unpacked destination %v", err)
+			}
+		}
+	}()
+
+	il := imageLayout{
+		rootDir:  dest,
+		layout:   layoutStr,
+		ref:      refTag,
+		manifest: manifestStr,
+		config:   configStr,
+	}
+
+	// create image layout bundle
+	return createImageLayoutBundle(il)
 }
