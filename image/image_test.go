@@ -43,9 +43,6 @@ const (
     "os": "linux",
     "config": {
         "User": "alice",
-        "Memory": 2048,
-        "MemorySwap": 4096,
-        "CpuShares": 8,
         "ExposedPorts": {
             "8080/tcp": {}
         },
