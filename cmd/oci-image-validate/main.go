@@ -179,7 +179,7 @@ func (v *validateCmd) validatePath(name string) error {
 
 	switch typ {
 	case image.TypeManifest:
-		return schema.MediaTypeManifest.Validate(f)
+		return image.ValidateManifestMediaType(f)
 	case image.TypeManifestList:
 		return schema.MediaTypeManifestList.Validate(f)
 	case image.TypeConfig:
