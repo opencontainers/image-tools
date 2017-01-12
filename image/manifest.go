@@ -107,10 +107,6 @@ func (m *manifest) unpack(w walker, dest string) (retErr error) {
 		}
 	}()
 	for _, d := range m.Layers {
-		if d.MediaType != string(schema.MediaTypeImageLayer) {
-			continue
-		}
-
 		switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
 			if info.IsDir() {
 				return nil
