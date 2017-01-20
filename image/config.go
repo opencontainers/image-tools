@@ -109,22 +109,7 @@ func (c *config) runtimeSpec(rootfs string) (*specs.Spec, error) {
 	s.Platform.OS = c.OS
 	s.Platform.Arch = c.Architecture
 
-	mem := uint64(c.Config.Memory)
-	swap := uint64(c.Config.MemorySwap)
-	shares := uint64(c.Config.CPUShares)
-
 	s.Linux = &specs.Linux{}
-	s.Linux.Resources = &specs.Resources{
-		CPU: &specs.CPU{
-			Shares: &shares,
-		},
-
-		Memory: &specs.Memory{
-			Limit:       &mem,
-			Reservation: &mem,
-			Swap:        &swap,
-		},
-	}
 
 	for vol := range c.Config.Volumes {
 		s.Mounts = append(
