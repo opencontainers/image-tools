@@ -14,7 +14,7 @@ oci-create-runtime-bundle \- Create an OCI runtime bundle
 Also translates the referenced config from application/vnd.oci.image.config.v1+json to a
 runtime-spec-compatible `dest/config.json`.
 
-# OPTIONS
+# FLAGS
 **--help**
   Print usage statement
 
