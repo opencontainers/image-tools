@@ -1,5 +1,7 @@
 package: github.com/opencontainers/image-tools
 import:
+- package: github.com/opencontainers/go-digest
+  version: v1.0.0-rc0
 - package: github.com/opencontainers/image-spec
   version: v1.0.0-rc4
   subpackages:

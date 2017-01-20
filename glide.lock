@@ -1,5 +1,5 @@
-hash: 9b4441d8a5beafc0334e55c3c0c98e32b60d51d7b0ceba8110b61b26f2b498fa
-updated: 2017-02-06T10:48:09.882426248+08:00
+hash: 96d33c78edbe7fe735d07563db6d34f7493db27e52984ada2ff5aaa2ea434979
+updated: 2017-02-06T21:22:16.913065811-08:00
 imports:
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
