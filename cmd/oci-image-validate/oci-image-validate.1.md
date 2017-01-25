@@ -12,7 +12,7 @@ oci-image-validate \- Validate one or more image files
 `oci-image-validate` validates the given file(s) against the OCI image specification.
 
 
-# OPTIONS
+# FLAGS
 **--help**
   Print usage statement
 
