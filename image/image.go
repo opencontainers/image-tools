@@ -180,6 +180,16 @@ func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
 		return err
 	}
 
+	if _, err = os.Stat(dest); err != nil {
+		if os.IsNotExist(err) {
+			if err2 := os.MkdirAll(dest, 0755); err2 != nil {
+				return err2
+			}
+		} else {
+			return err
+		}
+	}
+
 	err = m.unpack(w, filepath.Join(dest, rootfs))
 	if err != nil {
 		return err
