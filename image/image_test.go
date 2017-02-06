@@ -104,11 +104,10 @@ var (
     "layers": [
         {
             "digest": "<layer_digest>",
-            "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+            "mediaType": "application/vnd.oci.image.layer.v1.tar",
             "size": <layer_size>
         }
     ],
-    "mediaType": "application/vnd.oci.image.manifest.v1+json",
     "schemaVersion": 2
 }
  `
