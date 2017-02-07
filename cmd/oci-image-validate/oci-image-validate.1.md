@@ -6,7 +6,7 @@ oci-image-validate \- Validate one or more image files
 
 # SYNOPSIS
 **oci-image-validate** FILE... [flags]
-**oci-image-validate** [--help|--version]
+**oci-image-validate** [--help|-v|--version]
 
 # DESCRIPTION
 `oci-image-validate` validates the given file(s) against the OCI image specification.
@@ -16,16 +16,16 @@ oci-image-validate \- Validate one or more image files
 **--help**
   Print usage statement
 
-**--ref** NAME
+**--ref**=[]
   The reference to validate (should point to a manifest).
   Can be specified multiple times to validate multiple references.
   `NAME` must be present in the `refs` subdirectory of the image.
   Only applicable if type is image or imageLayout.
 
-**--type**
+**--type**=""
   Type of the file to validate. If unset, oci-image-validate will try to auto-detect the type. One of "imageLayout,image,manifest,manifestList,config"
 
-**--version**
+**-v**, **--version**
   Print version information and exit.
 
 # EXAMPLES
