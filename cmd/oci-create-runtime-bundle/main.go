@@ -146,5 +146,6 @@ func (v *bundleCmd) Run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	fmt.Println("creating succeeded")
 	os.Exit(0)
 }

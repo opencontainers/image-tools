@@ -138,5 +138,6 @@ func (v *unpackCmd) Run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	fmt.Println("unpacking succeeded")
 	os.Exit(0)
 }
