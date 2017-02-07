@@ -1,16 +1,18 @@
-hash: a27287d2a9f5fd00efc3b06bd2b99bad765ac555d12511b6f5eed1c32e6bd9a8
-updated: 2017-01-17T16:01:21.929841349+08:00
+hash: 9b4441d8a5beafc0334e55c3c0c98e32b60d51d7b0ceba8110b61b26f2b498fa
+updated: 2017-02-06T10:48:09.882426248+08:00
 imports:
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/opencontainers/go-digest
+  version: aa2ec055abd10d26d539eb630a92241b781ce4bc
 - name: github.com/opencontainers/image-spec
-  version: 3b65d2823d053f93ec790e64416072d6019f30e5
+  version: 86308139a22b005bfda7b2e49c02fade937b4180
   subpackages:
   - schema
   - specs-go
   - specs-go/v1
 - name: github.com/opencontainers/runtime-spec
-  version: 7dab1a245d3e13d0ad03b77409d0bf7e00a6ada4
+  version: 794ca7ac88234607f9d2c76da8a6e9bbbade8cb9
   subpackages:
   - specs-go
 - name: github.com/pkg/errors
@@ -26,7 +28,7 @@ imports:
 - name: github.com/xeipuuv/gojsonschema
   version: d5336c75940ef31c9ceeb0ae64cf92944bccb4ee
 - name: go4.org
-  version: 8c325b1c55e881d02e600d4e9a8069a48c924aa6
+  version: 7ce08ca145dbe0e66a127c447b80ee7914f3e4f9
   subpackages:
   - errorutil
 testImports: []

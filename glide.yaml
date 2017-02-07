@@ -1,12 +1,12 @@
 package: github.com/opencontainers/image-tools
 import:
 - package: github.com/opencontainers/image-spec
-  version: v1.0.0-rc3
+  version: v1.0.0-rc4
   subpackages:
   - schema
   - specs-go/v1
 - package: github.com/opencontainers/runtime-spec
-  version: v1.0.0-rc2
+  version: v1.0.0-rc3
   subpackages:
   - specs-go
 - package: github.com/pkg/errors
