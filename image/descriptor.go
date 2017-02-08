@@ -122,14 +122,14 @@ func (d *descriptor) validateContent(r io.Reader) error {
 		return errors.Wrap(err, "error generating hash")
 	}
 
+	if n != d.Size {
+		return errors.New("size mismatch")
+	}
+
 	digest := "sha256:" + hex.EncodeToString(h.Sum(nil))
 
 	if digest != d.Digest {
 		return errors.New("digest mismatch")
-	}
-
-	if n != d.Size {
-		return errors.New("size mismatch")
 	}
 
 	return nil
