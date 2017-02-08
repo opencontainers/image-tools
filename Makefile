@@ -8,13 +8,18 @@ TOOLS := \
 	oci-create-runtime-bundle \
 	oci-image-validate \
 	oci-unpack
+MAN := $(TOOLS:%=%.1)
 
 default: help
 
 help:
 	@echo "Usage: make <target>"
 	@echo
+	@echo " * 'all' - Build the oci tools and manual pages"
+	@echo " * 'install' - Install binaries and manual pages"
+	@echo " * 'uninstall' - Remove the oci tools and manual pages"
 	@echo " * 'tools' - Build the oci image tools binaries"
+	@echo " * 'man' - Build the oci image manual pages"
 	@echo " * 'check-license' - Check license headers in source files"
 	@echo " * 'lint' - Execute the source code linter"
 	@echo " * 'test' - Execute the unit tests"
@@ -26,8 +31,23 @@ check-license:
 
 tools: $(TOOLS)
 
+man: $(MAN)
+
+all: $(TOOLS) $(MAN)
+
 $(TOOLS): oci-%:
 	go build -ldflags "-X main.gitCommit=${COMMIT}" ./cmd/$@
+
+.SECONDEXPANSION:
+$(MAN): %.1: cmd/$$*/$$*.1.md
+	go-md2man -in "$<" -out "$@"
+
+install: $(TOOLS) $(MAN)
+	install -m 755 $(TOOLS) /usr/local/bin/
+	install -m 644 $(MAN) /usr/local/share/man/man1
+
+uninstall: clean
+	rm -f $(MAN:%=/usr/local/share/man/man1/%) $(TOOLS:%=/usr/local/bin/%)
 
 lint:
 	@echo "checking lint"
@@ -57,7 +77,7 @@ endif
 
 .PHONY: install.tools
 
-install.tools: .install.gitvalidation .install.glide .install.glide-vc .install.gometalinter
+install.tools: .install.gitvalidation .install.glide .install.glide-vc .install.gometalinter .install.go-md2man
 
 .install.gitvalidation:
 	go get github.com/vbatts/git-validation
@@ -72,12 +92,18 @@ install.tools: .install.gitvalidation .install.glide .install.glide-vc .install.
 	go get github.com/alecthomas/gometalinter
 	gometalinter --install --update
 
+.install.go-md2man:
+	go get github.com/cpuguy83/go-md2man
+
 clean:
-	rm -rf *~ $(OUTPUT_DIRNAME) $(TOOLS)
+	rm -rf *~ $(OUTPUT_DIRNAME) $(TOOLS) $(MAN)
 
 .PHONY: \
+	all \
 	tools \
-	$(TOOLS) \
+	man \
+	install \
+	uninstall \
 	check-license \
 	clean \
 	lint \

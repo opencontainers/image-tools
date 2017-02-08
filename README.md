@@ -2,6 +2,71 @@
 
 `image-tools` is a collection of tools for working with the [OCI image format specification](https://github.com/opencontainers/image-spec).
 
+## Install
+
+It is recommended that use `go get` to download a single command tools.
+
+```
+$ go get -d github.com/opencontainers/image-tools/cmd/oci-unpack
+$ cd $GOPATH/src/github.com/opencontainers/image-tools/
+$ make all
+$ sudo make install
+```
+
+## Uninstall
+
+```
+$ sudo make uninstall
+```
+
+## Example
+
+### Obtaining an image
+
+The following examples assume you have a [image-layout](https://github.com/opencontainers/image-spec/blob/v1.0.0-rc2/image-layout.md) tar archive at `busybox-oci`.
+One way to acquire that image is with [skopeo](https://github.com/projectatomic/skopeo#installing):
+
+```
+$ skopeo copy docker://busybox oci:busybox-oci
+```
+
+### oci-create-runtime-bundle
+
+More information about `oci-create-runtime-bundle` can be found in its [man page](./cmd/oci-create-runtime-bundle/oci-create-runtime-bundle.1.md)
+
+```
+$ mkdir busybox-bundle
+$ oci-create-runtime-bundle --ref latest busybox-oci busybox-bundle
+$ cd busybox-bundle && sudo runc run busybox
+```
+
+### oci-image-validate
+
+More information about `oci-image-validate` can be found in its [man page](./cmd/oci-image-validate/oci-image-validate.1.md)
+
+```
+$ oci-image-validate --type imageLayout --ref latest busybox-oci
+busybox-oci: OK
+```
+
+### oci-unpack
+
+More information about `oci-unpack` can be found in its [man page](./cmd/oci-unpack/oci-unpack.1.md)
+
+```
+$ mkdir busybox-bundle
+$ oci-unpack --ref latest busybox-oci busybox-bundle
+$ tree busybox-bundle
+busybox-bundle
+├── bin
+│   ├── [
+│   ├── [[
+│   ├── acpid
+│   ├── addgroup
+│   ├── add-shell
+[...]
+```
+
 # Contributing
 
 Development happens on GitHub. Issues are used for bugs and actionable items and longer discussions can happen on the [mailing list](#mailing-list).
