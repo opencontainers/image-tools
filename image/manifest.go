@@ -75,8 +75,15 @@ func (m *manifest) validate(w walker) error {
 		return errors.Wrap(err, "config validation failed")
 	}
 
+	validLayerMediaTypes := []string{
+		v1.MediaTypeImageLayer,
+		v1.MediaTypeImageLayerGzip,
+		v1.MediaTypeImageLayerNonDistributable,
+		v1.MediaTypeImageLayerNonDistributableGzip,
+	}
+
 	for _, d := range m.Layers {
-		if err := d.validate(w, []string{v1.MediaTypeImageLayer}); err != nil {
+		if err := d.validate(w, validLayerMediaTypes); err != nil {
 			return errors.Wrap(err, "layer validation failed")
 		}
 	}
