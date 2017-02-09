@@ -71,12 +71,22 @@ func findManifest(w walker, d *descriptor) (*manifest, error) {
 }
 
 func (m *manifest) validate(w walker) error {
+	mediatype := v1.MediaTypeImageLayer
 	if err := m.Config.validate(w, []string{v1.MediaTypeImageConfig}); err != nil {
 		return errors.Wrap(err, "config validation failed")
 	}
 
 	for _, d := range m.Layers {
-		if err := d.validate(w, []string{v1.MediaTypeImageLayer}); err != nil {
+		switch d.MediaType {
+		case v1.MediaTypeImageLayerGzip:
+			mediatype = v1.MediaTypeImageLayerGzip
+		case v1.MediaTypeImageLayerNonDistributable:
+			mediatype = v1.MediaTypeImageLayerNonDistributable
+		case v1.MediaTypeImageLayerNonDistributableGzip:
+			mediatype = v1.MediaTypeImageLayerNonDistributableGzip
+		}
+
+		if err := d.validate(w, []string{mediatype}); err != nil {
 			return errors.Wrap(err, "layer validation failed")
 		}
 	}
