@@ -15,8 +15,6 @@
 package image
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -24,6 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 )
 
@@ -116,8 +115,13 @@ func (d *descriptor) validate(w walker, mts []string) error {
 }
 
 func (d *descriptor) validateContent(r io.Reader) error {
-	h := sha256.New()
-	n, err := io.Copy(h, r)
+	parsed, err := digest.Parse(d.Digest)
+	if err != nil {
+		return err
+	}
+
+	verifier := parsed.Verifier()
+	n, err := io.Copy(verifier, r)
 	if err != nil {
 		return errors.Wrap(err, "error generating hash")
 	}
@@ -126,9 +130,7 @@ func (d *descriptor) validateContent(r io.Reader) error {
 		return errors.New("size mismatch")
 	}
 
-	digest := "sha256:" + hex.EncodeToString(h.Sum(nil))
-
-	if digest != d.Digest {
+	if !verifier.Verified() {
 		return errors.New("digest mismatch")
 	}
 

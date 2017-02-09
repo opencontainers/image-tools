@@ -18,14 +18,14 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
-	"crypto/sha256"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/opencontainers/go-digest"
 )
 
 func TestUnpackLayerDuplicateEntries(t *testing.T) {
@@ -90,18 +90,17 @@ func TestUnpackLayer(t *testing.T) {
 	gw.Close()
 	f.Close()
 
-	// generate sha256 hash
-	h := sha256.New()
+	digester := digest.SHA256.Digester()
 	file, err := os.Open(tarfile)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer file.Close()
-	_, err = io.Copy(h, file)
+	_, err = io.Copy(digester.Hash(), file)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.Rename(tarfile, filepath.Join(tmp1, "blobs", "sha256", fmt.Sprintf("%x", h.Sum(nil))))
+	err = os.Rename(tarfile, filepath.Join(tmp1, "blobs", "sha256", digester.Digest().Hex()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,7 +108,7 @@ func TestUnpackLayer(t *testing.T) {
 	testManifest := manifest{
 		Layers: []descriptor{descriptor{
 			MediaType: "application/vnd.oci.image.layer.v1.tar+gzip",
-			Digest:    fmt.Sprintf("sha256:%s", fmt.Sprintf("%x", h.Sum(nil))),
+			Digest:    digester.Digest().String(),
 		}},
 	}
 	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
@@ -151,18 +150,17 @@ func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {
 	gw.Close()
 	f.Close()
 
-	// generate sha256 hash
-	h := sha256.New()
+	digester := digest.SHA256.Digester()
 	file, err := os.Open(tarfile)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer file.Close()
-	_, err = io.Copy(h, file)
+	_, err = io.Copy(digester.Hash(), file)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.Rename(tarfile, filepath.Join(tmp1, "blobs", "sha256", fmt.Sprintf("%x", h.Sum(nil))))
+	err = os.Rename(tarfile, filepath.Join(tmp1, "blobs", "sha256", digester.Digest().Hex()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -170,7 +168,7 @@ func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {
 	testManifest := manifest{
 		Layers: []descriptor{descriptor{
 			MediaType: "application/vnd.oci.image.layer.v1.tar+gzip",
-			Digest:    fmt.Sprintf("sha256:%s", fmt.Sprintf("%x", h.Sum(nil))),
+			Digest:    digester.Digest().String(),
 		}},
 	}
 	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))

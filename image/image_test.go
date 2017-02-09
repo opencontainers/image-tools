@@ -18,8 +18,6 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
-	"crypto/sha256"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -28,6 +26,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/opencontainers/go-digest"
 	"github.com/opencontainers/image-spec/specs-go/v1"
 )
 
@@ -298,14 +297,16 @@ func createHashedBlob(name string) (descriptor, error) {
 		return descriptor{}, err
 	}
 
-	// Rename the file to hashed-digest name.
-	err = os.Rename(name, filepath.Join(filepath.Dir(name), desc.Digest))
+	parsed, err := digest.Parse(desc.Digest)
 	if err != nil {
 		return descriptor{}, err
 	}
 
-	//Normalize the hashed digest.
-	desc.Digest = "sha256:" + desc.Digest
+	// Rename the file to hashed-digest name.
+	err = os.Rename(name, filepath.Join(filepath.Dir(name), parsed.Hex()))
+	if err != nil {
+		return descriptor{}, err
+	}
 
 	return desc, nil
 }
@@ -317,15 +318,14 @@ func newDescriptor(name string) (descriptor, error) {
 	}
 	defer file.Close()
 
-	// generate sha256 hash
-	hash := sha256.New()
-	size, err := io.Copy(hash, file)
+	digester := digest.SHA256.Digester()
+	size, err := io.Copy(digester.Hash(), file)
 	if err != nil {
 		return descriptor{}, err
 	}
 
 	return descriptor{
-		Digest: fmt.Sprintf("%x", hash.Sum(nil)),
+		Digest: digester.Digest().String(),
 		Size:   size,
 	}, nil
 }
