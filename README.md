@@ -2,6 +2,55 @@
 
 `image-tools` is a collection of tools for working with the [OCI image format specification](https://github.com/opencontainers/image-spec).
 
+## Validate one or more OCI image
+[`oci-image-validate`](cmd/oci-image-validate/oci-image-validate.1.md) validates the given file(s) against the [OCI image specification](https://github.com/opencontainers/image-spec).
+
+```sh
+$ skopeo copy docker://busybox oci:busybox-oci
+$ oci-image-validate --type imageLayout --ref latest busybox-oci
+busybox-oci: OK
+
+```
+
+## Create an OCI runtime bundle
+
+[`oci-create-runtime-bundle`](cmd/oci-create-runtime-bundle/oci-create-runtime-bundle.1.md) validates an [`application/vnd.oci.image.manifest.v1+json`](https://github.com/opencontainers/image-spec/blob/master/manifest.md) and unpacks its layered filesystem to `dest/rootfs`, also translates the referenced config from [`application/vnd.oci.image.config.v1+json`](https://github.com/opencontainers/image-spec/blob/master/config.md) to a runtime-spec-compatible `dest/config.json`.
+
+```sh
+$ skopeo copy docker://busybox oci:busybox-oci
+$ mkdir busybox-bundle
+$ oci-create-runtime-bundle --ref latest busybox-oci busybox-bundle
+$ cd busybox-bundle && sudo runc run busybox
+[...]
+```
+
+## Unpack an image or image source layout
+
+[`oci-unpack`](https://github.com/opencontainers/image-tools/blob/master/cmd/oci-unpack/oci-unpack.1.md) validates an [`application/vnd.oci.image.manifest.v1+json`](https://github.com/opencontainers/image-spec/blob/master/manifest.md) and unpacks its layered filesystem to `dest`.
+
+```sh
+$ skopeo copy docker://busybox oci:busybox-oci
+$ mkdir busybox-bundle
+$ oci-unpack --ref latest busybox-oci busybox-bundle
+tree busybox-bundle
+busybox-bundle
+├── bin
+│   ├── [
+│   ├── [[
+│   ├── acpid
+│   ├── addgroup
+│   ├── add-shell
+│   ├── adduser
+│   ├── adjtimex
+│   ├── ar
+│   ├── arp
+│   ├── arping
+│   ├── ash
+[...]
+
+```
+
+
 ## Install
 
 It is recommended that use `go get` to download a single command tools.
