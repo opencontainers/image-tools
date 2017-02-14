@@ -17,6 +17,7 @@ help:
 	@echo
 	@echo " * 'all' - Build the oci tools and manual pages"
 	@echo " * 'install' - Install binaries and manual pages"
+	@echo " * 'install.tools' - Install tools needed for building this project"
 	@echo " * 'uninstall' - Remove the oci tools and manual pages"
 	@echo " * 'tools' - Build the oci image tools binaries"
 	@echo " * 'man' - Build the oci image manual pages"
@@ -24,6 +25,7 @@ help:
 	@echo " * 'lint' - Execute the source code linter"
 	@echo " * 'test' - Execute the unit tests"
 	@echo " * 'update-deps' - Update vendored dependencies"
+	@echo " * 'clean' - clean existing build artifacts"
 
 check-license:
 	@echo "checking license headers"
