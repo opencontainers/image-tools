@@ -93,7 +93,7 @@ func findDescriptor(w walker, name string) (*descriptor, error) {
 	}
 }
 
-func (d *descriptor) validate(w walker, mts []string) error {
+func (d *descriptor) validate(get reader, mts []string) error {
 	var found bool
 	for _, mt := range mts {
 		if d.MediaType == mt {
@@ -105,7 +105,7 @@ func (d *descriptor) validate(w walker, mts []string) error {
 		return fmt.Errorf("invalid descriptor MediaType %q", d.MediaType)
 	}
 
-	rc, err := w.Get(*d)
+	rc, err := get.Get(*d)
 	if err != nil {
 		return err
 	}
