@@ -60,8 +60,8 @@ func findManifest(get reader, d *descriptor) (*manifest, error) {
 	return &m, nil
 }
 
-func (m *manifest) validate(w walker) error {
-	if err := m.Config.validate(w, []string{v1.MediaTypeImageConfig}); err != nil {
+func (m *manifest) validate(get reader) error {
+	if err := m.Config.validate(get, []string{v1.MediaTypeImageConfig}); err != nil {
 		return errors.Wrap(err, "config validation failed")
 	}
 
@@ -73,7 +73,7 @@ func (m *manifest) validate(w walker) error {
 	}
 
 	for _, d := range m.Layers {
-		if err := d.validate(w, validLayerMediaTypes); err != nil {
+		if err := d.validate(get, validLayerMediaTypes); err != nil {
 			return errors.Wrap(err, "layer validation failed")
 		}
 	}
