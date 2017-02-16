@@ -111,7 +111,8 @@ func TestUnpackLayer(t *testing.T) {
 			Digest:    digester.Digest().String(),
 		}},
 	}
-	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
+	get := &layoutReader{root: tmp1}
+	err = testManifest.unpack(get, filepath.Join(tmp1, "rootfs"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -171,7 +172,8 @@ func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {
 			Digest:    digester.Digest().String(),
 		}},
 	}
-	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
+	get := &layoutReader{root: tmp1}
+	err = testManifest.unpack(get, filepath.Join(tmp1, "rootfs"))
 	if err != nil && !strings.Contains(err.Error(), "duplicate entry for") {
 		t.Fatal(err)
 	}
