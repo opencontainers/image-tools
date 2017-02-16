@@ -81,7 +81,7 @@ func (m *manifest) validate(get reader) error {
 	return nil
 }
 
-func (m *manifest) unpack(w walker, dest string) (retErr error) {
+func (m *manifest) unpack(get reader, dest string) (retErr error) {
 	// error out if the dest directory is not empty
 	s, err := ioutil.ReadDir(dest)
 	if err != nil && !os.IsNotExist(err) {
@@ -100,26 +100,18 @@ func (m *manifest) unpack(w walker, dest string) (retErr error) {
 		}
 	}()
 	for _, d := range m.Layers {
-		switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-			if info.IsDir() {
-				return nil
-			}
+		reader, err := get.Get(d)
+		if err != nil {
+			return err
+		}
+		defer reader.Close()
 
-			dd, err := filepath.Rel(filepath.Join("blobs", d.algo()), filepath.Clean(path))
-			if err != nil || d.hash() != dd {
-				return nil
-			}
+		if err = unpackLayer(dest, reader); err != nil {
+			return errors.Wrap(err, "error extracting layer")
+		}
 
-			if err := unpackLayer(dest, r); err != nil {
-				return errors.Wrap(err, "error extracting layer")
-			}
-
-			return errEOW
-		}); err {
-		case nil:
-			return fmt.Errorf("%s: layer not found", dest)
-		case errEOW:
-		default:
+		err = reader.Close()
+		if err != nil {
 			return err
 		}
 	}
