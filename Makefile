@@ -103,6 +103,7 @@ clean:
 .PHONY: \
 	all \
 	tools \
+	$(TOOLS) \
 	man \
 	install \
 	uninstall \
