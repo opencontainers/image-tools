@@ -10,7 +10,7 @@ TOOLS := \
 	oci-unpack
 MAN := $(TOOLS:%=%.1)
 
-default: help
+default: all
 
 help:
 	@echo "Usage: make <target>"
