@@ -22,6 +22,7 @@ import (
 
 	specs "github.com/opencontainers/image-spec/specs-go"
 	"github.com/opencontainers/image-tools/image"
+	"github.com/opencontainers/image-tools/version"
 	"github.com/spf13/cobra"
 )
 
@@ -100,6 +101,7 @@ func newUnpackCmd(stdout, stderr *log.Logger) *cobra.Command {
 func (v *unpackCmd) Run(cmd *cobra.Command, args []string) {
 	if v.version {
 		v.stdout.Printf("commit: %s", gitCommit)
+		v.stdout.Printf("version: %s", version.Version)
 		v.stdout.Printf("spec: %s", specs.Version)
 		os.Exit(0)
 	}
