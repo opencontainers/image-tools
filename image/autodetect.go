@@ -27,11 +27,11 @@ import (
 
 // supported autodetection types
 const (
-	TypeImageLayout  = "imageLayout"
-	TypeImage        = "image"
-	TypeManifest     = "manifest"
-	TypeManifestList = "manifestList"
-	TypeConfig       = "config"
+	TypeImageLayout = "imageLayout"
+	TypeImage       = "image"
+	TypeManifest    = "manifest"
+	TypeImageIndex  = "imageIndex"
+	TypeConfig      = "config"
 )
 
 // Autodetect detects the validation type for the given path
@@ -94,11 +94,11 @@ func Autodetect(path string) (string, error) {
 	}
 
 	switch {
-	case header.MediaType == string(schema.MediaTypeManifest):
+	case header.MediaType == string(schema.ValidatorMediaTypeManifest):
 		return TypeManifest, nil
 
-	case header.MediaType == string(schema.MediaTypeManifestList):
-		return TypeManifestList, nil
+	case header.MediaType == string(schema.ValidatorMediaTypeImageIndex):
+		return TypeImageIndex, nil
 
 	case header.MediaType == "" && header.SchemaVersion == 0 && header.Config != nil:
 		// config files don't have mediaType/schemaVersion header

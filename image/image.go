@@ -45,7 +45,7 @@ func Validate(tarFile string, refs []string, out *log.Logger) error {
 
 var validRefMediaTypes = []string{
 	v1.MediaTypeImageManifest,
-	v1.MediaTypeImageManifestList,
+	v1.MediaTypeImageIndex,
 }
 
 func validate(w walker, refs []string, out *log.Logger) error {

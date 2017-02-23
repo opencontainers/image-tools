@@ -51,7 +51,7 @@ func findManifest(w walker, d *descriptor) (*manifest, error) {
 			return errors.Wrapf(err, "%s: error reading manifest", path)
 		}
 
-		if err := schema.MediaTypeManifest.Validate(bytes.NewReader(buf)); err != nil {
+		if err := schema.ValidatorMediaTypeManifest.Validate(bytes.NewReader(buf)); err != nil {
 			return errors.Wrapf(err, "%s: manifest validation failed", path)
 		}
 

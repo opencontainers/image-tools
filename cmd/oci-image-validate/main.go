@@ -36,7 +36,7 @@ var validateTypes = []string{
 	image.TypeImageLayout,
 	image.TypeImage,
 	image.TypeManifest,
-	image.TypeManifestList,
+	image.TypeImageIndex,
 	image.TypeConfig,
 }
 
@@ -179,11 +179,11 @@ func (v *validateCmd) validatePath(name string) error {
 
 	switch typ {
 	case image.TypeManifest:
-		return schema.MediaTypeManifest.Validate(f)
-	case image.TypeManifestList:
-		return schema.MediaTypeManifestList.Validate(f)
+		return schema.ValidatorMediaTypeManifest.Validate(f)
+	case image.TypeImageIndex:
+		return schema.ValidatorMediaTypeImageIndex.Validate(f)
 	case image.TypeConfig:
-		return schema.MediaTypeImageConfig.Validate(f)
+		return schema.ValidatorMediaTypeImageConfig.Validate(f)
 	}
 
 	return fmt.Errorf("type %q unimplemented", typ)
