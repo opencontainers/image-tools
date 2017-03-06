@@ -18,10 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -33,36 +30,28 @@ import (
 
 type config v1.Image
 
-func findConfig(w walker, d *descriptor) (*config, error) {
-	var c config
-	cpath := filepath.Join("blobs", d.algo(), d.hash())
-
-	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-		if info.IsDir() || filepath.Clean(path) != cpath {
-			return nil
-		}
-		buf, err := ioutil.ReadAll(r)
-		if err != nil {
-			return errors.Wrapf(err, "%s: error reading config", path)
-		}
-
-		if err := schema.MediaTypeImageConfig.Validate(bytes.NewReader(buf)); err != nil {
-			return errors.Wrapf(err, "%s: config validation failed", path)
-		}
-
-		if err := json.Unmarshal(buf, &c); err != nil {
-			return err
-		}
-
-		return errEOW
-	}); err {
-	case nil:
-		return nil, fmt.Errorf("%s: config not found", cpath)
-	case errEOW:
-		return &c, nil
-	default:
+func findConfig(get reader, d *descriptor) (*config, error) {
+	reader, err := get.Get(*d)
+	if err != nil {
 		return nil, err
 	}
+	defer reader.Close()
+
+	buf, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, errors.Wrapf(err, "%s: error reading config", d.Digest)
+	}
+
+	if err := schema.MediaTypeImageConfig.Validate(bytes.NewReader(buf)); err != nil {
+		return nil, errors.Wrapf(err, "%s: config validation failed", d.Digest)
+	}
+
+	var c config
+	if err := json.Unmarshal(buf, &c); err != nil {
+		return nil, err
+	}
+
+	return &c, nil
 }
 
 func (c *config) runtimeSpec(rootfs string) (*specs.Spec, error) {

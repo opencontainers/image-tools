@@ -37,41 +37,31 @@ type manifest struct {
 	Layers []descriptor `json:"layers"`
 }
 
-func findManifest(w walker, d *descriptor) (*manifest, error) {
-	var m manifest
-	mpath := filepath.Join("blobs", d.algo(), d.hash())
-
-	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-		if info.IsDir() || filepath.Clean(path) != mpath {
-			return nil
-		}
-
-		buf, err := ioutil.ReadAll(r)
-		if err != nil {
-			return errors.Wrapf(err, "%s: error reading manifest", path)
-		}
-
-		if err := schema.MediaTypeManifest.Validate(bytes.NewReader(buf)); err != nil {
-			return errors.Wrapf(err, "%s: manifest validation failed", path)
-		}
-
-		if err := json.Unmarshal(buf, &m); err != nil {
-			return err
-		}
-
-		return errEOW
-	}); err {
-	case nil:
-		return nil, fmt.Errorf("%s: manifest not found", mpath)
-	case errEOW:
-		return &m, nil
-	default:
+func findManifest(get reader, d *descriptor) (*manifest, error) {
+	reader, err := get.Get(*d)
+	if err != nil {
 		return nil, err
 	}
+	defer reader.Close()
+
+	buf, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, errors.Wrapf(err, "%s: error reading manifest", d.Digest)
+	}
+
+	if err := schema.MediaTypeManifest.Validate(bytes.NewReader(buf)); err != nil {
+		return nil, errors.Wrapf(err, "%s: manifest validation failed", d.Digest)
+	}
+
+	var m manifest
+	if err := json.Unmarshal(buf, &m); err != nil {
+		return nil, err
+	}
+	return &m, nil
 }
 
-func (m *manifest) validate(w walker) error {
-	if err := m.Config.validate(w, []string{v1.MediaTypeImageConfig}); err != nil {
+func (m *manifest) validate(get reader) error {
+	if err := m.Config.validate(get, []string{v1.MediaTypeImageConfig}); err != nil {
 		return errors.Wrap(err, "config validation failed")
 	}
 
@@ -83,7 +73,7 @@ func (m *manifest) validate(w walker) error {
 	}
 
 	for _, d := range m.Layers {
-		if err := d.validate(w, validLayerMediaTypes); err != nil {
+		if err := d.validate(get, validLayerMediaTypes); err != nil {
 			return errors.Wrap(err, "layer validation failed")
 		}
 	}
@@ -91,7 +81,7 @@ func (m *manifest) validate(w walker) error {
 	return nil
 }
 
-func (m *manifest) unpack(w walker, dest string) (retErr error) {
+func (m *manifest) unpack(get reader, dest string) (retErr error) {
 	// error out if the dest directory is not empty
 	s, err := ioutil.ReadDir(dest)
 	if err != nil && !os.IsNotExist(err) {
@@ -110,26 +100,18 @@ func (m *manifest) unpack(w walker, dest string) (retErr error) {
 		}
 	}()
 	for _, d := range m.Layers {
-		switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-			if info.IsDir() {
-				return nil
-			}
+		reader, err := get.Get(d)
+		if err != nil {
+			return err
+		}
+		defer reader.Close()
 
-			dd, err := filepath.Rel(filepath.Join("blobs", d.algo()), filepath.Clean(path))
-			if err != nil || d.hash() != dd {
-				return nil
-			}
+		if err = unpackLayer(dest, reader); err != nil {
+			return errors.Wrap(err, "error extracting layer")
+		}
 
-			if err := unpackLayer(dest, r); err != nil {
-				return errors.Wrap(err, "error extracting layer")
-			}
-
-			return errEOW
-		}); err {
-		case nil:
-			return fmt.Errorf("%s: layer not found", dest)
-		case errEOW:
-		default:
+		err = reader.Close()
+		if err != nil {
 			return err
 		}
 	}
