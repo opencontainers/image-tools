@@ -23,7 +23,7 @@ oci-image-validate \- Validate one or more image files
   Only applicable if type is image or imageLayout.
 
 **--type**=""
-  Type of the file to validate. If unset, oci-image-validate will try to auto-detect the type. One of "imageLayout,image,manifest,manifestList,config"
+  Type of the file to validate. If unset, oci-image-validate will try to auto-detect the type. One of "imageLayout,image,manifest,imageIndex,config"
 
 **-v**, **--version**
   Print version information and exit.
