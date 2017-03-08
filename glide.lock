@@ -1,18 +1,18 @@
-hash: 96d33c78edbe7fe735d07563db6d34f7493db27e52984ada2ff5aaa2ea434979
-updated: 2017-02-06T21:22:16.913065811-08:00
+hash: 241445fd3c6f49a1a4c23f7a42d6ff85bf7a72a9d1c58fd62b987a43f2d910b5
+updated: 2017-02-23T09:35:36.276714335+08:00
 imports:
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/opencontainers/go-digest
   version: aa2ec055abd10d26d539eb630a92241b781ce4bc
 - name: github.com/opencontainers/image-spec
-  version: 86308139a22b005bfda7b2e49c02fade937b4180
+  version: 5faaada8762b465d5ce8a8da27b92d577a1aa576
   subpackages:
   - schema
   - specs-go
   - specs-go/v1
 - name: github.com/opencontainers/runtime-spec
-  version: 794ca7ac88234607f9d2c76da8a6e9bbbade8cb9
+  version: 339eba52400dde8732b03e32624607a4517a556c
   subpackages:
   - specs-go
 - name: github.com/pkg/errors
