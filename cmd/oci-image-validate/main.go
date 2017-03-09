@@ -160,6 +160,7 @@ func (v *validateCmd) validatePath(name string) error {
 		if typ, err = image.Autodetect(name); err != nil {
 			return errors.Wrap(err, "unable to determine type")
 		}
+		fmt.Printf("auto-detect type of %q is %q\n", name, typ)
 	}
 
 	switch typ {
