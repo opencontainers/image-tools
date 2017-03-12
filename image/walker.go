@@ -76,12 +76,6 @@ loop:
 	return nil
 }
 
-type eofReader struct{}
-
-func (eofReader) Read(_ []byte) (int, error) {
-	return 0, io.EOF
-}
-
 type pathWalker struct {
 	root string
 	layoutReader
@@ -104,10 +98,6 @@ func (w *pathWalker) walk(f walkFunc) error {
 		rel, err := filepath.Rel(w.root, path)
 		if err != nil {
 			return errors.Wrap(err, "error walking path") // err from filepath.Walk includes path name
-		}
-
-		if info.IsDir() { // behave like a tar reader for directories
-			return f(rel, info, eofReader{})
 		}
 
 		file, err := os.Open(path)
