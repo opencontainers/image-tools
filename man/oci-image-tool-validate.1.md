@@ -2,17 +2,17 @@
 % OCI Community
 % JULY 2016
 # NAME
-oci-image-validate \- Validate one or more image files
+oci-image-tool validate \- Validate one or more image files
 
 # SYNOPSIS
-**oci-image-validate** FILE... [flags]
-**oci-image-validate** [--help|-v|--version]
+**oci-image-tool validate** FILE... [OPTIONS]
+**oci-image-tool validate** [--help|-v|--version]
 
 # DESCRIPTION
-`oci-image-validate` validates the given file(s) against the OCI image specification.
+`oci-image-tool validate` validates the given file(s) against the OCI image specification.
 
 
-# FLAGS
+# OPTIONS
 **--help**
   Print usage statement
 
@@ -23,7 +23,7 @@ oci-image-validate \- Validate one or more image files
   Only applicable if type is image or imageLayout.
 
 **--type**=""
-  Type of the file to validate. If unset, oci-image-validate will try to auto-detect the type. One of "imageLayout,image,manifest,imageIndex,config"
+  Type of the file to validate. If unset, oci-image-tool will try to auto-detect the type. One of "imageLayout,image,manifest,imageIndex,config"
 
 **-v**, **--version**
   Print version information and exit.
@@ -31,7 +31,7 @@ oci-image-validate \- Validate one or more image files
 # EXAMPLES
 ```
 $ skopeo copy docker://busybox oci:busybox-oci
-$ oci-image-validate --type imageLayout --ref latest busybox-oci
+$ oci-image-tool validate --type imageLayout --ref latest busybox-oci
 busybox-oci: OK
 ```
 

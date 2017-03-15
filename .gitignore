@@ -1,5 +1,3 @@
-/oci-create-runtime-bundle
-/oci-unpack
-/oci-image-validate
+/oci-image-tool
 
 *.1
