@@ -49,7 +49,7 @@ func newTarWalker(tarFile string, r io.ReadSeeker) walker {
 }
 
 func (w *tarWalker) walk(f walkFunc) error {
-	if _, err := w.r.Seek(0, os.SEEK_SET); err != nil {
+	if _, err := w.r.Seek(0, io.SeekStart); err != nil {
 		return errors.Wrapf(err, "unable to reset")
 	}
 

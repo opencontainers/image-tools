@@ -70,7 +70,7 @@ func Autodetect(path string) (string, error) {
 		return "", errors.New("unknown file type")
 	}
 
-	if _, err := f.Seek(0, os.SEEK_SET); err != nil {
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
 		return "", errors.Wrap(err, "unable to seek")
 	}
 
@@ -81,7 +81,7 @@ func Autodetect(path string) (string, error) {
 	}{}
 
 	if err := json.NewDecoder(f).Decode(&header); err != nil {
-		if _, errSeek := f.Seek(0, os.SEEK_SET); errSeek != nil {
+		if _, errSeek := f.Seek(0, io.SeekStart); errSeek != nil {
 			return "", errors.Wrap(err, "unable to seek")
 		}
 

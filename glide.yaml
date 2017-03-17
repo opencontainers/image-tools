@@ -17,3 +17,5 @@ import:
   version: 9c28e4bbd74e5c3ed7aacbc552b2cab7cfdfe744
 - package: github.com/spf13/pflag
   version: 7b17cc4658ef5ca157b986ea5c0b43af7938532b
+- package: github.com/Sirupsen/logrus
+  version: ~0.10.0
