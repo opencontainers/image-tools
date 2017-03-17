@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/opencontainers/image-tools/image"
+	"github.com/opencontainers/image-tools/logger"
 	"github.com/urfave/cli"
 )
 
@@ -74,7 +75,7 @@ func createHandle(context *cli.Context) error {
 	}
 
 	if err != nil {
-		fmt.Printf("creating failed: %v\n", err)
+		logger.G(globalCtx).WithError(err).Infof("creating failed")
 	}
 
 	return err

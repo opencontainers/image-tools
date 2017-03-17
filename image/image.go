@@ -18,29 +18,29 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/opencontainers/image-tools/logger"
 	"github.com/pkg/errors"
 )
 
 // ValidateLayout walks through the given file tree and validates the manifest
 // pointed to by the given refs or returns an error if the validation failed.
-func ValidateLayout(src string, refs []string, out *log.Logger) error {
-	return validate(newPathWalker(src), refs, out)
+func ValidateLayout(ctx logger.Context, src string, refs []string) error {
+	return validate(ctx, newPathWalker(src), refs)
 }
 
 // ValidateFile opens the tar file given by the filename, then calls ValidateReader
-func ValidateFile(tarFile string, refs []string, out *log.Logger) error {
+func ValidateFile(ctx logger.Context, tarFile string, refs []string) error {
 	f, err := os.Open(tarFile)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
 	}
 	defer f.Close()
 
-	return Validate(f, refs, out)
+	return Validate(ctx, f, refs)
 }
 
 // Validate walks through a tar stream and validates the manifest.
@@ -48,8 +48,8 @@ func ValidateFile(tarFile string, refs []string, out *log.Logger) error {
 // * Checks that all referred blobs are valid
 // * Checks that mime-types are correct
 // returns error on validation failure
-func Validate(r io.ReadSeeker, refs []string, out *log.Logger) error {
-	return validate(newTarWalker(r), refs, out)
+func Validate(ctx logger.Context, r io.ReadSeeker, refs []string) error {
+	return validate(ctx, newTarWalker(r), refs)
 }
 
 var validRefMediaTypes = []string{
@@ -57,16 +57,13 @@ var validRefMediaTypes = []string{
 	v1.MediaTypeImageIndex,
 }
 
-func validate(w walker, refs []string, out *log.Logger) error {
+func validate(ctx logger.Context, w walker, refs []string) error {
 	ds, err := listReferences(w)
 	if err != nil {
 		return err
 	}
 	if len(refs) == 0 && len(ds) == 0 {
-		// TODO(runcom): ugly, we'll need a better way and library
-		// to express log levels.
-		// see https://github.com/opencontainers/image-spec/issues/288
-		out.Print("WARNING: no descriptors found")
+		logger.G(ctx).Warnf("no descriptors found")
 	}
 
 	if len(refs) == 0 {
@@ -96,9 +93,7 @@ func validate(w walker, refs []string, out *log.Logger) error {
 		if err := m.validate(w); err != nil {
 			return err
 		}
-		if out != nil {
-			out.Printf("reference %q: OK", ref)
-		}
+		logger.G(ctx).WithField("reference", ref).Infof("validate OK")
 	}
 	return nil
 }
