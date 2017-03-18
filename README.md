@@ -7,7 +7,7 @@
 It is recommended that use `go get` to download a single command tools.
 
 ```
-$ go get -d github.com/opencontainers/image-tools/cmd/oci-unpack
+$ go get -d github.com/opencontainers/image-tools/cmd/oci-image-tool
 $ cd $GOPATH/src/github.com/opencontainers/image-tools/
 $ make all
 $ sudo make install
@@ -36,7 +36,7 @@ More information about `oci-create-runtime-bundle` can be found in its [man page
 
 ```
 $ mkdir busybox-bundle
-$ oci-create-runtime-bundle --ref latest busybox-oci busybox-bundle
+$ oci-image-tool create --ref latest busybox-oci busybox-bundle
 $ cd busybox-bundle && sudo runc run busybox
 ```
 
@@ -45,7 +45,7 @@ $ cd busybox-bundle && sudo runc run busybox
 More information about `oci-image-validate` can be found in its [man page](./cmd/oci-image-validate/oci-image-validate.1.md)
 
 ```
-$ oci-image-validate --type imageLayout --ref latest busybox-oci
+$ oci-image-tool validate --type imageLayout --ref latest busybox-oci
 busybox-oci: OK
 ```
 
@@ -55,7 +55,7 @@ More information about `oci-unpack` can be found in its [man page](./cmd/oci-unp
 
 ```
 $ mkdir busybox-bundle
-$ oci-unpack --ref latest busybox-oci busybox-bundle
+$ oci-image-tool unpack --ref latest busybox-oci busybox-bundle
 $ tree busybox-bundle
 busybox-bundle
 ├── bin
