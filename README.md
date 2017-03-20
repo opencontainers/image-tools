@@ -1,6 +1,6 @@
-# image-tools [![Build Status](https://travis-ci.org/opencontainers/image-tools.svg?branch=master)](https://travis-ci.org/opencontainers/image-tools)
+# oci-image-tools [![Build Status](https://travis-ci.org/opencontainers/image-tools.svg?branch=master)](https://travis-ci.org/opencontainers/image-tools)
 
-`image-tools` is a collection of tools for working with the [OCI image format specification](https://github.com/opencontainers/image-spec).
+`oci-image-tools` is a collection of tools for working with the [OCI image format specification](https://github.com/opencontainers/image-spec).
 
 ## Install
 
@@ -30,9 +30,9 @@ One way to acquire that image is with [skopeo](https://github.com/projectatomic/
 $ skopeo copy docker://busybox oci:busybox-oci
 ```
 
-### oci-create-runtime-bundle
+### oci-image-tool-create
 
-More information about `oci-create-runtime-bundle` can be found in its [man page](./cmd/oci-create-runtime-bundle/oci-create-runtime-bundle.1.md)
+More information about `oci-image-tool-create` can be found in its [man page](./man/oci-image-tool-create.1.md)
 
 ```
 $ mkdir busybox-bundle
@@ -40,18 +40,18 @@ $ oci-image-tool create --ref latest busybox-oci busybox-bundle
 $ cd busybox-bundle && sudo runc run busybox
 ```
 
-### oci-image-validate
+### oci-image-tool-validate
 
-More information about `oci-image-validate` can be found in its [man page](./cmd/oci-image-validate/oci-image-validate.1.md)
+More information about `oci-image-tool-validate` can be found in its [man page](./man/oci-image-tool-validate.1.md)
 
 ```
 $ oci-image-tool validate --type imageLayout --ref latest busybox-oci
 busybox-oci: OK
 ```
 
-### oci-unpack
+### oci-image-tool-unpack
 
-More information about `oci-unpack` can be found in its [man page](./cmd/oci-unpack/oci-unpack.1.md)
+More information about `oci-image-tool-unpack` can be found in its [man page](./man/oci-image-tool-unpack.1.md)
 
 ```
 $ mkdir busybox-bundle
