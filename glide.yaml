@@ -19,3 +19,5 @@ import:
   version: 7b17cc4658ef5ca157b986ea5c0b43af7938532b
 - package: github.com/Sirupsen/logrus
   version: ~0.10.0
+- package: github.com/urfave/cli
+  version: ~1.19.1
