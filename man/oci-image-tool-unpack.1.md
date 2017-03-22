@@ -1,4 +1,4 @@
-% OCI(1) OCI-UNPACK User Manuals
+% OCI(1) OCI-IMAGE-TOOL User Manuals
 % OCI Community
 % JULY 2016
 # NAME
