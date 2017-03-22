@@ -1,8 +1,8 @@
-% OCI(1) OCI-CREATE-RUNTIME-BUNDLE User Manuals
+% OCI(1) OCI-IMAGE-TOOL User Manuals
 % OCI Community
 % JULY 2016
 # NAME
-oci-image-tool-create \- Create an OCI runtime bundle
+oci-image-tool create \- Create an OCI runtime bundle
 
 # SYNOPSIS
 **oci-image-tool create** [src] [dest] [OPTIONS]
