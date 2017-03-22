@@ -17,6 +17,8 @@ package image
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -24,6 +26,14 @@ import (
 	"github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 )
+
+// ImageLayout the structure in the "oci-layout" file
+// TODO: this has beed defined in image-spec,
+// needs a rebase after vendoring image-spec to v1.0.0-rc2
+// to just reference image-spec.
+type Layout struct {
+	Version string `json:"imageLayoutVersion"`
+}
 
 // ValidateLayout walks through the given file tree and validates the manifest
 // pointed to by the given refs or returns an error if the validation failed.
@@ -49,6 +59,9 @@ var validRefMediaTypes = []string{
 }
 
 func validate(w walker, refs []string, out *log.Logger) error {
+	if err := validateImageLayout(w); err != nil {
+		return err
+	}
 	ds, err := listReferences(w)
 	if err != nil {
 		return err
@@ -94,6 +107,37 @@ func validate(w walker, refs []string, out *log.Logger) error {
 	return nil
 }
 
+func validateImageLayout(w walker) error {
+	mpath := "oci-layout"
+	imageLayout := &Layout{}
+	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
+		if info.IsDir() || filepath.Clean(path) != mpath {
+			return nil
+		}
+		buf, err := ioutil.ReadAll(r)
+		if err != nil {
+			return errors.Wrapf(err, "error reading oci-layout")
+		}
+
+		if err := json.Unmarshal(buf, &imageLayout); err != nil {
+			return err
+		}
+		if imageLayout.Version != "1.0.0" {
+			return fmt.Errorf("imageLayout version %s mismatch with required version 1.0.0", imageLayout.Version)
+		}
+
+		return errEOW
+	}); err {
+	case nil:
+		return fmt.Errorf("oci-layout not found")
+	case errEOW:
+		return nil
+	default:
+		return err
+	}
+
+}
+
 // UnpackLayout walks through the file tree given by src and, using the layers
 // specified in the manifest pointed to by the given ref, unpacks all layers in
 // the given destination directory or returns an error if the unpacking failed.
@@ -115,6 +159,10 @@ func Unpack(tarFile, dest, ref string) error {
 }
 
 func unpack(w walker, dest, refName string) error {
+	if err := validateImageLayout(w); err != nil {
+		return err
+	}
+
 	ref, err := findDescriptor(w, refName)
 	if err != nil {
 		return err
@@ -157,6 +205,10 @@ func CreateRuntimeBundle(tarFile, dest, ref, root string) error {
 }
 
 func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
+	if err := validateImageLayout(w); err != nil {
+		return err
+	}
+
 	ref, err := findDescriptor(w, refName)
 	if err != nil {
 		return err
