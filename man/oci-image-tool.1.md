@@ -12,7 +12,6 @@ oci-image-tool \- OCI (Open Container Initiative) image tools
 # DESCRIPTION
 oci-image-tool is a collection of tools for working with the [OCI image specification](https://github.com/opencontainers/image-spec).
 
-
 # OPTIONS
 **--help**
   Print usage statement.
