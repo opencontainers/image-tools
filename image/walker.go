@@ -20,6 +20,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/pkg/errors"
 )
@@ -31,24 +32,34 @@ var (
 // walkFunc is a function type that gets called for each file or directory visited by the Walker.
 type walkFunc func(path string, _ os.FileInfo, _ io.Reader) error
 
-// walker is the interface that walks through a file tree,
-// calling walk for each file or directory in the tree.
+// walker is the interface that defines how to access a given archival format
 type walker interface {
+
+	// walk calls walkfunc for every entity in the archive
 	walk(walkFunc) error
-	reader
+
+	// get will copy an arbitrary blob, defined by desc, in to dst. returns
+	// the number of bytes copied on success.
+	get(desc descriptor, dst io.Writer) (int64, error)
 }
 
+// tarWalker exposes access to image layouts in a tar file.
 type tarWalker struct {
 	r io.ReadSeeker
-	tarReader
+
+	// Synchronize use of the reader
+	mut sync.Mutex
 }
 
 // newTarWalker returns a Walker that walks through .tar files.
-func newTarWalker(tarFile string, r io.ReadSeeker) walker {
-	return &tarWalker{r, tarReader{name: tarFile}}
+func newTarWalker(r io.ReadSeeker) walker {
+	return &tarWalker{r: r}
 }
 
 func (w *tarWalker) walk(f walkFunc) error {
+	w.mut.Lock()
+	defer w.mut.Unlock()
+
 	if _, err := w.r.Seek(0, io.SeekStart); err != nil {
 		return errors.Wrapf(err, "unable to reset")
 	}
@@ -76,6 +87,37 @@ loop:
 	return nil
 }
 
+func (w *tarWalker) get(desc descriptor, dst io.Writer) (int64, error) {
+	var bytes int64
+	done := false
+
+	expectedPath := filepath.Join("blobs", desc.algo(), desc.hash())
+
+	f := func(path string, info os.FileInfo, rdr io.Reader) error {
+		var err error
+		if done {
+			return nil
+		}
+
+		if path == expectedPath && !info.IsDir() {
+			if bytes, err = io.Copy(dst, rdr); err != nil {
+				return errors.Wrapf(err, "get failed: failed to copy blob to destination")
+			}
+			done = true
+		}
+		return nil
+	}
+
+	if err := w.walk(f); err != nil {
+		return 0, errors.Wrapf(err, "get failed: unable to walk")
+	}
+	if !done {
+		return 0, os.ErrNotExist
+	}
+
+	return bytes, nil
+}
+
 type eofReader struct{}
 
 func (eofReader) Read(_ []byte) (int, error) {
@@ -84,13 +126,12 @@ func (eofReader) Read(_ []byte) (int, error) {
 
 type pathWalker struct {
 	root string
-	layoutReader
 }
 
 // newPathWalker returns a Walker that walks through directories
 // starting at the given root path. It does not follow symlinks.
 func newPathWalker(root string) walker {
-	return &pathWalker{root, layoutReader{root: root}}
+	return &pathWalker{root}
 }
 
 func (w *pathWalker) walk(f walkFunc) error {
@@ -118,4 +159,29 @@ func (w *pathWalker) walk(f walkFunc) error {
 
 		return f(rel, info, file)
 	})
+}
+
+func (w *pathWalker) get(desc descriptor, dst io.Writer) (int64, error) {
+	name := filepath.Join(w.root, "blobs", desc.algo(), desc.hash())
+
+	info, err := os.Stat(name)
+	if err != nil {
+		return 0, err
+	}
+
+	if info.IsDir() {
+		return 0, fmt.Errorf("object is dir")
+	}
+
+	fp, err := os.Open(name)
+	if err != nil {
+		return 0, errors.Wrapf(err, "get failed")
+	}
+	defer fp.Close()
+
+	nbytes, err := io.Copy(dst, fp)
+	if err != nil {
+		return 0, errors.Wrapf(err, "get failed: failed to copy blob to destination")
+	}
+	return nbytes, nil
 }

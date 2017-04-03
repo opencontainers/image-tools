@@ -100,7 +100,7 @@ func validatePath(name string) error {
 	case image.TypeImageLayout:
 		return image.ValidateLayout(name, v.refs, v.stdout)
 	case image.TypeImage:
-		return image.Validate(name, v.refs, v.stdout)
+		return image.ValidateFile(name, v.refs, v.stdout)
 	}
 
 	if len(v.refs) != 0 {

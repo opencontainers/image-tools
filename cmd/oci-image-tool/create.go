@@ -47,7 +47,9 @@ func createHandle(context *cli.Context) error {
 		v.ref = context.String("ref")
 	}
 	if context.IsSet("rootfs") {
-		v.root = context.String("roofs")
+		v.root = context.String("rootfs")
+	} else {
+		v.root = "rootfs"
 	}
 
 	if v.typ == "" {
@@ -64,7 +66,7 @@ func createHandle(context *cli.Context) error {
 		err = image.CreateRuntimeBundleLayout(context.Args()[0], context.Args()[1], v.ref, v.root)
 
 	case image.TypeImage:
-		err = image.CreateRuntimeBundle(context.Args()[0], context.Args()[1], v.ref, v.root)
+		err = image.CreateRuntimeBundleFile(context.Args()[0], context.Args()[1], v.ref, v.root)
 
 	default:
 		err = fmt.Errorf("cannot create %q", v.typ)

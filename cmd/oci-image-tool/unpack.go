@@ -60,7 +60,7 @@ func unpackHandle(context *cli.Context) error {
 		err = image.UnpackLayout(context.Args()[0], context.Args()[1], v.ref)
 
 	case image.TypeImage:
-		err = image.Unpack(context.Args()[0], context.Args()[1], v.ref)
+		err = image.UnpackFile(context.Args()[0], context.Args()[1], v.ref)
 
 	default:
 		err = fmt.Errorf("cannot unpack %q", v.typ)
