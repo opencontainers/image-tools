@@ -105,28 +105,23 @@ func (d *descriptor) validate(w walker, mts []string) error {
 		return fmt.Errorf("invalid descriptor MediaType %q", d.MediaType)
 	}
 
-	rc, err := w.Get(*d)
-	if err != nil {
-		return err
-	}
-	defer rc.Close()
-
-	return d.validateContent(rc)
-}
-
-func (d *descriptor) validateContent(r io.Reader) error {
 	parsed, err := digest.Parse(d.Digest)
 	if err != nil {
 		return err
 	}
 
+	// Copy the contents of the layer in to the verifier
 	verifier := parsed.Verifier()
-	n, err := io.Copy(verifier, r)
+	numBytes, err := w.get(*d, verifier)
+	if err != nil {
+		return err
+	}
+
 	if err != nil {
 		return errors.Wrap(err, "error generating hash")
 	}
 
-	if n != d.Size {
+	if numBytes != d.Size {
 		return errors.New("size mismatch")
 	}
 

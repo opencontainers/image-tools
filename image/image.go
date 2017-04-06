@@ -17,6 +17,7 @@ package image
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -31,16 +32,24 @@ func ValidateLayout(src string, refs []string, out *log.Logger) error {
 	return validate(newPathWalker(src), refs, out)
 }
 
-// Validate walks through the given .tar file and validates the manifest
-// pointed to by the given refs or returns an error if the validation failed.
-func Validate(tarFile string, refs []string, out *log.Logger) error {
+// ValidateFile opens the tar file given by the filename, then calls ValidateReader
+func ValidateFile(tarFile string, refs []string, out *log.Logger) error {
 	f, err := os.Open(tarFile)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
 	}
 	defer f.Close()
 
-	return validate(newTarWalker(tarFile, f), refs, out)
+	return Validate(f, refs, out)
+}
+
+// Validate walks through a tar stream and validates the manifest.
+// * Check that all refs point to extant blobs
+// * Checks that all referred blobs are valid
+// * Checks that mime-types are correct
+// returns error on validation failure
+func Validate(r io.ReadSeeker, refs []string, out *log.Logger) error {
+	return validate(newTarWalker(r), refs, out)
 }
 
 var validRefMediaTypes = []string{
@@ -101,17 +110,23 @@ func UnpackLayout(src, dest, ref string) error {
 	return unpack(newPathWalker(src), dest, ref)
 }
 
-// Unpack walks through the given .tar file and, using the layers specified in
-// the manifest pointed to by the given ref, unpacks all layers in the given
-// destination directory or returns an error if the unpacking failed.
-func Unpack(tarFile, dest, ref string) error {
-	f, err := os.Open(tarFile)
+// UnpackFile opens the file pointed by tarFileName and calls Unpack on it.
+func UnpackFile(tarFileName, dest, ref string) error {
+	f, err := os.Open(tarFileName)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
 	}
 	defer f.Close()
 
-	return unpack(newTarWalker(tarFile, f), dest, ref)
+	return Unpack(f, dest, ref)
+}
+
+// Unpack walks through the tar stream and, using the layers specified in
+// the manifest pointed to by the given ref, unpacks all layers in the given
+// destination directory or returns an error if the unpacking failed.
+// The destination will be created if it does not exist.
+func Unpack(r io.ReadSeeker, dest, refName string) error {
+	return unpack(newTarWalker(r), dest, refName)
 }
 
 func unpack(w walker, dest, refName string) error {
@@ -143,17 +158,23 @@ func CreateRuntimeBundleLayout(src, dest, ref, root string) error {
 	return createRuntimeBundle(newPathWalker(src), dest, ref, root)
 }
 
-// CreateRuntimeBundle walks through the given .tar file and
-// creates an OCI runtime bundle in the given destination dest
-// or returns an error if the unpacking failed.
-func CreateRuntimeBundle(tarFile, dest, ref, root string) error {
+// CreateRuntimeBundleFile opens the file pointed by tarFile and calls
+// CreateRuntimeBundle.
+func CreateRuntimeBundleFile(tarFile, dest, ref, root string) error {
 	f, err := os.Open(tarFile)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
 	}
 	defer f.Close()
 
-	return createRuntimeBundle(newTarWalker(tarFile, f), dest, ref, root)
+	return createRuntimeBundle(newTarWalker(f), dest, ref, root)
+}
+
+// CreateRuntimeBundle walks through the given tar stream and
+// creates an OCI runtime bundle in the given destination dest
+// or returns an error if the unpacking failed.
+func CreateRuntimeBundle(r io.ReadSeeker, dest, ref, root string) error {
+	return createRuntimeBundle(newTarWalker(r), dest, ref, root)
 }
 
 func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
@@ -190,8 +211,7 @@ func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
 		}
 	}
 
-	err = m.unpack(w, filepath.Join(dest, rootfs))
-	if err != nil {
+	if err = m.unpack(w, filepath.Join(dest, rootfs)); err != nil {
 		return err
 	}
 

@@ -94,8 +94,8 @@ func (m *manifest) validate(w walker) error {
 func (m *manifest) unpack(w walker, dest string) (retErr error) {
 	// error out if the dest directory is not empty
 	s, err := ioutil.ReadDir(dest)
-	if err != nil && !os.IsNotExist(err) {
-		return errors.Wrap(err, "unable to open file") // err contains dest
+	if err != nil && !os.IsNotExist(err) { // We'll create the dir later
+		return errors.Wrap(err, "unpack: unable to open dest") // err contains dest
 	}
 	if len(s) > 0 {
 		return fmt.Errorf("%s is not empty", dest)
@@ -121,7 +121,7 @@ func (m *manifest) unpack(w walker, dest string) (retErr error) {
 			}
 
 			if err := unpackLayer(dest, r); err != nil {
-				return errors.Wrap(err, "error extracting layer")
+				return errors.Wrap(err, "unpack: error extracting layer")
 			}
 
 			return errEOW
