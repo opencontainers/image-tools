@@ -6,7 +6,6 @@ oci-image-tool create \- Create an OCI runtime bundle
 
 # SYNOPSIS
 **oci-image-tool create** [src] [dest] [OPTIONS]
-**oci-image-tool create** [--help|-v|--version]
 
 # DESCRIPTION
 `oci-image-tool create` validates an application/vnd.oci.image.manifest.v1+json and unpacks its layered filesystem to `dest/rootfs`, although the target directory is configurable with `--rootfs`. See **oci-image-tool unpack**(1) for more details on this process.
@@ -26,9 +25,6 @@ runtime-spec-compatible `dest/config.json`.
 
 **--type**=""
   Type of the file to unpack. If unset, oci-image-tool will try to auto-detect the type. One of "imageLayout,image"
-
-**-v**, **--version**
-  Print version information and exit.
 
 # EXAMPLES
 ```

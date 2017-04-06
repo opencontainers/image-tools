@@ -6,7 +6,6 @@ oci-image-tool validate \- Validate one or more image files
 
 # SYNOPSIS
 **oci-image-tool validate** FILE... [OPTIONS]
-**oci-image-tool validate** [--help|-v|--version]
 
 # DESCRIPTION
 `oci-image-tool validate` validates the given file(s) against the OCI image specification.
@@ -24,9 +23,6 @@ oci-image-tool validate \- Validate one or more image files
 
 **--type**=""
   Type of the file to validate. If unset, oci-image-tool will try to auto-detect the type. One of "imageLayout,image,manifest,imageIndex,config"
-
-**-v**, **--version**
-  Print version information and exit.
 
 # EXAMPLES
 ```
