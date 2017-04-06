@@ -39,17 +39,10 @@ func createHandle(context *cli.Context) error {
 		return fmt.Errorf("both src and dest must be provided")
 	}
 
-	var v bundleCmd
-	if context.IsSet("type") {
-		v.typ = context.String("type")
-	}
-	if context.IsSet("ref") {
-		v.ref = context.String("ref")
-	}
-	if context.IsSet("rootfs") {
-		v.root = context.String("rootfs")
-	} else {
-		v.root = "rootfs"
+	v := bundleCmd{
+		typ:  context.String("type"),
+		ref:  context.String("ref"),
+		root: context.String("rootfs"),
 	}
 
 	if v.typ == "" {
