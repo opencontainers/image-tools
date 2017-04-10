@@ -48,12 +48,9 @@ func validateHandler(context *cli.Context) error {
 		return fmt.Errorf("no files specified")
 	}
 
-	if context.IsSet("type") {
-		v.typ = context.String("type")
-	}
-
-	if context.IsSet("ref") {
-		v.refs = context.StringSlice("ref")
+	v = validateCmd{
+		typ:  context.String("type"),
+		refs: context.StringSlice("ref"),
 	}
 
 	var errs []string
