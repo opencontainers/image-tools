@@ -93,6 +93,10 @@ func validatePath(name string) error {
 		}
 	}
 
+	if v.stdout == nil {
+		v.stdout = log.New(os.Stdout, "oci-image-tool: ", 0)
+	}
+
 	switch typ {
 	case image.TypeImageLayout:
 		return image.ValidateLayout(name, v.refs, v.stdout)
