@@ -60,7 +60,7 @@ func Autodetect(path string) (string, error) {
 	mimeType := http.DetectContentType(buf)
 
 	switch mimeType {
-	case "application/x-gzip", "application/octet-stream":
+	case "application/x-gzip", "application/zip", "application/x-rar-compressed", "application/octet-stream":
 		return TypeImage, nil
 
 	case "text/plain; charset=utf-8":
