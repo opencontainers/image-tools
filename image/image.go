@@ -141,6 +141,7 @@ func validate(w walker, refs []string, out *log.Logger) error {
 			out.Printf("reference %q: OK", ref)
 		}
 	}
+
 	return nil
 }
 
@@ -154,8 +155,8 @@ func UnpackLayout(src, dest, ref, platform string) error {
 // UnpackZip opens and walks through the zip file given by src and, using the layers
 // specified in the manifest pointed to by the given ref, unpacks all layers in
 // the given destination directory or returns an error if the unpacking failed.
-func UnpackZip(src, dest, ref string) error {
-	return unpack(newZipWalker(src), dest, ref)
+func UnpackZip(src, dest, ref, platform string) error {
+	return unpack(newZipWalker(src), dest, ref, platform)
 }
 
 // UnpackFile opens the file pointed by tarFileName and calls Unpack on it.
@@ -237,8 +238,8 @@ func CreateRuntimeBundleLayout(src, dest, ref, root, platform string) error {
 // CreateRuntimeBundleZip opens and walks through the zip file given by src
 // and creates an OCI runtime bundle in the given destination dest
 // or returns an error if the unpacking failed.
-func CreateRuntimeBundleZip(src, dest, ref, root string) error {
-	return createRuntimeBundle(newZipWalker(src), dest, ref, root)
+func CreateRuntimeBundleZip(src, dest, ref, root, platform string) error {
+	return createRuntimeBundle(newZipWalker(src), dest, ref, root, platform)
 }
 
 // CreateRuntimeBundleFile opens the file pointed by tarFile and calls

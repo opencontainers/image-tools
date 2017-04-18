@@ -21,6 +21,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/opencontainers/image-spec/schema"
@@ -32,7 +33,7 @@ func layoutValidate(w walker) error {
 	var blobsExist, indexExist, layoutExist bool
 
 	if err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-		if strings.EqualFold(path, "blobs") {
+		if strings.EqualFold(filepath.Base(path), "blobs") {
 			blobsExist = true
 			if !info.IsDir() {
 				return fmt.Errorf("blobs is not a directory")
@@ -41,7 +42,7 @@ func layoutValidate(w walker) error {
 			return nil
 		}
 
-		if strings.EqualFold(path, "index.json") {
+		if strings.EqualFold(filepath.Base(path), "index.json") {
 			indexExist = true
 			if info.IsDir() {
 				return fmt.Errorf("index.json is a directory")
@@ -60,7 +61,7 @@ func layoutValidate(w walker) error {
 			return nil
 		}
 
-		if strings.EqualFold(path, "oci-layout") {
+		if strings.EqualFold(filepath.Base(path), "oci-layout") {
 			layoutExist = true
 			if info.IsDir() {
 				return fmt.Errorf("oci-layout is a directory")

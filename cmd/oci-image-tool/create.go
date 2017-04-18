@@ -26,6 +26,7 @@ import (
 var bundleTypes = []string{
 	image.TypeImageLayout,
 	image.TypeImage,
+	image.TypeImageZip,
 }
 
 type bundleCmd struct {
@@ -61,7 +62,7 @@ func createHandle(context *cli.Context) error {
 		err = image.CreateRuntimeBundleLayout(context.Args()[0], context.Args()[1], v.ref, v.root, v.platform)
 
 	case image.TypeImageZip:
-		err = image.CreateRuntimeBundleZip(context.Args()[0], context.Args()[1], v.ref, v.root)
+		err = image.CreateRuntimeBundleZip(context.Args()[0], context.Args()[1], v.ref, v.root, v.platform)
 
 	case image.TypeImage:
 		err = image.CreateRuntimeBundleFile(context.Args()[0], context.Args()[1], v.ref, v.root, v.platform)

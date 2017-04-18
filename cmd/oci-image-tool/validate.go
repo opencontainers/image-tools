@@ -30,6 +30,7 @@ import (
 var validateTypes = []string{
 	image.TypeImageLayout,
 	image.TypeImage,
+	image.TypeImageZip,
 	image.TypeManifest,
 	image.TypeImageIndex,
 	image.TypeConfig,
