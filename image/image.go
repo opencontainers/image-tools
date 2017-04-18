@@ -33,6 +33,12 @@ func ValidateLayout(src string, refs []string, out *log.Logger) error {
 	return validate(newPathWalker(src), refs, out)
 }
 
+// ValidateZip walks through the given file tree and validates the manifest
+// pointed to by the given refs or returns an error if the validation failed.
+func ValidateZip(src string, refs []string, out *log.Logger) error {
+	return validate(newZipWalker(src), refs, out)
+}
+
 // ValidateFile opens the tar file given by the filename, then calls ValidateReader
 func ValidateFile(tarFile string, refs []string, out *log.Logger) error {
 	f, err := os.Open(tarFile)
@@ -145,6 +151,13 @@ func UnpackLayout(src, dest, ref, platform string) error {
 	return unpack(newPathWalker(src), dest, ref, platform)
 }
 
+// UnpackZip opens and walks through the zip file given by src and, using the layers
+// specified in the manifest pointed to by the given ref, unpacks all layers in
+// the given destination directory or returns an error if the unpacking failed.
+func UnpackZip(src, dest, ref string) error {
+	return unpack(newZipWalker(src), dest, ref)
+}
+
 // UnpackFile opens the file pointed by tarFileName and calls Unpack on it.
 func UnpackFile(tarFileName, dest, ref, platform string) error {
 	f, err := os.Open(tarFileName)
@@ -219,6 +232,13 @@ func unpack(w walker, dest, refName, platform string) error {
 // or returns an error if the unpacking failed.
 func CreateRuntimeBundleLayout(src, dest, ref, root, platform string) error {
 	return createRuntimeBundle(newPathWalker(src), dest, ref, root, platform)
+}
+
+// CreateRuntimeBundleZip opens and walks through the zip file given by src
+// and creates an OCI runtime bundle in the given destination dest
+// or returns an error if the unpacking failed.
+func CreateRuntimeBundleZip(src, dest, ref, root string) error {
+	return createRuntimeBundle(newZipWalker(src), dest, ref, root)
 }
 
 // CreateRuntimeBundleFile opens the file pointed by tarFile and calls

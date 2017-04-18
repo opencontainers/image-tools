@@ -58,6 +58,9 @@ func unpackHandle(context *cli.Context) error {
 	case image.TypeImageLayout:
 		err = image.UnpackLayout(context.Args()[0], context.Args()[1], v.ref, v.platform)
 
+	case image.TypeImageZip:
+		err = image.UnpackZip(context.Args()[0], context.Args()[1], v.ref)
+
 	case image.TypeImage:
 		err = image.UnpackFile(context.Args()[0], context.Args()[1], v.ref, v.platform)
 

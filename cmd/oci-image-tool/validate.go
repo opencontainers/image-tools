@@ -100,6 +100,8 @@ func validatePath(name string) error {
 	switch typ {
 	case image.TypeImageLayout:
 		return image.ValidateLayout(name, v.refs, v.stdout)
+	case image.TypeImageZip:
+		return image.ValidateZip(name, v.refs, v.stdout)
 	case image.TypeImage:
 		return image.ValidateFile(name, v.refs, v.stdout)
 	}
