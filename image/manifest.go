@@ -39,11 +39,7 @@ func findManifest(w walker, d *v1.Descriptor) (*v1.Manifest, error) {
 	var m v1.Manifest
 	mpath := filepath.Join("blobs", string(d.Digest.Algorithm()), d.Digest.Hex())
 
-	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-		if info.IsDir() || filepath.Clean(path) != mpath {
-			return nil
-		}
-
+	switch err := w.find(mpath, func(path string, r io.Reader) error {
 		buf, err := ioutil.ReadAll(r)
 		if err != nil {
 			return errors.Wrapf(err, "%s: error reading manifest", path)
@@ -108,18 +104,10 @@ func unpackManifest(m *v1.Manifest, w walker, dest string) (retErr error) {
 		}
 	}()
 	for _, d := range m.Layers {
-		switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-			if info.IsDir() {
-				return nil
-			}
-
-			dd, err := filepath.Rel(filepath.Join("blobs", string(d.Digest.Algorithm())), filepath.Clean(path))
-			if err != nil || d.Digest.Hex() != dd {
-				return nil
-			}
-
+		lpath := filepath.Join("blobs", string(d.Digest.Algorithm()), d.Digest.Hex())
+		switch err := w.find(lpath, func(path string, r io.Reader) error {
 			if err := unpackLayer(d.MediaType, path, dest, r); err != nil {
-				return errors.Wrap(err, "error unpack: extracting layer")
+				return errors.Wrap(err, "unpack: error extracting layer")
 			}
 
 			return errEOW

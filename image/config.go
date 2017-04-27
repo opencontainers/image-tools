@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -35,10 +34,7 @@ func findConfig(w walker, d *v1.Descriptor) (*v1.Image, error) {
 	var c v1.Image
 	cpath := filepath.Join("blobs", string(d.Digest.Algorithm()), d.Digest.Hex())
 
-	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-		if info.IsDir() || filepath.Clean(path) != cpath {
-			return nil
-		}
+	switch err := w.find(cpath, func(path string, r io.Reader) error {
 		buf, err := ioutil.ReadAll(r)
 		if err != nil {
 			return errors.Wrapf(err, "%s: error reading config", path)
