@@ -31,8 +31,7 @@ import (
 )
 
 const (
-	refTag = "latest"
-
+	refTag    = "latest"
 	layoutStr = `{"imageLayoutVersion": "1.0.0"}`
 
 	configStr = `{
@@ -91,8 +90,44 @@ const (
 )
 
 var (
-	refStr = `{"digest":"<manifest_digest>","mediaType":"application/vnd.oci.image.manifest.v1+json","size":<manifest_size>}`
-
+	indexStr = `{
+  "schemaVersion": 2,
+  "manifests": [
+    {
+      "mediaType": "application/vnd.oci.image.index.v1+json",
+      "size": <manifest_size>,
+      "digest": "<manifest_digest>",
+      "annotations": {
+        "org.opencontainers.ref.name": "v1.0"
+      }
+    },
+    {
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "size": <manifest_size>,
+      "digest": "<manifest_digest>",
+      "platform": {
+        "architecture": "ppc64le",
+        "os": "linux"
+      },
+      "annotations": {
+        "org.opencontainers.ref.name": "latest"
+      }
+    },
+    {
+      "mediaType": "application/xml",
+      "size": <manifest_size>,
+      "digest": "<manifest_digest>",
+      "annotations": {
+        "org.freedesktop.specifications.metainfo.version": "1.0",
+        "org.freedesktop.specifications.metainfo.type": "AppStream"
+      }
+    }
+  ],
+  "annotations": {
+    "com.example.index.revision": "r124356"
+  }
+}
+ `
 	manifestStr = `{
     "annotations": null,
     "config": {
@@ -162,11 +197,6 @@ func createImageLayoutBundle(il imageLayout) error {
 		return err
 	}
 
-	err = os.MkdirAll(filepath.Join(il.rootDir, "refs"), 0700)
-	if err != nil {
-		return err
-	}
-
 	// create image layout file
 	err = createLayoutFile(il.rootDir)
 	if err != nil {
@@ -178,14 +208,14 @@ func createImageLayoutBundle(il imageLayout) error {
 	if err != nil {
 		return err
 	}
-	il.manifest = strings.Replace(il.manifest, "<layer_digest>", desc.Digest, 1)
+	il.manifest = strings.Replace(il.manifest, "<layer_digest>", string(desc.Digest), 1)
 	il.manifest = strings.Replace(il.manifest, "<layer_size>", strconv.FormatInt(desc.Size, 10), 1)
 
 	desc, err = createConfigFile(il.rootDir, il.config)
 	if err != nil {
 		return err
 	}
-	il.manifest = strings.Replace(il.manifest, "<config_digest>", desc.Digest, 1)
+	il.manifest = strings.Replace(il.manifest, "<config_digest>", string(desc.Digest), 1)
 	il.manifest = strings.Replace(il.manifest, "<config_size>", strconv.FormatInt(desc.Size, 10), 1)
 
 	// create manifest blob file
@@ -194,7 +224,7 @@ func createImageLayoutBundle(il imageLayout) error {
 		return err
 	}
 
-	return createRefFile(il.rootDir, il.ref, desc)
+	return createIndexFile(il.rootDir, desc)
 }
 
 func createLayoutFile(root string) error {
@@ -208,16 +238,16 @@ func createLayoutFile(root string) error {
 	return err
 }
 
-func createRefFile(root, ref string, mft descriptor) error {
-	refpath := filepath.Join(root, "refs", ref)
-	f, err := os.Create(refpath)
+func createIndexFile(root string, mft descriptor) error {
+	indexpath := filepath.Join(root, "index.json")
+	f, err := os.Create(indexpath)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	refStr = strings.Replace(refStr, "<manifest_digest>", mft.Digest, -1)
-	refStr = strings.Replace(refStr, "<manifest_size>", strconv.FormatInt(mft.Size, 10), -1)
-	_, err = io.Copy(f, bytes.NewBuffer([]byte(refStr)))
+	indexStr = strings.Replace(indexStr, "<manifest_digest>", string(mft.Digest), -1)
+	indexStr = strings.Replace(indexStr, "<manifest_size>", strconv.FormatInt(mft.Size, 10), -1)
+	_, err = io.Copy(f, bytes.NewBuffer([]byte(indexStr)))
 	return err
 }
 
@@ -297,7 +327,7 @@ func createHashedBlob(name string) (descriptor, error) {
 		return descriptor{}, err
 	}
 
-	parsed, err := digest.Parse(desc.Digest)
+	parsed, err := digest.Parse(string(desc.Digest))
 	if err != nil {
 		return descriptor{}, err
 	}
@@ -325,7 +355,7 @@ func newDescriptor(name string) (descriptor, error) {
 	}
 
 	return descriptor{
-		Digest: digester.Digest().String(),
+		Digest: digester.Digest(),
 		Size:   size,
 	}, nil
 }

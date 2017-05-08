@@ -23,17 +23,14 @@ import (
 	"strings"
 
 	"github.com/opencontainers/go-digest"
+	"github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 )
 
-type descriptor struct {
-	MediaType string `json:"mediaType"`
-	Digest    string `json:"digest"`
-	Size      int64  `json:"size"`
-}
+type descriptor v1.Descriptor
 
 func (d *descriptor) algo() string {
-	pts := strings.SplitN(d.Digest, ":", 2)
+	pts := strings.SplitN(string(d.Digest), ":", 2)
 	if len(pts) != 2 {
 		return ""
 	}
@@ -41,7 +38,7 @@ func (d *descriptor) algo() string {
 }
 
 func (d *descriptor) hash() string {
-	pts := strings.SplitN(d.Digest, ":", 2)
+	pts := strings.SplitN(string(d.Digest), ":", 2)
 	if len(pts) != 2 {
 		return ""
 	}
@@ -50,17 +47,22 @@ func (d *descriptor) hash() string {
 
 func listReferences(w walker) (map[string]*descriptor, error) {
 	refs := make(map[string]*descriptor)
+	var index v1.ImageIndex
 
 	if err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-		if info.IsDir() || !strings.HasPrefix(path, "refs") {
+		if info.IsDir() || filepath.Clean(path) != "index.json" {
 			return nil
 		}
 
-		var d descriptor
-		if err := json.NewDecoder(r).Decode(&d); err != nil {
+		if err := json.NewDecoder(r).Decode(&index); err != nil {
 			return err
 		}
-		refs[info.Name()] = &d
+
+		for i := 0; i < len(index.Manifests); i++ {
+			if index.Manifests[i].Descriptor.Annotations["org.opencontainers.ref.name"] != "" {
+				refs[index.Manifests[i].Descriptor.Annotations["org.opencontainers.ref.name"]] = (*descriptor)(&index.Manifests[i].Descriptor)
+			}
+		}
 
 		return nil
 	}); err != nil {
@@ -71,21 +73,28 @@ func listReferences(w walker) (map[string]*descriptor, error) {
 
 func findDescriptor(w walker, name string) (*descriptor, error) {
 	var d descriptor
-	dpath := filepath.Join("refs", name)
+	var index v1.ImageIndex
 
 	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-		if info.IsDir() || filepath.Clean(path) != dpath {
+		if info.IsDir() || filepath.Clean(path) != "index.json" {
 			return nil
 		}
 
-		if err := json.NewDecoder(r).Decode(&d); err != nil {
+		if err := json.NewDecoder(r).Decode(&index); err != nil {
 			return err
 		}
 
-		return errEOW
+		for i := 0; i < len(index.Manifests); i++ {
+			if index.Manifests[i].Descriptor.Annotations["org.opencontainers.ref.name"] == name {
+				d = (descriptor)(index.Manifests[i].Descriptor)
+				return errEOW
+			}
+		}
+
+		return nil
 	}); err {
 	case nil:
-		return nil, fmt.Errorf("%s: descriptor not found", dpath)
+		return nil, fmt.Errorf("index.json: descriptor not found")
 	case errEOW:
 		return &d, nil
 	default:
@@ -105,7 +114,7 @@ func (d *descriptor) validate(w walker, mts []string) error {
 		return fmt.Errorf("invalid descriptor MediaType %q", d.MediaType)
 	}
 
-	parsed, err := digest.Parse(d.Digest)
+	parsed, err := digest.Parse(string(d.Digest))
 	if err != nil {
 		return err
 	}

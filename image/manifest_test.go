@@ -143,7 +143,7 @@ func testUnpackLayer(t *testing.T, compression string, invalid bool) {
 	testManifest := manifest{
 		Layers: []descriptor{descriptor{
 			MediaType: mediatype,
-			Digest:    digester.Digest().String(),
+			Digest:    digester.Digest(),
 		}},
 	}
 	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
@@ -212,7 +212,7 @@ func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {
 	testManifest := manifest{
 		Layers: []descriptor{descriptor{
 			MediaType: "application/vnd.oci.image.layer.v1.tar+gzip",
-			Digest:    digester.Digest().String(),
+			Digest:    digester.Digest(),
 		}},
 	}
 	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
