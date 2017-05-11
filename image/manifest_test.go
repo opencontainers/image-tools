@@ -25,8 +25,16 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/opencontainers/go-digest"
+	"github.com/pkg/errors"
+
+	bz2 "github.com/dsnet/compress/bzip2"
 )
+
+func init() {
+	logrus.SetLevel(logrus.DebugLevel)
+}
 
 func TestUnpackLayerDuplicateEntries(t *testing.T) {
 	tmp1, err := ioutil.TempDir("", "test-dup")
@@ -60,12 +68,12 @@ func TestUnpackLayerDuplicateEntries(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmp2)
-	if err := unpackLayer(tmp2, r); err != nil && !strings.Contains(err.Error(), "duplicate entry for") {
+	if err := unpackLayer("application/vnd.oci.image.layer.v1.tar+gzip", f.Name(), tmp2, r); err != nil && !strings.Contains(err.Error(), "duplicate entry for") {
 		t.Fatalf("Expected to fail with duplicate entry, got %v", err)
 	}
 }
 
-func TestUnpackLayer(t *testing.T) {
+func testUnpackLayer(t *testing.T, compression string, invalid bool) {
 	tmp1, err := ioutil.TempDir("", "test-layer")
 	if err != nil {
 		t.Fatal(err)
@@ -81,14 +89,34 @@ func TestUnpackLayer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gw := gzip.NewWriter(f)
-	tw := tar.NewWriter(gw)
+	var writer io.WriteCloser = f
 
-	tw.WriteHeader(&tar.Header{Name: "test", Size: 4, Mode: 0600})
-	io.Copy(tw, bytes.NewReader([]byte("test")))
+	if !invalid {
+		switch compression {
+		case "gzip":
+			writer = gzip.NewWriter(f)
+		case "bzip2":
+			writer, err = bz2.NewWriter(f, nil)
+			if err != nil {
+				t.Fatal(errors.Wrap(err, "compiling bzip compressor"))
+			}
+		}
+	} else if invalid && compression == "" {
+		writer = gzip.NewWriter(f)
+	}
+
+	tw := tar.NewWriter(writer)
+
+	if headerErr := tw.WriteHeader(&tar.Header{Name: "test", Size: 4, Mode: 0600}); headerErr != nil {
+		t.Fatal(headerErr)
+	}
+
+	if _, copyErr := io.Copy(tw, bytes.NewReader([]byte("test"))); copyErr != nil {
+		t.Fatal(copyErr)
+	}
+
 	tw.Close()
-	gw.Close()
-	f.Close()
+	writer.Close()
 
 	digester := digest.SHA256.Digester()
 	file, err := os.Open(tarfile)
@@ -100,26 +128,42 @@ func TestUnpackLayer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = os.Rename(tarfile, filepath.Join(tmp1, "blobs", "sha256", digester.Digest().Hex()))
-	if err != nil {
-		t.Fatal(err)
+
+	blobPath := filepath.Join(tmp1, "blobs", "sha256", digester.Digest().Hex())
+
+	if renameErr := os.Rename(tarfile, blobPath); renameErr != nil {
+		t.Fatal(errors.Wrap(renameErr, blobPath))
+	}
+
+	mediatype := "application/vnd.oci.image.layer.v1.tar"
+	if compression != "" {
+		mediatype += "+" + compression
 	}
 
 	testManifest := manifest{
 		Layers: []descriptor{descriptor{
-			MediaType: "application/vnd.oci.image.layer.v1.tar+gzip",
+			MediaType: mediatype,
 			Digest:    digester.Digest().String(),
 		}},
 	}
 	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal(errors.Wrapf(err, "%q / %s", blobPath, compression))
 	}
 
 	_, err = os.Stat(filepath.Join(tmp1, "rootfs", "test"))
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal(errors.Wrapf(err, "%q / %s", blobPath, compression))
 	}
+}
+
+func TestUnpackLayer(t *testing.T) {
+	testUnpackLayer(t, "gzip", true)
+	testUnpackLayer(t, "gzip", false)
+	testUnpackLayer(t, "", true)
+	testUnpackLayer(t, "", false)
+	testUnpackLayer(t, "bzip2", true)
+	testUnpackLayer(t, "bzip2", false)
 }
 
 func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {

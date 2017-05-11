@@ -16,7 +16,9 @@ package image
 
 import (
 	"archive/tar"
+	"bufio"
 	"bytes"
+	"compress/bzip2"
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
@@ -27,6 +29,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/opencontainers/image-spec/schema"
 	"github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
@@ -120,8 +123,8 @@ func (m *manifest) unpack(w walker, dest string) (retErr error) {
 				return nil
 			}
 
-			if err := unpackLayer(dest, r); err != nil {
-				return errors.Wrap(err, "unpack: error extracting layer")
+			if err := unpackLayer(d.MediaType, path, dest, r); err != nil {
+				return errors.Wrap(err, "error unpack: extracting layer")
 			}
 
 			return errEOW
@@ -136,16 +139,72 @@ func (m *manifest) unpack(w walker, dest string) (retErr error) {
 	return nil
 }
 
-func unpackLayer(dest string, r io.Reader) error {
-	entries := make(map[string]bool)
-	gz, err := gzip.NewReader(r)
-	if err != nil {
-		return errors.Wrap(err, "error creating gzip reader")
+func getReader(path, mediaType, comp string, buf io.Reader) (io.Reader, error) {
+	switch comp {
+	case "gzip":
+		if !strings.HasSuffix(mediaType, "+gzip") {
+			logrus.Debugf("%q: %s media type with non-%s file", path, comp, comp)
+		}
+
+		return gzip.NewReader(buf)
+	case "bzip2":
+		if !strings.HasSuffix(mediaType, "+bzip2") {
+			logrus.Debugf("%q: %s media type with non-%s file", path, comp, comp)
+		}
+
+		return bzip2.NewReader(buf), nil
+	case "xz":
+		return nil, errors.New("xz layers are not supported")
+	default:
+		if strings.Contains(mediaType, "+") {
+			logrus.Debugf("%q: %s media type with non-%s file", path, comp, comp)
+		}
+
+		return buf, nil
 	}
-	defer gz.Close()
+}
+
+// DetectCompression detects the compression algorithm of the source.
+func DetectCompression(r *bufio.Reader) (string, error) {
+	source, err := r.Peek(10)
+	if err != nil {
+		return "", err
+	}
+
+	for compression, m := range map[string][]byte{
+		"bzip2": {0x42, 0x5A, 0x68},
+		"gzip":  {0x1F, 0x8B, 0x08},
+		// FIXME needs decompression support
+		// "xz":    {0xFD, 0x37, 0x7A, 0x58, 0x5A, 0x00},
+	} {
+		if len(source) < len(m) {
+			logrus.Debug("Len too short")
+			continue
+		}
+		if bytes.Equal(m, source[:len(m)]) {
+			return compression, nil
+		}
+	}
+	return "plain", nil
+}
+
+func unpackLayer(mediaType, path, dest string, r io.Reader) error {
+	entries := make(map[string]bool)
+
+	buf := bufio.NewReader(r)
+
+	comp, err := DetectCompression(buf)
+	if err != nil {
+		return err
+	}
+
+	reader, err := getReader(path, mediaType, comp, buf)
+	if err != nil {
+		return err
+	}
 
 	var dirs []*tar.Header
-	tr := tar.NewReader(gz)
+	tr := tar.NewReader(reader)
 
 loop:
 	for {
