@@ -1,0 +1,240 @@
+#!/bin/bash
+#
+# bash completion file for core oci-image-tool commands
+#
+# This script provides completion of:
+#  - commands and their options
+#  - filepaths
+#
+# To enable the completions either:
+#  - place this file in /usr/share/bash-completion/completions
+#  or
+#  - copy this file to e.g. ~/.oci-image-tool-completion.sh and add the line
+#    below to your .bashrc after bash completion features are loaded
+#    . ~/.oci-image-tool-completion.sh
+#
+# Configuration:
+#
+
+
+# Note for developers:
+# Please arrange options sorted alphabetically by long name with the short
+# options immediately following their corresponding long form.
+# This order should be applied to lists, alternatives and code blocks.
+
+__oci-image-tool_previous_extglob_setting=$(shopt -p extglob)
+shopt -s extglob
+
+__oci-image-tool_pos_first_nonflag() {
+	local argument_flags=$1
+
+	local counter=$((${subcommand_pos:-${command_pos}} + 1))
+	while [ $counter -le $cword ]; do
+		if [ -n "$argument_flags" ] && eval "case '${words[$counter]}' in $argument_flags) true ;; *) false ;; esac"; then
+			(( counter++ ))
+		else
+			case "${words[$counter]}" in
+				-*)
+					;;
+				*)
+					break
+					;;
+			esac
+		fi
+		(( counter++ ))
+	done
+
+	echo $counter
+}
+
+# Transforms a multiline list of strings into a single line string
+# with the words separated by "|".
+# This is used to prepare arguments to __oci-image-tool_pos_first_nonflag().
+__oci-image-tool_to_alternatives() {
+	local parts=( $1 )
+	local IFS='|'
+	echo "${parts[*]}"
+}
+
+# Transforms a multiline list of options into an extglob pattern
+# suitable for use in case statements.
+__oci-image-tool_to_extglob() {
+	local extglob=$( __oci-image-tool_to_alternatives "$1" )
+	echo "@($extglob)"
+}
+
+# Subcommand processing.
+# Locates the first occurrence of any of the subcommands contained in the
+# first argument. In case of a match, calls the corresponding completion
+# function and returns 0.
+# If no match is found, 1 is returned. The calling function can then
+# continue processing its completion.
+#
+# TODO if the preceding command has options that accept arguments and an
+# argument is equal ot one of the subcommands, this is falsely detected as
+# a match.
+__oci-image-tool_subcommands() {
+	local subcommands="$1"
+
+	local counter=$(($command_pos + 1))
+	while [ $counter -lt $cword ]; do
+		case "${words[$counter]}" in
+			$(__oci-image-tool_to_extglob "$subcommands") )
+				subcommand_pos=$counter
+				local subcommand=${words[$counter]}
+				local completions_func=_oci-image-tool_${command}_${subcommand}
+				declare -F $completions_func >/dev/null && $completions_func
+				return 0
+				;;
+		esac
+		(( counter++ ))
+	done
+	return 1
+}
+
+# suppress trailing whitespace
+__oci-image-tool_nospace() {
+	# compopt is not available in ancient bash versions
+	type compopt &>/dev/null && compopt -o nospace
+}
+
+__oci-image-tool_complete_common_types() {
+	# The list of types, ALL was added manually.
+	COMPREPLY=( $( compgen -W "
+		image
+		imageLayout
+	" -- "$cur" ) )
+}
+
+__oci-image-tool_complete_validate_types() {
+	# The list of types, ALL was added manually.
+	COMPREPLY=( $( compgen -W "
+		config
+		image
+		imageIndex
+		imageLayout
+		manifest
+	" -- "$cur" ) )
+}
+
+# global options that may appear after the oci-image-tool command
+_oci-image-tool_oci-image-tool() {
+	local boolean_options="
+		--debug
+		--help -h
+		--version -v
+	"
+
+	local all_options="$boolean_options"
+
+	case "$cur" in
+		-*)
+			COMPREPLY=( $( compgen -W "$all_options" -- "$cur" ) )
+			;;
+		*)
+			local counter=$( __oci-image-tool_pos_first_nonflag )
+			if [ $cword -eq $counter ]; then
+				COMPREPLY=( $( compgen -W "${commands[*]} help" -- "$cur" ) )
+			fi
+			;;
+	esac
+}
+
+_oci-image-tool_create() {
+	case "$prev" in
+		--type)
+			__oci-image-tool_complete_common_types
+			return
+			;;
+	esac
+
+	case "$cur" in
+		-*)
+			COMPREPLY=( $( compgen -W "--type --ref --rootfs --help -h" -- "$cur" ) )
+			;;
+	esac
+
+}
+
+_oci-image-tool_unpack() {
+	case "$prev" in
+		--type)
+			__oci-image-tool_complete_common_types
+			return
+			;;
+	esac
+
+	case "$cur" in
+		-*)
+			COMPREPLY=( $( compgen -W "--type --ref --help -h" -- "$cur" ) )
+			;;
+	esac
+
+}
+
+_oci-image-tool_validate() {
+	case "$prev" in
+		--type)
+			__oci-image-tool_complete_validate_types
+			return
+			;;
+	esac
+
+	case "$cur" in
+		-*)
+			COMPREPLY=( $( compgen -W "--type --ref --help -h" -- "$cur" ) )
+			;;
+	esac
+
+}
+
+_oci-image-tool_help() {
+	local counter=$(__oci-image-tool_pos_first_nonflag)
+	if [ $cword -eq $counter ]; then
+		COMPREPLY=( $( compgen -W "${commands[*]}" -- "$cur" ) )
+	fi
+}
+
+_oci-image-tool() {
+	local previous_extglob_setting=$(shopt -p extglob)
+	shopt -s extglob
+
+	local commands=(
+		create
+		validate
+		unpack
+	)
+
+	COMPREPLY=()
+	local cur prev words cword
+	_get_comp_words_by_ref -n : cur prev words cword
+
+	local command='oci-image-tool' command_pos=0 subcommand_pos
+	local counter=1
+	while [ $counter -lt $cword ]; do
+		case "${words[$counter]}" in
+			-*)
+				;;
+			=)
+				(( counter++ ))
+				;;
+			*)
+				command="${words[$counter]}"
+				command_pos=$counter
+				break
+				;;
+		esac
+		(( counter++ ))
+	done
+
+	local completions_func=_oci-image-tool_${command}
+	declare -F $completions_func >/dev/null && $completions_func
+
+	eval "$previous_extglob_setting"
+	return 0
+}
+
+eval "$__oci-image-tool_previous_extglob_setting"
+unset __oci-image-tool_previous_extglob_setting
+
+complete -F _oci-image-tool oci-image-tool

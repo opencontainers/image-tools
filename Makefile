@@ -48,7 +48,7 @@ install: man
 	install -d -m 755 $(PREFIX)/share/man/man1
 	install -m 644 *.1 $(PREFIX)/share/man/man1
 	install -d -m 755 $(PREFIX)/share/bash-completion/completions
-	install -m 644 completions/bash/oci-image-tool $(PREFIX)/share/bash-completion/completionsn
+	install -m 644 completions/bash/oci-image-tool $(PREFIX)/share/bash-completion/completions
 
 uninstall:
 	rm -f $(BINDIR)/oci-image-tool
