@@ -43,7 +43,7 @@ type validateCmd struct {
 
 var v validateCmd
 
-func validateHandler(context *cli.Context) error {
+func validateAction(context *cli.Context) error {
 	if len(context.Args()) < 1 {
 		return fmt.Errorf("no files specified")
 	}
@@ -129,7 +129,7 @@ func validatePath(name string) error {
 var validateCommand = cli.Command{
 	Name:   "validate",
 	Usage:  "Validate one or more image files",
-	Action: validateHandler,
+	Action: validateAction,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name: "type",

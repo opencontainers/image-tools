@@ -34,7 +34,7 @@ type bundleCmd struct {
 	root string
 }
 
-func createHandle(context *cli.Context) error {
+func createAction(context *cli.Context) error {
 	if len(context.Args()) != 2 {
 		return fmt.Errorf("both src and dest must be provided")
 	}
@@ -76,7 +76,7 @@ func createHandle(context *cli.Context) error {
 var createCommand = cli.Command{
 	Name:   "create",
 	Usage:  "Create an OCI image runtime bundle",
-	Action: createHandle,
+	Action: createAction,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name: "type",
