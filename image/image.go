@@ -75,6 +75,12 @@ func validate(w walker, refs []string, out *log.Logger) error {
 		}
 	}
 
+	for _, refName := range refs {
+		if err = refsNameRegexpCheck(refName); err != nil {
+			return err
+		}
+	}
+
 	for _, ref := range refs {
 		d, ok := ds[ref]
 		if !ok {
@@ -130,6 +136,10 @@ func Unpack(r io.ReadSeeker, dest, refName string) error {
 }
 
 func unpack(w walker, dest, refName string) error {
+	if err := refsNameRegexpCheck(refName); err != nil {
+		return err
+	}
+
 	ref, err := findDescriptor(w, refName)
 	if err != nil {
 		return err
@@ -178,6 +188,10 @@ func CreateRuntimeBundle(r io.ReadSeeker, dest, ref, root string) error {
 }
 
 func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
+	if err := refsNameRegexpCheck(refName); err != nil {
+		return err
+	}
+
 	ref, err := findDescriptor(w, refName)
 	if err != nil {
 		return err
@@ -227,4 +241,11 @@ func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
 	defer f.Close()
 
 	return json.NewEncoder(f).Encode(spec)
+}
+
+func refsNameRegexpCheck(refName string) error {
+	if boolRefsNameMatch := v1.RefsRegexp.MatchString(refName); !boolRefsNameMatch {
+		return fmt.Errorf("input parameter --ref (%s) is invalide", refName)
+	}
+	return nil
 }
