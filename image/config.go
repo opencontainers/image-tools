@@ -78,9 +78,10 @@ func (c *config) runtimeSpec(rootfs string) (*specs.Spec, error) {
 
 	s.Process = &specs.Process{}
 	s.Process.Terminal = true
-	s.Process.Cwd = "/"
 	if c.Config.WorkingDir != "" {
 		s.Process.Cwd = c.Config.WorkingDir
+	} else {
+		s.Process.Cwd = "/"
 	}
 	s.Process.Env = append(s.Process.Env, c.Config.Env...)
 	s.Process.Args = append(s.Process.Args, c.Config.Entrypoint...)
