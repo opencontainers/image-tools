@@ -1,8 +1,6 @@
-hash: 241445fd3c6f49a1a4c23f7a42d6ff85bf7a72a9d1c58fd62b987a43f2d910b5
-updated: 2017-02-23T09:35:36.276714335+08:00
+hash: b499d554f4cb67661181be8b786fd97227a16f6aad804970cbf25c684febb9ee
+updated: 2017-03-28T15:27:57.376207574+08:00
 imports:
-- name: github.com/inconshreveable/mousetrap
-  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/opencontainers/go-digest
   version: aa2ec055abd10d26d539eb630a92241b781ce4bc
 - name: github.com/opencontainers/image-spec
@@ -21,18 +19,18 @@ imports:
   version: 4b6ea7319e214d98c938f12692336f7ca9348d6b
 - name: github.com/urfave/cli
   version: 0bdeddeeb0f650497d603c4ad7b20cfe685682f6
-- name: github.com/spf13/cobra
-  version: 9c28e4bbd74e5c3ed7aacbc552b2cab7cfdfe744
-- name: github.com/spf13/pflag
-  version: 7b17cc4658ef5ca157b986ea5c0b43af7938532b
 - name: github.com/xeipuuv/gojsonpointer
-  version: e0fe6f68307607d540ed8eac07a342c33fa1b54a
+  version: 6fe8760cad3569743d51ddbb243b26f8456742dc
 - name: github.com/xeipuuv/gojsonreference
   version: e02fc20de94c78484cd5ffb007f8af96be030a45
 - name: github.com/xeipuuv/gojsonschema
   version: d5336c75940ef31c9ceeb0ae64cf92944bccb4ee
 - name: go4.org
-  version: 7ce08ca145dbe0e66a127c447b80ee7914f3e4f9
+  version: 169ea6cabe2a4888dba958edaecc9e9751adc711
   subpackages:
   - errorutil
+- name: golang.org/x/sys
+  version: afadfcc7779c1f4db0f6f6438afcb108d9c9c7cd
+  subpackages:
+  - unix
 testImports: []
