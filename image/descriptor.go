@@ -27,7 +27,7 @@ import (
 
 func listReferences(w walker) (map[string]*v1.Descriptor, error) {
 	refs := make(map[string]*v1.Descriptor)
-	var index v1.ImageIndex
+	var index v1.Index
 
 	if err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
 		if info.IsDir() || filepath.Clean(path) != "index.json" {
@@ -39,8 +39,8 @@ func listReferences(w walker) (map[string]*v1.Descriptor, error) {
 		}
 
 		for i := 0; i < len(index.Manifests); i++ {
-			if index.Manifests[i].Descriptor.Annotations["org.opencontainers.ref.name"] != "" {
-				refs[index.Manifests[i].Descriptor.Annotations["org.opencontainers.ref.name"]] = &index.Manifests[i].Descriptor
+			if index.Manifests[i].Annotations["org.opencontainers.ref.name"] != "" {
+				refs[index.Manifests[i].Annotations["org.opencontainers.ref.name"]] = &index.Manifests[i]
 			}
 		}
 
@@ -53,7 +53,7 @@ func listReferences(w walker) (map[string]*v1.Descriptor, error) {
 
 func findDescriptor(w walker, name string) (*v1.Descriptor, error) {
 	var d v1.Descriptor
-	var index v1.ImageIndex
+	var index v1.Index
 
 	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
 		if info.IsDir() || filepath.Clean(path) != "index.json" {
@@ -65,8 +65,8 @@ func findDescriptor(w walker, name string) (*v1.Descriptor, error) {
 		}
 
 		for i := 0; i < len(index.Manifests); i++ {
-			if index.Manifests[i].Descriptor.Annotations["org.opencontainers.ref.name"] == name {
-				d = index.Manifests[i].Descriptor
+			if index.Manifests[i].Annotations["org.opencontainers.ref.name"] == name {
+				d = index.Manifests[i]
 				return errEOW
 			}
 		}
