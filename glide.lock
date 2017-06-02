@@ -1,5 +1,5 @@
-hash: b499d554f4cb67661181be8b786fd97227a16f6aad804970cbf25c684febb9ee
-updated: 2017-03-28T15:27:57.376207574+08:00
+hash: e9c211852a86321a1f813d907d77ebb1fc9f7155659908083d7fd36154a5d300
+updated: 2017-05-19T15:06:11.526723405+08:00
 imports:
 - name: github.com/opencontainers/go-digest
   version: aa2ec055abd10d26d539eb630a92241b781ce4bc
@@ -10,7 +10,7 @@ imports:
   - specs-go
   - specs-go/v1
 - name: github.com/opencontainers/runtime-spec
-  version: 339eba52400dde8732b03e32624607a4517a556c
+  version: 035da1dca3dfbb00d752eb58b0b158d6129f3776
   subpackages:
   - specs-go
 - name: github.com/pkg/errors
@@ -26,11 +26,18 @@ imports:
 - name: github.com/xeipuuv/gojsonschema
   version: d5336c75940ef31c9ceeb0ae64cf92944bccb4ee
 - name: go4.org
-  version: 169ea6cabe2a4888dba958edaecc9e9751adc711
+  version: 16ace784e4b16df1d51c3435223b1d602cd43bfa
   subpackages:
   - errorutil
 - name: golang.org/x/sys
-  version: afadfcc7779c1f4db0f6f6438afcb108d9c9c7cd
+  version: a2e06a18b0d52d8cb2010e04b372a1965d8e3439
   subpackages:
   - unix
-testImports: []
+testImports:
+- name: github.com/dsnet/compress
+  version: b9aab3c6a04eef14c56384b4ad065e7b73438862
+  subpackages:
+  - bzip2
+  - bzip2/internal/sais
+  - internal
+  - internal/prefix
