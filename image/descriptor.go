@@ -53,7 +53,7 @@ func listReferences(w walker) (map[string]*descriptor, error) {
 
 	if err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
 		if info.IsDir() || !strings.HasPrefix(path, "refs") {
-			return nil
+			return errors.New("no descriptors found")
 		}
 
 		var d descriptor
