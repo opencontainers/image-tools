@@ -33,9 +33,9 @@ import (
 
 type config v1.Image
 
-func findConfig(w walker, d *descriptor) (*config, error) {
+func findConfig(w walker, d *v1.Descriptor) (*config, error) {
 	var c config
-	cpath := filepath.Join("blobs", d.algo(), d.hash())
+	cpath := filepath.Join("blobs", string(d.Digest.Algorithm()), d.Digest.Hex())
 
 	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
 		if info.IsDir() || filepath.Clean(path) != cpath {

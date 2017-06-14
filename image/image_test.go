@@ -238,7 +238,7 @@ func createLayoutFile(root string) error {
 	return err
 }
 
-func createIndexFile(root string, mft descriptor) error {
+func createIndexFile(root string, mft v1.Descriptor) error {
 	indexpath := filepath.Join(root, "index.json")
 	f, err := os.Create(indexpath)
 	if err != nil {
@@ -251,48 +251,48 @@ func createIndexFile(root string, mft descriptor) error {
 	return err
 }
 
-func createManifestFile(root, str string) (descriptor, error) {
+func createManifestFile(root, str string) (v1.Descriptor, error) {
 	name := filepath.Join(root, "blobs", "sha256", "test-manifest")
 	f, err := os.Create(name)
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 	defer f.Close()
 
 	_, err = io.Copy(f, bytes.NewBuffer([]byte(str)))
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 
 	return createHashedBlob(name)
 }
 
-func createConfigFile(root, config string) (descriptor, error) {
+func createConfigFile(root, config string) (v1.Descriptor, error) {
 	name := filepath.Join(root, "blobs", "sha256", "test-config")
 	f, err := os.Create(name)
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 	defer f.Close()
 
 	_, err = io.Copy(f, bytes.NewBuffer([]byte(config)))
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 
 	return createHashedBlob(name)
 }
 
-func createImageLayerFile(root string, list []tarContent) (descriptor, error) {
+func createImageLayerFile(root string, list []tarContent) (v1.Descriptor, error) {
 	name := filepath.Join(root, "blobs", "sha256", "test-layer")
 	err := createTarBlob(name, list)
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 
 	desc, err := createHashedBlob(name)
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 
 	desc.MediaType = v1.MediaTypeImageLayer
@@ -321,40 +321,39 @@ func createTarBlob(name string, list []tarContent) error {
 	return nil
 }
 
-func createHashedBlob(name string) (descriptor, error) {
+func createHashedBlob(name string) (v1.Descriptor, error) {
 	desc, err := newDescriptor(name)
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 
-	parsed, err := digest.Parse(string(desc.Digest))
-	if err != nil {
-		return descriptor{}, err
+	if err := desc.Digest.Validate(); err != nil {
+		return v1.Descriptor{}, err
 	}
 
 	// Rename the file to hashed-digest name.
-	err = os.Rename(name, filepath.Join(filepath.Dir(name), parsed.Hex()))
+	err = os.Rename(name, filepath.Join(filepath.Dir(name), desc.Digest.Hex()))
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 
 	return desc, nil
 }
 
-func newDescriptor(name string) (descriptor, error) {
+func newDescriptor(name string) (v1.Descriptor, error) {
 	file, err := os.Open(name)
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 	defer file.Close()
 
 	digester := digest.SHA256.Digester()
 	size, err := io.Copy(digester.Hash(), file)
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 
-	return descriptor{
+	return v1.Descriptor{
 		Digest: digester.Digest(),
 		Size:   size,
 	}, nil

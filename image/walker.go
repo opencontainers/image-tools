@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 )
 
@@ -40,7 +41,7 @@ type walker interface {
 
 	// get will copy an arbitrary blob, defined by desc, in to dst. returns
 	// the number of bytes copied on success.
-	get(desc descriptor, dst io.Writer) (int64, error)
+	get(desc v1.Descriptor, dst io.Writer) (int64, error)
 }
 
 // tarWalker exposes access to image layouts in a tar file.
@@ -87,11 +88,11 @@ loop:
 	return nil
 }
 
-func (w *tarWalker) get(desc descriptor, dst io.Writer) (int64, error) {
+func (w *tarWalker) get(desc v1.Descriptor, dst io.Writer) (int64, error) {
 	var bytes int64
 	done := false
 
-	expectedPath := filepath.Join("blobs", desc.algo(), desc.hash())
+	expectedPath := filepath.Join("blobs", string(desc.Digest.Algorithm()), desc.Digest.Hex())
 
 	f := func(path string, info os.FileInfo, rdr io.Reader) error {
 		var err error
@@ -161,8 +162,8 @@ func (w *pathWalker) walk(f walkFunc) error {
 	})
 }
 
-func (w *pathWalker) get(desc descriptor, dst io.Writer) (int64, error) {
-	name := filepath.Join(w.root, "blobs", desc.algo(), desc.hash())
+func (w *pathWalker) get(desc v1.Descriptor, dst io.Writer) (int64, error) {
+	name := filepath.Join(w.root, "blobs", string(desc.Digest.Algorithm()), desc.Digest.Hex())
 
 	info, err := os.Stat(name)
 	if err != nil {
