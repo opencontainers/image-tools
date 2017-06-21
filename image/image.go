@@ -84,7 +84,7 @@ func validate(w walker, refs []string, out *log.Logger) error {
 			return fmt.Errorf("reference %s not found", ref)
 		}
 
-		if err = d.validate(w, validRefMediaTypes); err != nil {
+		if err = validateDescriptor(d, w, validRefMediaTypes); err != nil {
 			return err
 		}
 
@@ -135,7 +135,7 @@ func unpack(w walker, dest, refName string) error {
 		return err
 	}
 
-	if err = ref.validate(w, validRefMediaTypes); err != nil {
+	if err = validateDescriptor(ref, w, validRefMediaTypes); err != nil {
 		return err
 	}
 
@@ -183,7 +183,7 @@ func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
 		return err
 	}
 
-	if err = ref.validate(w, validRefMediaTypes); err != nil {
+	if err = validateDescriptor(ref, w, validRefMediaTypes); err != nil {
 		return err
 	}
 

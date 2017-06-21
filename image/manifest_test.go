@@ -27,6 +27,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/opencontainers/go-digest"
+	"github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 
 	bz2 "github.com/dsnet/compress/bzip2"
@@ -141,9 +142,9 @@ func testUnpackLayer(t *testing.T, compression string, invalid bool) {
 	}
 
 	testManifest := manifest{
-		Layers: []descriptor{descriptor{
+		Layers: []v1.Descriptor{v1.Descriptor{
 			MediaType: mediatype,
-			Digest:    digester.Digest().String(),
+			Digest:    digester.Digest(),
 		}},
 	}
 	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
@@ -210,9 +211,9 @@ func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {
 	}
 
 	testManifest := manifest{
-		Layers: []descriptor{descriptor{
+		Layers: []v1.Descriptor{v1.Descriptor{
 			MediaType: "application/vnd.oci.image.layer.v1.tar+gzip",
-			Digest:    digester.Digest().String(),
+			Digest:    digester.Digest(),
 		}},
 	}
 	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))

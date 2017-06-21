@@ -31,8 +31,7 @@ import (
 )
 
 const (
-	refTag = "latest"
-
+	refTag    = "latest"
 	layoutStr = `{"imageLayoutVersion": "1.0.0"}`
 
 	configStr = `{
@@ -91,8 +90,44 @@ const (
 )
 
 var (
-	refStr = `{"digest":"<manifest_digest>","mediaType":"application/vnd.oci.image.manifest.v1+json","size":<manifest_size>}`
-
+	indexStr = `{
+  "schemaVersion": 2,
+  "manifests": [
+    {
+      "mediaType": "application/vnd.oci.image.index.v1+json",
+      "size": <manifest_size>,
+      "digest": "<manifest_digest>",
+      "annotations": {
+        "org.opencontainers.ref.name": "v1.0"
+      }
+    },
+    {
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "size": <manifest_size>,
+      "digest": "<manifest_digest>",
+      "platform": {
+        "architecture": "ppc64le",
+        "os": "linux"
+      },
+      "annotations": {
+        "org.opencontainers.ref.name": "latest"
+      }
+    },
+    {
+      "mediaType": "application/xml",
+      "size": <manifest_size>,
+      "digest": "<manifest_digest>",
+      "annotations": {
+        "org.freedesktop.specifications.metainfo.version": "1.0",
+        "org.freedesktop.specifications.metainfo.type": "AppStream"
+      }
+    }
+  ],
+  "annotations": {
+    "com.example.index.revision": "r124356"
+  }
+}
+ `
 	manifestStr = `{
     "annotations": null,
     "config": {
@@ -162,11 +197,6 @@ func createImageLayoutBundle(il imageLayout) error {
 		return err
 	}
 
-	err = os.MkdirAll(filepath.Join(il.rootDir, "refs"), 0700)
-	if err != nil {
-		return err
-	}
-
 	// create image layout file
 	err = createLayoutFile(il.rootDir)
 	if err != nil {
@@ -178,14 +208,14 @@ func createImageLayoutBundle(il imageLayout) error {
 	if err != nil {
 		return err
 	}
-	il.manifest = strings.Replace(il.manifest, "<layer_digest>", desc.Digest, 1)
+	il.manifest = strings.Replace(il.manifest, "<layer_digest>", string(desc.Digest), 1)
 	il.manifest = strings.Replace(il.manifest, "<layer_size>", strconv.FormatInt(desc.Size, 10), 1)
 
 	desc, err = createConfigFile(il.rootDir, il.config)
 	if err != nil {
 		return err
 	}
-	il.manifest = strings.Replace(il.manifest, "<config_digest>", desc.Digest, 1)
+	il.manifest = strings.Replace(il.manifest, "<config_digest>", string(desc.Digest), 1)
 	il.manifest = strings.Replace(il.manifest, "<config_size>", strconv.FormatInt(desc.Size, 10), 1)
 
 	// create manifest blob file
@@ -194,7 +224,7 @@ func createImageLayoutBundle(il imageLayout) error {
 		return err
 	}
 
-	return createRefFile(il.rootDir, il.ref, desc)
+	return createIndexFile(il.rootDir, desc)
 }
 
 func createLayoutFile(root string) error {
@@ -208,61 +238,61 @@ func createLayoutFile(root string) error {
 	return err
 }
 
-func createRefFile(root, ref string, mft descriptor) error {
-	refpath := filepath.Join(root, "refs", ref)
-	f, err := os.Create(refpath)
+func createIndexFile(root string, mft v1.Descriptor) error {
+	indexpath := filepath.Join(root, "index.json")
+	f, err := os.Create(indexpath)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	refStr = strings.Replace(refStr, "<manifest_digest>", mft.Digest, -1)
-	refStr = strings.Replace(refStr, "<manifest_size>", strconv.FormatInt(mft.Size, 10), -1)
-	_, err = io.Copy(f, bytes.NewBuffer([]byte(refStr)))
+	indexStr = strings.Replace(indexStr, "<manifest_digest>", string(mft.Digest), -1)
+	indexStr = strings.Replace(indexStr, "<manifest_size>", strconv.FormatInt(mft.Size, 10), -1)
+	_, err = io.Copy(f, bytes.NewBuffer([]byte(indexStr)))
 	return err
 }
 
-func createManifestFile(root, str string) (descriptor, error) {
+func createManifestFile(root, str string) (v1.Descriptor, error) {
 	name := filepath.Join(root, "blobs", "sha256", "test-manifest")
 	f, err := os.Create(name)
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 	defer f.Close()
 
 	_, err = io.Copy(f, bytes.NewBuffer([]byte(str)))
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 
 	return createHashedBlob(name)
 }
 
-func createConfigFile(root, config string) (descriptor, error) {
+func createConfigFile(root, config string) (v1.Descriptor, error) {
 	name := filepath.Join(root, "blobs", "sha256", "test-config")
 	f, err := os.Create(name)
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 	defer f.Close()
 
 	_, err = io.Copy(f, bytes.NewBuffer([]byte(config)))
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 
 	return createHashedBlob(name)
 }
 
-func createImageLayerFile(root string, list []tarContent) (descriptor, error) {
+func createImageLayerFile(root string, list []tarContent) (v1.Descriptor, error) {
 	name := filepath.Join(root, "blobs", "sha256", "test-layer")
 	err := createTarBlob(name, list)
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 
 	desc, err := createHashedBlob(name)
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 
 	desc.MediaType = v1.MediaTypeImageLayer
@@ -291,41 +321,40 @@ func createTarBlob(name string, list []tarContent) error {
 	return nil
 }
 
-func createHashedBlob(name string) (descriptor, error) {
+func createHashedBlob(name string) (v1.Descriptor, error) {
 	desc, err := newDescriptor(name)
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 
-	parsed, err := digest.Parse(desc.Digest)
-	if err != nil {
-		return descriptor{}, err
+	if err := desc.Digest.Validate(); err != nil {
+		return v1.Descriptor{}, err
 	}
 
 	// Rename the file to hashed-digest name.
-	err = os.Rename(name, filepath.Join(filepath.Dir(name), parsed.Hex()))
+	err = os.Rename(name, filepath.Join(filepath.Dir(name), desc.Digest.Hex()))
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 
 	return desc, nil
 }
 
-func newDescriptor(name string) (descriptor, error) {
+func newDescriptor(name string) (v1.Descriptor, error) {
 	file, err := os.Open(name)
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 	defer file.Close()
 
 	digester := digest.SHA256.Digester()
 	size, err := io.Copy(digester.Hash(), file)
 	if err != nil {
-		return descriptor{}, err
+		return v1.Descriptor{}, err
 	}
 
-	return descriptor{
-		Digest: digester.Digest().String(),
+	return v1.Descriptor{
+		Digest: digester.Digest(),
 		Size:   size,
 	}, nil
 }

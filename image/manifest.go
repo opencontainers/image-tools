@@ -36,13 +36,13 @@ import (
 )
 
 type manifest struct {
-	Config descriptor   `json:"config"`
-	Layers []descriptor `json:"layers"`
+	Config v1.Descriptor   `json:"config"`
+	Layers []v1.Descriptor `json:"layers"`
 }
 
-func findManifest(w walker, d *descriptor) (*manifest, error) {
+func findManifest(w walker, d *v1.Descriptor) (*manifest, error) {
 	var m manifest
-	mpath := filepath.Join("blobs", d.algo(), d.hash())
+	mpath := filepath.Join("blobs", string(d.Digest.Algorithm()), d.Digest.Hex())
 
 	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
 		if info.IsDir() || filepath.Clean(path) != mpath {
@@ -74,7 +74,7 @@ func findManifest(w walker, d *descriptor) (*manifest, error) {
 }
 
 func (m *manifest) validate(w walker) error {
-	if err := m.Config.validate(w, []string{v1.MediaTypeImageConfig}); err != nil {
+	if err := validateDescriptor(&m.Config, w, []string{v1.MediaTypeImageConfig}); err != nil {
 		return errors.Wrap(err, "config validation failed")
 	}
 
@@ -86,7 +86,7 @@ func (m *manifest) validate(w walker) error {
 	}
 
 	for _, d := range m.Layers {
-		if err := d.validate(w, validLayerMediaTypes); err != nil {
+		if err := validateDescriptor(&d, w, validLayerMediaTypes); err != nil {
 			return errors.Wrap(err, "layer validation failed")
 		}
 	}
@@ -118,8 +118,8 @@ func (m *manifest) unpack(w walker, dest string) (retErr error) {
 				return nil
 			}
 
-			dd, err := filepath.Rel(filepath.Join("blobs", d.algo()), filepath.Clean(path))
-			if err != nil || d.hash() != dd {
+			dd, err := filepath.Rel(filepath.Join("blobs", string(d.Digest.Algorithm())), filepath.Clean(path))
+			if err != nil || d.Digest.Hex() != dd {
 				return nil
 			}
 
