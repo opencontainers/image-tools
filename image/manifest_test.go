@@ -142,10 +142,12 @@ func testUnpackLayer(t *testing.T, compression string, invalid bool) {
 	}
 
 	testManifest := manifest{
-		Layers: []v1.Descriptor{v1.Descriptor{
-			MediaType: mediatype,
-			Digest:    digester.Digest(),
-		}},
+		Layers: []v1.Descriptor{
+			{
+				MediaType: mediatype,
+				Digest:    digester.Digest(),
+			},
+		},
 	}
 	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
 	if err != nil {
@@ -211,10 +213,12 @@ func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {
 	}
 
 	testManifest := manifest{
-		Layers: []v1.Descriptor{v1.Descriptor{
-			MediaType: "application/vnd.oci.image.layer.v1.tar+gzip",
-			Digest:    digester.Digest(),
-		}},
+		Layers: []v1.Descriptor{
+			{
+				MediaType: "application/vnd.oci.image.layer.v1.tar+gzip",
+				Digest:    digester.Digest(),
+			},
+		},
 	}
 	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
 	if err != nil && !strings.Contains(err.Error(), "duplicate entry for") {
@@ -226,6 +230,6 @@ func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err == nil {
-		t.Fatal("Execpt partialy unpacked file has been removed")
+		t.Fatal("Except partially unpacked file has been removed")
 	}
 }

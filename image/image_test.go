@@ -175,7 +175,7 @@ func TestValidateLayout(t *testing.T) {
 		manifest: manifestStr,
 		config:   configStr,
 		tarList: []tarContent{
-			tarContent{&tar.Header{Name: "test", Size: 4, Mode: 0600}, []byte("test")},
+			{&tar.Header{Name: "test", Size: 4, Mode: 0600}, []byte("test")},
 		},
 	}
 
