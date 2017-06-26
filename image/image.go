@@ -105,7 +105,7 @@ func validate(w walker, refs []string, out *log.Logger) error {
 				return err
 			}
 
-			if err := m.validate(w); err != nil {
+			if err := validateManifest(m, w); err != nil {
 				return err
 			}
 		}
@@ -131,7 +131,7 @@ func validate(w walker, refs []string, out *log.Logger) error {
 					return err
 				}
 
-				if err := m.validate(w); err != nil {
+				if err := validateManifest(m, w); err != nil {
 					return err
 				}
 			}
@@ -198,11 +198,11 @@ func unpack(w walker, dest, refName, platform string) error {
 			return err
 		}
 
-		if err := m.validate(w); err != nil {
+		if err := validateManifest(m, w); err != nil {
 			return err
 		}
 
-		return m.unpack(w, dest)
+		return unpackManifest(m, w, dest)
 	}
 
 	if ref.MediaType == validRefMediaTypes[1] {
@@ -221,7 +221,7 @@ func unpack(w walker, dest, refName, platform string) error {
 		}
 
 		for _, m := range manifests {
-			return m.unpack(w, dest)
+			return unpackManifest(m, w, dest)
 		}
 	}
 
@@ -281,7 +281,7 @@ func createRuntimeBundle(w walker, dest, refName, rootfs, platform string) error
 			return err
 		}
 
-		if err := m.validate(w); err != nil {
+		if err := validateManifest(m, w); err != nil {
 			return err
 		}
 
@@ -311,7 +311,7 @@ func createRuntimeBundle(w walker, dest, refName, rootfs, platform string) error
 	return nil
 }
 
-func createBundle(w walker, m *manifest, dest, rootfs string) (retErr error) {
+func createBundle(w walker, m *v1.Manifest, dest, rootfs string) (retErr error) {
 	c, err := findConfig(w, &m.Config)
 	if err != nil {
 		return err
@@ -334,11 +334,11 @@ func createBundle(w walker, m *manifest, dest, rootfs string) (retErr error) {
 		}
 	}
 
-	if err = m.unpack(w, filepath.Join(dest, rootfs)); err != nil {
+	if err = unpackManifest(m, w, filepath.Join(dest, rootfs)); err != nil {
 		return err
 	}
 
-	spec, err := c.runtimeSpec(rootfs)
+	spec, err := runtimeSpec(c, rootfs)
 	if err != nil {
 		return err
 	}
@@ -353,8 +353,8 @@ func createBundle(w walker, m *manifest, dest, rootfs string) (retErr error) {
 }
 
 // filertManifest returns a filtered list of manifests
-func filterManifest(w walker, Manifests []v1.Descriptor, platform string) ([]*manifest, error) {
-	var manifests []*manifest
+func filterManifest(w walker, Manifests []v1.Descriptor, platform string) ([]*v1.Manifest, error) {
+	var manifests []*v1.Manifest
 
 	argsParts := strings.Split(platform, ":")
 	if len(argsParts) != 2 {
@@ -372,7 +372,7 @@ func filterManifest(w walker, Manifests []v1.Descriptor, platform string) ([]*ma
 			return manifests, err
 		}
 
-		if err := m.validate(w); err != nil {
+		if err := validateManifest(m, w); err != nil {
 			return manifests, err
 		}
 		if strings.EqualFold(manifest.Platform.OS, argsParts[0]) && strings.EqualFold(manifest.Platform.Architecture, argsParts[1]) {
