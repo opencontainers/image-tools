@@ -20,6 +20,11 @@ oci-image-tool unpack \- Unpack an image or image source layout
 **--type**=""
   Type of the file to unpack. If unset, oci-image-tool will try to auto-detect the type. One of "imageLayout,image"
 
+**--platform**=""
+  The platform contains os and arch. Filter manifests according to the conditions provided.
+  Only applicable if reftype is index.
+
+
 # EXAMPLES
 ```
 $ skopeo copy docker://busybox oci:busybox-oci

@@ -150,7 +150,7 @@ _oci-image-tool_create() {
 
 	case "$cur" in
 		-*)
-			COMPREPLY=( $( compgen -W "--type --ref --rootfs --help -h" -- "$cur" ) )
+			COMPREPLY=( $( compgen -W "--type --ref --rootfs --platform --help -h" -- "$cur" ) )
 			;;
 	esac
 
@@ -166,7 +166,7 @@ _oci-image-tool_unpack() {
 
 	case "$cur" in
 		-*)
-			COMPREPLY=( $( compgen -W "--type --ref --help -h" -- "$cur" ) )
+			COMPREPLY=( $( compgen -W "--type --ref --platform --help -h" -- "$cur" ) )
 			;;
 	esac
 

@@ -28,8 +28,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-func findIndex(w walker, d *v1.Descriptor) (*v1.ImageIndex, error) {
-	var index v1.ImageIndex
+func findIndex(w walker, d *v1.Descriptor) (*v1.Index, error) {
+	var index v1.Index
 
 	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
 		if info.IsDir() || filepath.Clean(path) != indexPath {
@@ -60,9 +60,9 @@ func findIndex(w walker, d *v1.Descriptor) (*v1.ImageIndex, error) {
 	}
 }
 
-func validateIndex(index *v1.ImageIndex, w walker) error {
+func validateIndex(index *v1.Index, w walker) error {
 	for _, manifest := range index.Manifests {
-		if err := validateDescriptor(&manifest.Descriptor, w, []string{v1.MediaTypeImageManifest}); err != nil {
+		if err := validateDescriptor(&manifest, w, []string{v1.MediaTypeImageManifest}); err != nil {
 			return errors.Wrap(err, "manifest validation failed")
 		}
 	}

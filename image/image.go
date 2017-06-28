@@ -119,7 +119,7 @@ func validate(w walker, refs []string, out *log.Logger) error {
 			}
 
 			for _, manifest := range index.Manifests {
-				m, err := findManifest(w, &(manifest.Descriptor))
+				m, err := findManifest(w, &manifest)
 				if err != nil {
 					return err
 				}
@@ -140,30 +140,30 @@ func validate(w walker, refs []string, out *log.Logger) error {
 // UnpackLayout walks through the file tree given by src and, using the layers
 // specified in the manifest pointed to by the given ref, unpacks all layers in
 // the given destination directory or returns an error if the unpacking failed.
-func UnpackLayout(src, dest, ref string) error {
-	return unpack(newPathWalker(src), dest, ref)
+func UnpackLayout(src, dest, ref string, platform []string) error {
+	return unpack(newPathWalker(src), dest, ref, platform)
 }
 
 // UnpackFile opens the file pointed by tarFileName and calls Unpack on it.
-func UnpackFile(tarFileName, dest, ref string) error {
+func UnpackFile(tarFileName, dest, ref string, platform []string) error {
 	f, err := os.Open(tarFileName)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
 	}
 	defer f.Close()
 
-	return Unpack(f, dest, ref)
+	return Unpack(f, dest, ref, platform)
 }
 
 // Unpack walks through the tar stream and, using the layers specified in
 // the manifest pointed to by the given ref, unpacks all layers in the given
 // destination directory or returns an error if the unpacking failed.
 // The destination will be created if it does not exist.
-func Unpack(r io.ReadSeeker, dest, refName string) error {
-	return unpack(newTarWalker(r), dest, refName)
+func Unpack(r io.ReadSeeker, dest, refName string, platform []string) error {
+	return unpack(newTarWalker(r), dest, refName, platform)
 }
 
-func unpack(w walker, dest, refName string) error {
+func unpack(w walker, dest, refName string, platform []string) error {
 	if err := layoutValidate(w); err != nil {
 		return err
 	}
@@ -196,28 +196,17 @@ func unpack(w walker, dest, refName string) error {
 			return err
 		}
 
-		if err := validateIndex(index, w); err != nil {
+		if err = validateIndex(index, w); err != nil {
 			return err
 		}
 
-		if len(index.Manifests) == 0 {
-			fmt.Println("warning: no manifests found")
-			return nil
+		manifests, err := filterManifest(w, index.Manifests, platform)
+		if err != nil {
+			return err
 		}
 
-		for _, manifest := range index.Manifests {
-			m, err := findManifest(w, &(manifest.Descriptor))
-			if err != nil {
-				return err
-			}
-
-			if err := m.validate(w); err != nil {
-				return err
-			}
-
-			if err := m.unpack(w, dest); err != nil {
-				return err
-			}
+		for _, m := range manifests {
+			return m.unpack(w, dest)
 		}
 	}
 
@@ -227,30 +216,30 @@ func unpack(w walker, dest, refName string) error {
 // CreateRuntimeBundleLayout walks through the file tree given by src and
 // creates an OCI runtime bundle in the given destination dest
 // or returns an error if the unpacking failed.
-func CreateRuntimeBundleLayout(src, dest, ref, root string) error {
-	return createRuntimeBundle(newPathWalker(src), dest, ref, root)
+func CreateRuntimeBundleLayout(src, dest, ref, root string, platform []string) error {
+	return createRuntimeBundle(newPathWalker(src), dest, ref, root, platform)
 }
 
 // CreateRuntimeBundleFile opens the file pointed by tarFile and calls
 // CreateRuntimeBundle.
-func CreateRuntimeBundleFile(tarFile, dest, ref, root string) error {
+func CreateRuntimeBundleFile(tarFile, dest, ref, root string, platform []string) error {
 	f, err := os.Open(tarFile)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
 	}
 	defer f.Close()
 
-	return createRuntimeBundle(newTarWalker(f), dest, ref, root)
+	return createRuntimeBundle(newTarWalker(f), dest, ref, root, platform)
 }
 
 // CreateRuntimeBundle walks through the given tar stream and
 // creates an OCI runtime bundle in the given destination dest
 // or returns an error if the unpacking failed.
-func CreateRuntimeBundle(r io.ReadSeeker, dest, ref, root string) error {
-	return createRuntimeBundle(newTarWalker(r), dest, ref, root)
+func CreateRuntimeBundle(r io.ReadSeeker, dest, ref, root string, platform []string) error {
+	return createRuntimeBundle(newTarWalker(r), dest, ref, root, platform)
 }
 
-func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
+func createRuntimeBundle(w walker, dest, refName, rootfs string, platform []string) error {
 	if err := layoutValidate(w); err != nil {
 		return err
 	}
@@ -274,7 +263,7 @@ func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
 			return err
 		}
 
-		return createRuntimebundle(w, m, dest, rootfs)
+		return createBundle(w, m, dest, rootfs)
 	}
 
 	if ref.MediaType == validRefMediaTypes[1] {
@@ -283,35 +272,24 @@ func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
 			return err
 		}
 
-		if err := validateIndex(index, w); err != nil {
+		if err = validateIndex(index, w); err != nil {
 			return err
 		}
 
-		if len(index.Manifests) == 0 {
-			fmt.Println("warning: no manifests found")
-			return nil
+		manifests, err := filterManifest(w, index.Manifests, platform)
+		if err != nil {
+			return err
 		}
 
-		for _, manifest := range index.Manifests {
-			m, err := findManifest(w, &(manifest.Descriptor))
-			if err != nil {
-				return err
-			}
-
-			if err := m.validate(w); err != nil {
-				return err
-			}
-
-			if err := createRuntimebundle(w, m, dest, rootfs); err != nil {
-				return err
-			}
+		for _, m := range manifests {
+			return createBundle(w, m, dest, rootfs)
 		}
 	}
 
 	return nil
 }
 
-func createRuntimebundle(w walker, m *manifest, dest, rootfs string) error {
+func createBundle(w walker, m *manifest, dest, rootfs string) error {
 	c, err := findConfig(w, &m.Config)
 	if err != nil {
 		return err
@@ -343,4 +321,38 @@ func createRuntimebundle(w walker, m *manifest, dest, rootfs string) error {
 	defer f.Close()
 
 	return json.NewEncoder(f).Encode(spec)
+}
+
+// filertManifest returns a filtered list of manifests
+func filterManifest(w walker, Manifests []v1.Descriptor, platform []string) ([]*manifest, error) {
+	var manifests []*manifest
+
+	if len(Manifests) == 0 {
+		fmt.Println("warning: no manifests found")
+		return manifests, nil
+	}
+
+	if len(platform) != 2 {
+		return manifests, fmt.Errorf("platform must have os and arch")
+	}
+
+	for _, manifest := range Manifests {
+		m, err := findManifest(w, &manifest)
+		if err != nil {
+			return manifests, err
+		}
+
+		if err := m.validate(w); err != nil {
+			return manifests, err
+		}
+		if manifest.Platform.OS == platform[0] && manifest.Platform.Architecture == platform[1] {
+			manifests = append(manifests, m)
+		}
+	}
+
+	if len(manifests) == 0 {
+		return manifests, fmt.Errorf("There is no matching manifest")
+	}
+
+	return manifests, nil
 }
