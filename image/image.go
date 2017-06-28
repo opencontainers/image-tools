@@ -167,7 +167,7 @@ func CreateRuntimeBundleFile(tarFile, dest, ref, root string) error {
 	}
 	defer f.Close()
 
-	return createRuntimeBundle(newTarWalker(f), dest, ref, root)
+	return CreateRuntimeBundle(f, dest, ref, root)
 }
 
 // CreateRuntimeBundle walks through the given tar stream and
