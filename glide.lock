@@ -1,5 +1,5 @@
-hash: fe3f3d3993e02ad06f43796feda903b9da1abc9cb24bc05ad874c3f36cf50c8d
-updated: 2017-06-29T14:09:30.274239423+08:00
+hash: 05767d798fff367f75f75499c5b04dd44f7072102d1444862c0a556251040a37
+updated: 2017-08-22T09:22:06.648647878+08:00
 imports:
 - name: github.com/opencontainers/go-digest
   version: aa2ec055abd10d26d539eb630a92241b781ce4bc
@@ -16,7 +16,7 @@ imports:
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/Sirupsen/logrus
-  version: 4b6ea7319e214d98c938f12692336f7ca9348d6b
+  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
 - name: github.com/urfave/cli
   version: 0bdeddeeb0f650497d603c4ad7b20cfe685682f6
 - name: github.com/xeipuuv/gojsonpointer
@@ -29,8 +29,15 @@ imports:
   version: 034d17a462f7b2dcd1a4a73553ec5357ff6e6c6e
   subpackages:
   - errorutil
-- name: golang.org/x/sys/unix
-  version: 7a4fde3fda8ef580a89dbae8138c26041be14299
+- name: golang.org/x/crypto
+  version: eb71ad9bd329b5ac0fd0148dd99bd62e8be8e035
+  subpackages:
+  - ssh/terminal
+- name: golang.org/x/sys
+  version: a55a76086885b80f79961eacb876ebd8caf3868d
+  subpackages:
+  - unix
+  - windows
 testImports:
 - name: github.com/dsnet/compress
   version: 0ae8e136a5df9e3caf6c0f69983608b07438411b
