@@ -12,7 +12,7 @@ import:
   subpackages:
   - specs-go
 - package: github.com/pkg/errors
-  version: ~0.7.1
+  version: ~0.8.0
 - package: github.com/Sirupsen/logrus
   version: ~0.10.0
 - package: github.com/urfave/cli
