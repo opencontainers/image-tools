@@ -73,8 +73,11 @@ func (c *config) runtimeSpec(rootfs string) (*specs.Spec, error) {
 	var s specs.Spec
 	s.Version = specs.Version
 	// we should at least apply the default spec, otherwise this is totally useless
-	s.Process.Terminal = true
+	s.Root = &specs.Root{}
 	s.Root.Path = rootfs
+
+	s.Process = &specs.Process{}
+	s.Process.Terminal = true
 	s.Process.Cwd = "/"
 	if c.Config.WorkingDir != "" {
 		s.Process.Cwd = c.Config.WorkingDir

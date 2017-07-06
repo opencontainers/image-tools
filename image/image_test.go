@@ -187,12 +187,36 @@ type imageLayout struct {
 	tarList   []tarContent
 }
 
-func TestValidateLayout(t *testing.T) {
+func TestImageLayout(t *testing.T) {
 	root, err := ioutil.TempDir("", "oci-test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(root)
+
+	dest1, err := ioutil.TempDir("", "dest1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dest1)
+
+	dest2, err := ioutil.TempDir("", "dest2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dest2)
+
+	dest3, err := ioutil.TempDir("", "dest3")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dest3)
+
+	dest4, err := ioutil.TempDir("", "dest4")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dest4)
 
 	il := imageLayout{
 		rootDir:   root,
@@ -214,6 +238,23 @@ func TestValidateLayout(t *testing.T) {
 	}
 
 	err = ValidateLayout(root, refTag, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = UnpackLayout(root, dest1, refTag[0], "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = UnpackLayout(root, dest2, refTag[1], "linux:amd64")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = CreateRuntimeBundleLayout(root, dest3, refTag[0], "rootfs", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = CreateRuntimeBundleLayout(root, dest4, refTag[1], "rootfs", "linux:amd64")
 	if err != nil {
 		t.Fatal(err)
 	}
