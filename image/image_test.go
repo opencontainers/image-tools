@@ -129,7 +129,10 @@ var (
 }
  `
 	manifestStr = `{
-    "annotations": null,
+      "annotations": {
+        "org.freedesktop.specifications.metainfo.version": "1.0",
+        "org.freedesktop.specifications.metainfo.type": "AppStream"
+      },
     "config": {
         "digest": "<config_digest>",
         "mediaType": "application/vnd.oci.image.config.v1+json",
