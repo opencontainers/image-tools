@@ -1,10 +1,10 @@
-hash: ea13c98c3bc5b35361df211093fba2ac6f81c5c90080aebdcc7a65d8a35fd2e1
-updated: 2017-06-21T09:59:29.127898161+08:00
+hash: 749cfb2fcda2861b164c18b9ebbdf73f43e8f23977c95c460f9c9959bbfc5a93
+updated: 2017-07-14T09:20:34.70122783+08:00
 imports:
 - name: github.com/opencontainers/go-digest
   version: aa2ec055abd10d26d539eb630a92241b781ce4bc
 - name: github.com/opencontainers/image-spec
-  version: 1a6593ab6c3ab5902072b4694a22ff19425396ae
+  version: e0536ae0cb47b8fed6afdaa9ba2589f6bd915caa
   subpackages:
   - schema
   - specs-go
