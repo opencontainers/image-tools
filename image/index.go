@@ -30,9 +30,10 @@ import (
 
 func findIndex(w walker, d *v1.Descriptor) (*v1.Index, error) {
 	var index v1.Index
+	ipath := filepath.Join("blobs", string(d.Digest.Algorithm()), d.Digest.Hex())
 
 	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-		if info.IsDir() || filepath.Clean(path) != indexPath {
+		if info.IsDir() || filepath.Clean(path) != ipath {
 			return nil
 		}
 
@@ -54,7 +55,7 @@ func findIndex(w walker, d *v1.Descriptor) (*v1.Index, error) {
 	case errEOW:
 		return &index, nil
 	case nil:
-		return nil, fmt.Errorf("index.json not found")
+		return nil, fmt.Errorf("index not found")
 	default:
 		return nil, err
 	}

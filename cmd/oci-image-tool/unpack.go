@@ -31,7 +31,7 @@ var unpackTypes = []string{
 type unpackCmd struct {
 	typ      string // the type to unpack, can be empty string
 	ref      string
-	platform []string
+	platform string
 }
 
 func unpackHandle(context *cli.Context) error {
@@ -42,7 +42,7 @@ func unpackHandle(context *cli.Context) error {
 	v := unpackCmd{
 		typ:      context.String("type"),
 		ref:      context.String("ref"),
-		platform: context.StringSlice("platform"),
+		platform: context.String("platform"),
 	}
 
 	if v.typ == "" {
@@ -88,9 +88,9 @@ var unpackCommand = cli.Command{
 			Value: "v1.0",
 			Usage: "The ref pointing to the manifest of the OCI image. This must be present in the 'refs' subdirectory of the image.",
 		},
-		cli.StringSliceFlag{
+		cli.StringFlag{
 			Name:  "platform",
-			Usage: "The platform contains os and arch conditions. Filter manifests according to the conditions provided. Only applicable if reftype is index.",
+			Usage: "Specify the os and architecture of the manifest, format is OS:Architecture. Only applicable if reftype is index.",
 		},
 	},
 }

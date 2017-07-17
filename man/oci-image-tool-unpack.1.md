@@ -21,9 +21,9 @@ oci-image-tool unpack \- Unpack an image or image source layout
   Type of the file to unpack. If unset, oci-image-tool will try to auto-detect the type. One of "imageLayout,image"
 
 **--platform**=""
-  The platform contains os and arch. Filter manifests according to the conditions provided.
+  Specify the os and architecture of the manifest, format is OS:Architecture.
+  e.g. --platform linux:amd64
   Only applicable if reftype is index.
-
 
 # EXAMPLES
 ```

@@ -32,7 +32,7 @@ type bundleCmd struct {
 	typ      string // the type to bundle, can be empty string
 	ref      string
 	root     string
-	platform []string
+	platform string
 }
 
 func createHandle(context *cli.Context) error {
@@ -44,7 +44,7 @@ func createHandle(context *cli.Context) error {
 		typ:      context.String("type"),
 		ref:      context.String("ref"),
 		root:     context.String("rootfs"),
-		platform: context.StringSlice("platform"),
+		platform: context.String("platform"),
 	}
 
 	if v.typ == "" {
@@ -97,9 +97,9 @@ var createCommand = cli.Command{
 			Value: "rootfs",
 			Usage: "A directory representing the root filesystem of the container in the OCI runtime bundle. It is strongly recommended to keep the default value.",
 		},
-		cli.StringSliceFlag{
+		cli.StringFlag{
 			Name:  "platform",
-			Usage: "The platform contains os and arch. Filter manifests according to the conditions provided. Only applicable if reftype is index.",
+			Usage: "Specify the os and architecture of the manifest, format is OS:Architecture. Only applicable if reftype is index.",
 		},
 	},
 }

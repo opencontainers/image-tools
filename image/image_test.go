@@ -31,7 +31,6 @@ import (
 )
 
 const (
-	refTag    = "latest"
 	layoutStr = `{"imageLayoutVersion": "1.0.0"}`
 
 	configStr = `{
@@ -40,7 +39,6 @@ const (
     "architecture": "amd64",
     "os": "linux",
     "config": {
-        "User": "alice",
         "ExposedPorts": {
             "8080/tcp": {}
         },
@@ -90,17 +88,43 @@ const (
 )
 
 var (
+	refTag = []string{
+		"latest",
+		"v1.0",
+	}
+
+	indexJSON = `{
+    "schemaVersion": 2,
+    "manifests": [
+      {
+        "mediaType": "application/vnd.oci.image.index.v1+json",
+        "size": <index_size>,
+        "digest": "<index_digest>",
+        "annotations": {
+          "org.opencontainers.ref.name": "v1.0"
+        }
+      },
+      {
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "size": <manifest_size>,
+        "digest": "<manifest_digest>",
+        "platform": {
+          "architecture": "ppc64le",
+          "os": "linux"
+        },
+        "annotations": {
+          "org.opencontainers.ref.name": "latest"
+        }
+      }
+    ],
+    "annotations": {
+      "com.example.index.revision": "r124356"
+    }
+}
+ `
 	indexStr = `{
   "schemaVersion": 2,
   "manifests": [
-    {
-      "mediaType": "application/vnd.oci.image.index.v1+json",
-      "size": <manifest_size>,
-      "digest": "<manifest_digest>",
-      "annotations": {
-        "org.opencontainers.ref.name": "v1.0"
-      }
-    },
     {
       "mediaType": "application/vnd.oci.image.manifest.v1+json",
       "size": <manifest_size>,
@@ -108,18 +132,15 @@ var (
       "platform": {
         "architecture": "ppc64le",
         "os": "linux"
-      },
-      "annotations": {
-        "org.opencontainers.ref.name": "latest"
       }
     },
     {
-      "mediaType": "application/xml",
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
       "size": <manifest_size>,
       "digest": "<manifest_digest>",
-      "annotations": {
-        "org.freedesktop.specifications.metainfo.version": "1.0",
-        "org.freedesktop.specifications.metainfo.type": "AppStream"
+      "platform": {
+        "architecture": "amd64",
+        "os": "linux"
       }
     }
   ],
@@ -129,10 +150,10 @@ var (
 }
  `
 	manifestStr = `{
-      "annotations": {
+    "annotations": {
         "org.freedesktop.specifications.metainfo.version": "1.0",
         "org.freedesktop.specifications.metainfo.type": "AppStream"
-      },
+    },
     "config": {
         "digest": "<config_digest>",
         "mediaType": "application/vnd.oci.image.config.v1+json",
@@ -156,12 +177,14 @@ type tarContent struct {
 }
 
 type imageLayout struct {
-	rootDir  string
-	layout   string
-	ref      string
-	manifest string
-	config   string
-	tarList  []tarContent
+	rootDir   string
+	layout    string
+	ref       []string
+	manifest  string
+	index     string
+	config    string
+	indexjson string
+	tarList   []tarContent
 }
 
 func TestValidateLayout(t *testing.T) {
@@ -172,11 +195,13 @@ func TestValidateLayout(t *testing.T) {
 	defer os.RemoveAll(root)
 
 	il := imageLayout{
-		rootDir:  root,
-		layout:   layoutStr,
-		ref:      refTag,
-		manifest: manifestStr,
-		config:   configStr,
+		rootDir:   root,
+		layout:    layoutStr,
+		ref:       refTag,
+		manifest:  manifestStr,
+		index:     indexStr,
+		indexjson: indexJSON,
+		config:    configStr,
 		tarList: []tarContent{
 			{&tar.Header{Name: "test", Size: 4, Mode: 0600}, []byte("test")},
 		},
@@ -188,7 +213,7 @@ func TestValidateLayout(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = ValidateLayout(root, []string{refTag}, nil)
+	err = ValidateLayout(root, refTag, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -226,8 +251,22 @@ func createImageLayoutBundle(il imageLayout) error {
 	if err != nil {
 		return err
 	}
+	il.index = strings.Replace(il.index, "<manifest_digest>", string(desc.Digest), -1)
+	il.index = strings.Replace(il.index, "<manifest_size>", strconv.FormatInt(desc.Size, 10), -1)
 
-	return createIndexFile(il.rootDir, desc)
+	il.indexjson = strings.Replace(il.indexjson, "<manifest_digest>", string(desc.Digest), -1)
+	il.indexjson = strings.Replace(il.indexjson, "<manifest_size>", strconv.FormatInt(desc.Size, 10), -1)
+
+	// create index blob file
+	desc, err = createIndexFile(il.rootDir, il.index)
+	if err != nil {
+		return err
+	}
+	il.indexjson = strings.Replace(il.indexjson, "<index_digest>", string(desc.Digest), -1)
+	il.indexjson = strings.Replace(il.indexjson, "<index_size>", strconv.FormatInt(desc.Size, 10), -1)
+
+	// create index.json file
+	return createIndexJSON(il.rootDir, il.indexjson)
 }
 
 func createLayoutFile(root string) error {
@@ -241,17 +280,32 @@ func createLayoutFile(root string) error {
 	return err
 }
 
-func createIndexFile(root string, mft v1.Descriptor) error {
+func createIndexJSON(root string, str string) error {
 	indexpath := filepath.Join(root, "index.json")
 	f, err := os.Create(indexpath)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	indexStr = strings.Replace(indexStr, "<manifest_digest>", string(mft.Digest), -1)
-	indexStr = strings.Replace(indexStr, "<manifest_size>", strconv.FormatInt(mft.Size, 10), -1)
-	_, err = io.Copy(f, bytes.NewBuffer([]byte(indexStr)))
+	_, err = io.Copy(f, bytes.NewBuffer([]byte(str)))
+
 	return err
+}
+
+func createIndexFile(root, str string) (v1.Descriptor, error) {
+	name := filepath.Join(root, "blobs", "sha256", "test-index")
+	f, err := os.Create(name)
+	if err != nil {
+		return v1.Descriptor{}, err
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, bytes.NewBuffer([]byte(str)))
+	if err != nil {
+		return v1.Descriptor{}, err
+	}
+
+	return createHashedBlob(name)
 }
 
 func createManifestFile(root, str string) (v1.Descriptor, error) {
