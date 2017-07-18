@@ -35,6 +35,8 @@ oci-image-tool is a collection of tools for working with the [OCI image specific
   Create an OCI runtime bundle
   See **oci-image-tool-create**(1) for full documentation on the **create** command.
 
+During command run, the output stream will be sent to `OS stderr`.
+
 # SEE ALSO
 **oci-image-tool-validate**(1), **oci-image-tool-unpack**(1), **oci-image-tool-create**(1)
 

@@ -18,10 +18,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/opencontainers/image-tools/logger"
 	"github.com/opencontainers/image-tools/version"
 	"github.com/urfave/cli"
 )
+
+var globalCtx = logger.WithLogger(logger.Background(), logger.LogEntry)
 
 // gitCommit will be the hash that the binary was built from
 // and will be populated by the Makefile
@@ -43,9 +45,7 @@ func main() {
 		},
 	}
 	app.Before = func(c *cli.Context) error {
-		if c.GlobalBool("debug") {
-			logrus.SetLevel(logrus.DebugLevel)
-		}
+		logger.EnableDebugMode(c.GlobalBool("debug"))
 		return nil
 	}
 	app.Commands = []cli.Command{
@@ -55,6 +55,6 @@ func main() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		logrus.Fatal(err)
+		os.Exit(1)
 	}
 }

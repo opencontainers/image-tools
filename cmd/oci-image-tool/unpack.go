@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/opencontainers/image-tools/image"
+	"github.com/opencontainers/image-tools/logger"
 	"github.com/urfave/cli"
 )
 
@@ -64,7 +65,7 @@ func unpackHandle(context *cli.Context) error {
 	}
 
 	if err != nil {
-		fmt.Printf("unpacking failed: %v\n", err)
+		logger.G(globalCtx).WithError(err).Errorf("unpacking failed")
 	}
 	return err
 }

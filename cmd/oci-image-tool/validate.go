@@ -16,12 +16,12 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
 	"github.com/opencontainers/image-spec/schema"
 	"github.com/opencontainers/image-tools/image"
+	"github.com/opencontainers/image-tools/logger"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 )
@@ -36,9 +36,8 @@ var validateTypes = []string{
 }
 
 type validateCmd struct {
-	stdout *log.Logger
-	typ    string // the type to validate, can be empty string
-	refs   []string
+	typ  string // the type to validate, can be empty string
+	refs []string
 }
 
 var v validateCmd
@@ -55,10 +54,11 @@ func validateHandler(context *cli.Context) error {
 
 	var errs []string
 	for _, arg := range context.Args() {
+		var ctx = logger.WithLogger(globalCtx, logger.G(globalCtx).WithField("target", arg))
 		err := validatePath(arg)
 
 		if err == nil {
-			fmt.Printf("%s: OK\n", arg)
+			logger.G(ctx).Infof("OK")
 			continue
 		}
 
@@ -75,9 +75,12 @@ func validateHandler(context *cli.Context) error {
 	}
 
 	if len(errs) > 0 {
-		return fmt.Errorf("%d errors detected: \n%s", len(errs), strings.Join(errs, "\n"))
+		err := fmt.Errorf("%d errors detected: \n%s", len(errs), strings.Join(errs, "\n"))
+		logger.G(globalCtx).WithError(err).Infof("validation failed")
+		return err
 	}
-	fmt.Println("Validation succeeded")
+
+	logger.G(globalCtx).Infof("Validation succeeded")
 	return nil
 }
 
@@ -99,13 +102,13 @@ func validatePath(name string) error {
 
 	switch typ {
 	case image.TypeImageLayout:
-		return image.ValidateLayout(name, v.refs, v.stdout)
+		return image.ValidateLayout(globalCtx, name, v.refs)
 	case image.TypeImage:
-		return image.ValidateFile(name, v.refs, v.stdout)
+		return image.ValidateFile(globalCtx, name, v.refs)
 	}
 
 	if len(v.refs) != 0 {
-		fmt.Printf("WARNING: type %q does not support refs, which are only appropriate if type is image or imageLayout.\n", typ)
+		logger.G(globalCtx).Warnf("type %q does not support refs, which are only appropriate if type is image or imageLayout.", typ)
 	}
 
 	f, err := os.Open(name)

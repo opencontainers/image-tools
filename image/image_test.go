@@ -28,6 +28,7 @@ import (
 
 	"github.com/opencontainers/go-digest"
 	"github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/opencontainers/image-tools/logger"
 )
 
 const (
@@ -188,7 +189,7 @@ func TestValidateLayout(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = ValidateLayout(root, []string{refTag}, nil)
+	err = ValidateLayout(logger.Background(), root, []string{refTag})
 	if err != nil {
 		t.Fatal(err)
 	}
