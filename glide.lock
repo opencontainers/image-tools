@@ -1,10 +1,10 @@
-hash: 33888010d6203e7dbf8f254b5e5549a0d1a556626d8e551755dcd8c882bdef3a
-updated: 2017-07-20T09:33:11.289269916+08:00
+hash: bd44847c5d8eb9a431262aa7dc304c235ed5fd59a5e106b827a4c171e500c670
+updated: 2017-07-20T09:42:45.593735247+08:00
 imports:
 - name: github.com/opencontainers/go-digest
   version: aa2ec055abd10d26d539eb630a92241b781ce4bc
 - name: github.com/opencontainers/image-spec
-  version: e0536ae0cb47b8fed6afdaa9ba2589f6bd915caa
+  version: ab7389ef9f50030c9b245bc16b981c7ddf192882
   subpackages:
   - schema
   - specs-go
@@ -29,10 +29,8 @@ imports:
   version: 034d17a462f7b2dcd1a4a73553ec5357ff6e6c6e
   subpackages:
   - errorutil
-- name: golang.org/x/sys
-  version: a55a76086885b80f79961eacb876ebd8caf3868d
-  subpackages:
-  - unix
+- name: golang.org/x/sys/unix
+  version: 7a4fde3fda8ef580a89dbae8138c26041be14299
 testImports:
 - name: github.com/dsnet/compress
   version: 0ae8e136a5df9e3caf6c0f69983608b07438411b
