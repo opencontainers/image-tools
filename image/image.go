@@ -58,6 +58,10 @@ var validRefMediaTypes = []string{
 }
 
 func validate(w walker, refs []string, out *log.Logger) error {
+	if err := layoutValidate(w); err != nil {
+		return err
+	}
+
 	ds, err := listReferences(w)
 	if err != nil {
 		return err
@@ -130,6 +134,10 @@ func Unpack(r io.ReadSeeker, dest, refName string) error {
 }
 
 func unpack(w walker, dest, refName string) error {
+	if err := layoutValidate(w); err != nil {
+		return err
+	}
+
 	ref, err := findDescriptor(w, refName)
 	if err != nil {
 		return err
@@ -178,6 +186,10 @@ func CreateRuntimeBundle(r io.ReadSeeker, dest, ref, root string) error {
 }
 
 func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
+	if err := layoutValidate(w); err != nil {
+		return err
+	}
+
 	ref, err := findDescriptor(w, refName)
 	if err != nil {
 		return err
