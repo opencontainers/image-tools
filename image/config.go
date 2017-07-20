@@ -106,9 +106,6 @@ func (c *config) runtimeSpec(rootfs string) (*specs.Spec, error) {
 		return nil, errors.New("config.User: unsupported format")
 	}
 
-	s.Platform.OS = c.OS
-	s.Platform.Arch = c.Architecture
-
 	s.Linux = &specs.Linux{}
 
 	for vol := range c.Config.Volumes {
