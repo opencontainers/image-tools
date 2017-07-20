@@ -1,5 +1,5 @@
-hash: 749cfb2fcda2861b164c18b9ebbdf73f43e8f23977c95c460f9c9959bbfc5a93
-updated: 2017-07-14T09:20:34.70122783+08:00
+hash: 33888010d6203e7dbf8f254b5e5549a0d1a556626d8e551755dcd8c882bdef3a
+updated: 2017-07-20T09:33:11.289269916+08:00
 imports:
 - name: github.com/opencontainers/go-digest
   version: aa2ec055abd10d26d539eb630a92241b781ce4bc
@@ -10,7 +10,7 @@ imports:
   - specs-go
   - specs-go/v1
 - name: github.com/opencontainers/runtime-spec
-  version: 035da1dca3dfbb00d752eb58b0b158d6129f3776
+  version: 02137cd4e50b37a01665e1731fcd4ac2d2178230
   subpackages:
   - specs-go
 - name: github.com/pkg/errors
