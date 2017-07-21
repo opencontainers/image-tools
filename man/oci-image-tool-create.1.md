@@ -26,6 +26,11 @@ runtime-spec-compatible `dest/config.json`.
 **--type**=""
   Type of the file to unpack. If unset, oci-image-tool will try to auto-detect the type. One of "imageLayout,image"
 
+**--platform**=""
+  Specify the os and architecture of the manifest, format is OS:Architecture.
+  e.g. --platform linux:amd64
+  Only applicable if reftype is index.
+
 # EXAMPLES
 ```
 $ skopeo copy docker://busybox oci:busybox-oci

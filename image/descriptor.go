@@ -25,12 +25,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+const indexPath = "index.json"
+
 func listReferences(w walker) (map[string]*v1.Descriptor, error) {
 	refs := make(map[string]*v1.Descriptor)
 	var index v1.Index
 
 	if err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-		if info.IsDir() || filepath.Clean(path) != "index.json" {
+		if info.IsDir() || filepath.Clean(path) != indexPath {
 			return nil
 		}
 
@@ -56,7 +58,7 @@ func findDescriptor(w walker, name string) (*v1.Descriptor, error) {
 	var index v1.Index
 
 	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-		if info.IsDir() || filepath.Clean(path) != "index.json" {
+		if info.IsDir() || filepath.Clean(path) != indexPath {
 			return nil
 		}
 

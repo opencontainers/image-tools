@@ -29,9 +29,10 @@ var bundleTypes = []string{
 }
 
 type bundleCmd struct {
-	typ  string // the type to bundle, can be empty string
-	ref  string
-	root string
+	typ      string // the type to bundle, can be empty string
+	ref      string
+	root     string
+	platform string
 }
 
 func createHandle(context *cli.Context) error {
@@ -40,9 +41,10 @@ func createHandle(context *cli.Context) error {
 	}
 
 	v := bundleCmd{
-		typ:  context.String("type"),
-		ref:  context.String("ref"),
-		root: context.String("rootfs"),
+		typ:      context.String("type"),
+		ref:      context.String("ref"),
+		root:     context.String("rootfs"),
+		platform: context.String("platform"),
 	}
 
 	if v.typ == "" {
@@ -56,10 +58,10 @@ func createHandle(context *cli.Context) error {
 	var err error
 	switch v.typ {
 	case image.TypeImageLayout:
-		err = image.CreateRuntimeBundleLayout(context.Args()[0], context.Args()[1], v.ref, v.root)
+		err = image.CreateRuntimeBundleLayout(context.Args()[0], context.Args()[1], v.ref, v.root, v.platform)
 
 	case image.TypeImage:
-		err = image.CreateRuntimeBundleFile(context.Args()[0], context.Args()[1], v.ref, v.root)
+		err = image.CreateRuntimeBundleFile(context.Args()[0], context.Args()[1], v.ref, v.root, v.platform)
 
 	default:
 		err = fmt.Errorf("cannot create %q", v.typ)
@@ -94,6 +96,10 @@ var createCommand = cli.Command{
 			Name:  "rootfs",
 			Value: "rootfs",
 			Usage: "A directory representing the root filesystem of the container in the OCI runtime bundle. It is strongly recommended to keep the default value.",
+		},
+		cli.StringFlag{
+			Name:  "platform",
+			Usage: "Specify the os and architecture of the manifest, format is OS:Architecture. Only applicable if reftype is index.",
 		},
 	},
 }

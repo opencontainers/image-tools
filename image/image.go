@@ -21,6 +21,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
@@ -92,14 +93,44 @@ func validate(w walker, refs []string, out *log.Logger) error {
 			return err
 		}
 
-		m, err := findManifest(w, d)
-		if err != nil {
-			return err
+		if d.MediaType == validRefMediaTypes[0] {
+			m, err := findManifest(w, d)
+			if err != nil {
+				return err
+			}
+
+			if err := m.validate(w); err != nil {
+				return err
+			}
 		}
 
-		if err := m.validate(w); err != nil {
-			return err
+		if d.MediaType == validRefMediaTypes[1] {
+			index, err := findIndex(w, d)
+			if err != nil {
+				return err
+			}
+
+			if err := validateIndex(index, w); err != nil {
+				return err
+			}
+
+			if len(index.Manifests) == 0 {
+				fmt.Println("warning: no manifests found")
+				return nil
+			}
+
+			for _, manifest := range index.Manifests {
+				m, err := findManifest(w, &manifest)
+				if err != nil {
+					return err
+				}
+
+				if err := m.validate(w); err != nil {
+					return err
+				}
+			}
 		}
+
 		if out != nil {
 			out.Printf("reference %q: OK", ref)
 		}
@@ -110,30 +141,30 @@ func validate(w walker, refs []string, out *log.Logger) error {
 // UnpackLayout walks through the file tree given by src and, using the layers
 // specified in the manifest pointed to by the given ref, unpacks all layers in
 // the given destination directory or returns an error if the unpacking failed.
-func UnpackLayout(src, dest, ref string) error {
-	return unpack(newPathWalker(src), dest, ref)
+func UnpackLayout(src, dest, ref string, platform string) error {
+	return unpack(newPathWalker(src), dest, ref, platform)
 }
 
 // UnpackFile opens the file pointed by tarFileName and calls Unpack on it.
-func UnpackFile(tarFileName, dest, ref string) error {
+func UnpackFile(tarFileName, dest, ref string, platform string) error {
 	f, err := os.Open(tarFileName)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
 	}
 	defer f.Close()
 
-	return Unpack(f, dest, ref)
+	return Unpack(f, dest, ref, platform)
 }
 
 // Unpack walks through the tar stream and, using the layers specified in
 // the manifest pointed to by the given ref, unpacks all layers in the given
 // destination directory or returns an error if the unpacking failed.
 // The destination will be created if it does not exist.
-func Unpack(r io.ReadSeeker, dest, refName string) error {
-	return unpack(newTarWalker(r), dest, refName)
+func Unpack(r io.ReadSeeker, dest, refName string, platform string) error {
+	return unpack(newTarWalker(r), dest, refName, platform)
 }
 
-func unpack(w walker, dest, refName string) error {
+func unpack(w walker, dest, refName string, platform string) error {
 	if err := layoutValidate(w); err != nil {
 		return err
 	}
@@ -147,45 +178,69 @@ func unpack(w walker, dest, refName string) error {
 		return err
 	}
 
-	m, err := findManifest(w, ref)
-	if err != nil {
-		return err
+	if ref.MediaType == validRefMediaTypes[0] {
+		m, err := findManifest(w, ref)
+		if err != nil {
+			return err
+		}
+
+		if err := m.validate(w); err != nil {
+			return err
+		}
+
+		return m.unpack(w, dest)
 	}
 
-	if err = m.validate(w); err != nil {
-		return err
+	if ref.MediaType == validRefMediaTypes[1] {
+		index, err := findIndex(w, ref)
+		if err != nil {
+			return err
+		}
+
+		if err = validateIndex(index, w); err != nil {
+			return err
+		}
+
+		manifests, err := filterManifest(w, index.Manifests, platform)
+		if err != nil {
+			return err
+		}
+
+		for _, m := range manifests {
+			return m.unpack(w, dest)
+		}
 	}
 
-	return m.unpack(w, dest)
+	return nil
 }
 
 // CreateRuntimeBundleLayout walks through the file tree given by src and
 // creates an OCI runtime bundle in the given destination dest
 // or returns an error if the unpacking failed.
-func CreateRuntimeBundleLayout(src, dest, ref, root string) error {
-	return createRuntimeBundle(newPathWalker(src), dest, ref, root)
+func CreateRuntimeBundleLayout(src, dest, ref, root string, platform string) error {
+	return createRuntimeBundle(newPathWalker(src), dest, ref, root, platform)
 }
 
 // CreateRuntimeBundleFile opens the file pointed by tarFile and calls
 // CreateRuntimeBundle.
-func CreateRuntimeBundleFile(tarFile, dest, ref, root string) error {
+func CreateRuntimeBundleFile(tarFile, dest, ref, root string, platform string) error {
 	f, err := os.Open(tarFile)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
 	}
 	defer f.Close()
 
-	return createRuntimeBundle(newTarWalker(f), dest, ref, root)
+	return createRuntimeBundle(newTarWalker(f), dest, ref, root, platform)
 }
 
 // CreateRuntimeBundle walks through the given tar stream and
 // creates an OCI runtime bundle in the given destination dest
 // or returns an error if the unpacking failed.
-func CreateRuntimeBundle(r io.ReadSeeker, dest, ref, root string) error {
-	return createRuntimeBundle(newTarWalker(r), dest, ref, root)
+func CreateRuntimeBundle(r io.ReadSeeker, dest, ref, root string, platform string) error {
+	return createRuntimeBundle(newTarWalker(r), dest, ref, root, platform)
 }
 
-func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
+func createRuntimeBundle(w walker, dest, refName, rootfs string, platform string) error {
 	if err := layoutValidate(w); err != nil {
 		return err
 	}
@@ -199,15 +254,43 @@ func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
 		return err
 	}
 
-	m, err := findManifest(w, ref)
-	if err != nil {
-		return err
+	if ref.MediaType == validRefMediaTypes[0] {
+		m, err := findManifest(w, ref)
+		if err != nil {
+			return err
+		}
+
+		if err := m.validate(w); err != nil {
+			return err
+		}
+
+		return createBundle(w, m, dest, rootfs)
 	}
 
-	if err = m.validate(w); err != nil {
-		return err
+	if ref.MediaType == validRefMediaTypes[1] {
+		index, err := findIndex(w, ref)
+		if err != nil {
+			return err
+		}
+
+		if err = validateIndex(index, w); err != nil {
+			return err
+		}
+
+		manifests, err := filterManifest(w, index.Manifests, platform)
+		if err != nil {
+			return err
+		}
+
+		for _, m := range manifests {
+			return createBundle(w, m, dest, rootfs)
+		}
 	}
 
+	return nil
+}
+
+func createBundle(w walker, m *manifest, dest, rootfs string) error {
 	c, err := findConfig(w, &m.Config)
 	if err != nil {
 		return err
@@ -239,4 +322,39 @@ func createRuntimeBundle(w walker, dest, refName, rootfs string) error {
 	defer f.Close()
 
 	return json.NewEncoder(f).Encode(spec)
+}
+
+// filertManifest returns a filtered list of manifests
+func filterManifest(w walker, Manifests []v1.Descriptor, platform string) ([]*manifest, error) {
+	var manifests []*manifest
+
+	argsParts := strings.Split(platform, ":")
+	if len(argsParts) != 2 {
+		return manifests, fmt.Errorf("platform must have os and arch when reftype is index")
+	}
+
+	if len(Manifests) == 0 {
+		fmt.Println("warning: no manifests found")
+		return manifests, nil
+	}
+
+	for _, manifest := range Manifests {
+		m, err := findManifest(w, &manifest)
+		if err != nil {
+			return manifests, err
+		}
+
+		if err := m.validate(w); err != nil {
+			return manifests, err
+		}
+		if strings.EqualFold(manifest.Platform.OS, argsParts[0]) && strings.EqualFold(manifest.Platform.Architecture, argsParts[1]) {
+			manifests = append(manifests, m)
+		}
+	}
+
+	if len(manifests) == 0 {
+		return manifests, fmt.Errorf("There is no matching manifest")
+	}
+
+	return manifests, nil
 }
