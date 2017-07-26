@@ -169,7 +169,7 @@ func TestUnpackLayer(t *testing.T) {
 	testUnpackLayer(t, "bzip2", false)
 }
 
-func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {
+func TestUnpackLayerRemovePartiallyUnpackedFile(t *testing.T) {
 	// generate a tar file has duplicate entry which will failed on unpacking
 	tmp1, err := ioutil.TempDir("", "test-layer")
 	if err != nil {
