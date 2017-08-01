@@ -101,7 +101,7 @@ var (
         "size": <index_size>,
         "digest": "<index_digest>",
         "annotations": {
-          "org.opencontainers.ref.name": "v1.0"
+          "org.opencontainers.image.ref.name": "v1.0"
         }
       },
       {
@@ -113,7 +113,7 @@ var (
           "os": "linux"
         },
         "annotations": {
-          "org.opencontainers.ref.name": "latest"
+          "org.opencontainers.image.ref.name": "latest"
         }
       }
     ],

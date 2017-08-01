@@ -41,8 +41,8 @@ func listReferences(w walker) (map[string]*v1.Descriptor, error) {
 		}
 
 		for i := 0; i < len(index.Manifests); i++ {
-			if index.Manifests[i].Annotations["org.opencontainers.ref.name"] != "" {
-				refs[index.Manifests[i].Annotations["org.opencontainers.ref.name"]] = &index.Manifests[i]
+			if index.Manifests[i].Annotations[v1.AnnotationRefName] != "" {
+				refs[index.Manifests[i].Annotations[v1.AnnotationRefName]] = &index.Manifests[i]
 			}
 		}
 
@@ -67,7 +67,7 @@ func findDescriptor(w walker, name string) (*v1.Descriptor, error) {
 		}
 
 		for i := 0; i < len(index.Manifests); i++ {
-			if index.Manifests[i].Annotations["org.opencontainers.ref.name"] == name {
+			if index.Manifests[i].Annotations[v1.AnnotationRefName] == name {
 				d = index.Manifests[i]
 				return errEOW
 			}
