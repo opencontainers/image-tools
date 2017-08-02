@@ -141,12 +141,12 @@ func validate(w walker, refs []string, out *log.Logger) error {
 // UnpackLayout walks through the file tree given by src and, using the layers
 // specified in the manifest pointed to by the given ref, unpacks all layers in
 // the given destination directory or returns an error if the unpacking failed.
-func UnpackLayout(src, dest, ref string, platform string) error {
+func UnpackLayout(src, dest, ref, platform string) error {
 	return unpack(newPathWalker(src), dest, ref, platform)
 }
 
 // UnpackFile opens the file pointed by tarFileName and calls Unpack on it.
-func UnpackFile(tarFileName, dest, ref string, platform string) error {
+func UnpackFile(tarFileName, dest, ref, platform string) error {
 	f, err := os.Open(tarFileName)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
@@ -160,11 +160,11 @@ func UnpackFile(tarFileName, dest, ref string, platform string) error {
 // the manifest pointed to by the given ref, unpacks all layers in the given
 // destination directory or returns an error if the unpacking failed.
 // The destination will be created if it does not exist.
-func Unpack(r io.ReadSeeker, dest, refName string, platform string) error {
+func Unpack(r io.ReadSeeker, dest, refName, platform string) error {
 	return unpack(newTarWalker(r), dest, refName, platform)
 }
 
-func unpack(w walker, dest, refName string, platform string) error {
+func unpack(w walker, dest, refName, platform string) error {
 	if err := layoutValidate(w); err != nil {
 		return err
 	}
@@ -217,13 +217,13 @@ func unpack(w walker, dest, refName string, platform string) error {
 // CreateRuntimeBundleLayout walks through the file tree given by src and
 // creates an OCI runtime bundle in the given destination dest
 // or returns an error if the unpacking failed.
-func CreateRuntimeBundleLayout(src, dest, ref, root string, platform string) error {
+func CreateRuntimeBundleLayout(src, dest, ref, root, platform string) error {
 	return createRuntimeBundle(newPathWalker(src), dest, ref, root, platform)
 }
 
 // CreateRuntimeBundleFile opens the file pointed by tarFile and calls
 // CreateRuntimeBundle.
-func CreateRuntimeBundleFile(tarFile, dest, ref, root string, platform string) error {
+func CreateRuntimeBundleFile(tarFile, dest, ref, root, platform string) error {
 	f, err := os.Open(tarFile)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
@@ -236,11 +236,11 @@ func CreateRuntimeBundleFile(tarFile, dest, ref, root string, platform string) e
 // CreateRuntimeBundle walks through the given tar stream and
 // creates an OCI runtime bundle in the given destination dest
 // or returns an error if the unpacking failed.
-func CreateRuntimeBundle(r io.ReadSeeker, dest, ref, root string, platform string) error {
+func CreateRuntimeBundle(r io.ReadSeeker, dest, ref, root, platform string) error {
 	return createRuntimeBundle(newTarWalker(r), dest, ref, root, platform)
 }
 
-func createRuntimeBundle(w walker, dest, refName, rootfs string, platform string) error {
+func createRuntimeBundle(w walker, dest, refName, rootfs, platform string) error {
 	if err := layoutValidate(w); err != nil {
 		return err
 	}
