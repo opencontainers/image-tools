@@ -290,7 +290,7 @@ func createRuntimeBundle(w walker, dest, refName, rootfs, platform string) error
 	return nil
 }
 
-func createBundle(w walker, m *manifest, dest, rootfs string) error {
+func createBundle(w walker, m *manifest, dest, rootfs string) (retErr error) {
 	c, err := findConfig(w, &m.Config)
 	if err != nil {
 		return err
@@ -301,6 +301,13 @@ func createBundle(w walker, m *manifest, dest, rootfs string) error {
 			if err2 := os.MkdirAll(dest, 0755); err2 != nil {
 				return err2
 			}
+			defer func() {
+				if retErr != nil {
+					if err3 := os.RemoveAll(dest); err3 != nil {
+						fmt.Printf("Failed to clean up %q: %s\n", dest, err3.Error())
+					}
+				}
+			}()
 		} else {
 			return err
 		}
