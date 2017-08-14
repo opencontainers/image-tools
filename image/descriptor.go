@@ -76,7 +76,7 @@ func findDescriptor(w walker, name string) (*v1.Descriptor, error) {
 		return nil
 	}); err {
 	case nil:
-		return nil, fmt.Errorf("index.json: descriptor not found")
+		return nil, fmt.Errorf("index.json: descriptor %q not found", name)
 	case errEOW:
 		return &d, nil
 	default:

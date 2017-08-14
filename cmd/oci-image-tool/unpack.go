@@ -65,9 +65,6 @@ func unpackHandle(context *cli.Context) error {
 		err = fmt.Errorf("cannot unpack %q", v.typ)
 	}
 
-	if err != nil {
-		fmt.Printf("unpacking failed: %v\n", err)
-	}
 	return err
 }
 

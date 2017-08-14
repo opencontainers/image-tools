@@ -68,10 +68,6 @@ func createHandle(context *cli.Context) error {
 
 	}
 
-	if err != nil {
-		fmt.Printf("creating failed: %v\n", err)
-	}
-
 	return err
 }
 
