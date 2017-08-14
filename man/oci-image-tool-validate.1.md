@@ -16,9 +16,10 @@ oci-image-tool validate \- Validate one or more image files
   Print usage statement
 
 **--ref**=[]
-  The reference to validate (should point to a manifest).
-  Can be specified multiple times to validate multiple references.
-  `NAME` must be present in the `refs` subdirectory of the image.
+  Specify the search criteria for the validated reference, format is A=B.
+  Reference should point to a manifest or index.
+  e.g. --ref name=v1.0 --ref platform.os=latest
+  Only support `name`, `platform.os` and `digest` three cases.
   Only applicable if type is image or imageLayout.
 
 **--type**=""
@@ -27,7 +28,7 @@ oci-image-tool validate \- Validate one or more image files
 # EXAMPLES
 ```
 $ skopeo copy docker://busybox oci:busybox-oci:latest
-$ oci-image-tool validate --type imageLayout --ref latest busybox-oci
+$ oci-image-tool validate --type imageLayout --ref name=latest busybox-oci
 busybox-oci: OK
 ```
 

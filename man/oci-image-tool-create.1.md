@@ -17,8 +17,11 @@ runtime-spec-compatible `dest/config.json`.
 **--help**
   Print usage statement
 
-**--ref**=""
-  The ref pointing to the manifest of the OCI image. This must be present in the "refs" subdirectory of the image. (default "v1.0")
+**--ref**=[]
+  Specify the search criteria for the validated reference, format is A=B.
+  Reference should point to a manifest or index.
+  e.g. --ref name=v1.0 --ref platform.os=latest
+  Only support `name`, `platform.os` and `digest` three cases.
 
 **--rootfs**=""
   A directory representing the root filesystem of the container in the OCI runtime bundle. It is strongly recommended to keep the default value. (default "rootfs")
@@ -35,7 +38,7 @@ runtime-spec-compatible `dest/config.json`.
 ```
 $ skopeo copy docker://busybox oci:busybox-oci:latest
 $ mkdir busybox-bundle
-$ oci-image-tool create --ref latest busybox-oci busybox-bundle
+$ oci-image-tool create --ref name=latest busybox-oci busybox-bundle
 $ cd busybox-bundle && sudo runc run busybox
 [...]
 ```

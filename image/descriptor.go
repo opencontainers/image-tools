@@ -20,6 +20,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
@@ -27,8 +28,30 @@ import (
 
 const indexPath = "index.json"
 
-func listReferences(w walker) (map[string]*v1.Descriptor, error) {
-	refs := make(map[string]*v1.Descriptor)
+func listReferences(w walker) ([]v1.Descriptor, error) {
+	var descs []v1.Descriptor
+	var index v1.Index
+
+	if err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
+		if info.IsDir() || filepath.Clean(path) != indexPath {
+			return nil
+		}
+
+		if err := json.NewDecoder(r).Decode(&index); err != nil {
+			return err
+		}
+		descs = index.Manifests
+
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return descs, nil
+}
+
+func findDescriptor(w walker, names []string) ([]v1.Descriptor, error) {
+	var descs []v1.Descriptor
 	var index v1.Index
 
 	if err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
@@ -40,9 +63,34 @@ func listReferences(w walker) (map[string]*v1.Descriptor, error) {
 			return err
 		}
 
-		for i := 0; i < len(index.Manifests); i++ {
-			if index.Manifests[i].Annotations[v1.AnnotationRefName] != "" {
-				refs[index.Manifests[i].Annotations[v1.AnnotationRefName]] = &index.Manifests[i]
+		descs = index.Manifests
+		for _, name := range names {
+			argsParts := strings.Split(name, "=")
+			if len(argsParts) != 2 {
+				return fmt.Errorf("each ref must contain two parts")
+			}
+
+			switch argsParts[0] {
+			case "name":
+				for i := 0; i < len(descs); i++ {
+					if descs[i].Annotations[v1.AnnotationRefName] != argsParts[1] {
+						descs = append(descs[:i], descs[i+1:]...)
+					}
+				}
+			case "platform.os":
+				for i := 0; i < len(descs); i++ {
+					if descs[i].Platform != nil && index.Manifests[i].Platform.OS != argsParts[1] {
+						descs = append(descs[:i], descs[i+1:]...)
+					}
+				}
+			case "digest":
+				for i := 0; i < len(descs); i++ {
+					if string(descs[i].Digest) != argsParts[1] {
+						descs = append(descs[:i], descs[i+1:]...)
+					}
+				}
+			default:
+				return fmt.Errorf("criteria %q unimplemented", argsParts[0])
 			}
 		}
 
@@ -50,38 +98,14 @@ func listReferences(w walker) (map[string]*v1.Descriptor, error) {
 	}); err != nil {
 		return nil, err
 	}
-	return refs, nil
-}
 
-func findDescriptor(w walker, name string) (*v1.Descriptor, error) {
-	var d v1.Descriptor
-	var index v1.Index
-
-	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-		if info.IsDir() || filepath.Clean(path) != indexPath {
-			return nil
-		}
-
-		if err := json.NewDecoder(r).Decode(&index); err != nil {
-			return err
-		}
-
-		for i := 0; i < len(index.Manifests); i++ {
-			if index.Manifests[i].Annotations[v1.AnnotationRefName] == name {
-				d = index.Manifests[i]
-				return errEOW
-			}
-		}
-
-		return nil
-	}); err {
-	case nil:
-		return nil, fmt.Errorf("index.json: descriptor %q not found", name)
-	case errEOW:
-		return &d, nil
-	default:
-		return nil, err
+	if len(descs) == 0 {
+		return nil, fmt.Errorf("index.json: descriptor retrieved by refs %v is not match", names)
+	} else if len(descs) > 1 {
+		return nil, fmt.Errorf("index.json: descriptor retrieved by refs %v is not unique", names)
 	}
+
+	return descs, nil
 }
 
 func validateDescriptor(d *v1.Descriptor, w walker, mts []string) error {

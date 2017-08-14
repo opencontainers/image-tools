@@ -31,7 +31,7 @@ var bundleTypes = []string{
 
 type bundleCmd struct {
 	typ      string // the type to bundle, can be empty string
-	ref      string
+	refs     []string
 	root     string
 	platform string
 }
@@ -43,9 +43,13 @@ func createHandle(context *cli.Context) error {
 
 	v := bundleCmd{
 		typ:      context.String("type"),
-		ref:      context.String("ref"),
+		refs:     context.StringSlice("ref"),
 		root:     context.String("rootfs"),
 		platform: context.String("platform"),
+	}
+
+	if len(v.refs) == 0 {
+		return fmt.Errorf("ref must be provided")
 	}
 
 	if v.typ == "" {
@@ -59,13 +63,13 @@ func createHandle(context *cli.Context) error {
 	var err error
 	switch v.typ {
 	case image.TypeImageLayout:
-		err = image.CreateRuntimeBundleLayout(context.Args()[0], context.Args()[1], v.ref, v.root, v.platform)
+		err = image.CreateRuntimeBundleLayout(context.Args()[0], context.Args()[1], v.root, v.platform, v.refs)
 
 	case image.TypeImageZip:
-		err = image.CreateRuntimeBundleZip(context.Args()[0], context.Args()[1], v.ref, v.root, v.platform)
+		err = image.CreateRuntimeBundleZip(context.Args()[0], context.Args()[1], v.root, v.platform, v.refs)
 
 	case image.TypeImage:
-		err = image.CreateRuntimeBundleFile(context.Args()[0], context.Args()[1], v.ref, v.root, v.platform)
+		err = image.CreateRuntimeBundleFile(context.Args()[0], context.Args()[1], v.root, v.platform, v.refs)
 
 	default:
 		err = fmt.Errorf("cannot create %q", v.typ)
@@ -87,10 +91,9 @@ var createCommand = cli.Command{
 				strings.Join(bundleTypes, ","),
 			),
 		},
-		cli.StringFlag{
+		cli.StringSliceFlag{
 			Name:  "ref",
-			Value: "v1.0",
-			Usage: "The ref pointing to the manifest of the OCI image. This must be present in the 'refs' subdirectory of the image.",
+			Usage: "A set of ref specify the search criteria for the validated reference, format is A=B. Only support 'name', 'platform.os' and 'digest' three cases.",
 		},
 		cli.StringFlag{
 			Name:  "rootfs",

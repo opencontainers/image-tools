@@ -65,36 +65,35 @@ var validRefMediaTypes = []string{
 }
 
 func validate(w walker, refs []string, out *log.Logger) error {
-	if err := layoutValidate(w); err != nil {
-		return err
-	}
+	var descs []v1.Descriptor
+	var err error
 
-	ds, err := listReferences(w)
-	if err != nil {
+	if err = layoutValidate(w); err != nil {
 		return err
-	}
-	if len(refs) == 0 && len(ds) == 0 {
-		// TODO(runcom): ugly, we'll need a better way and library
-		// to express log levels.
-		// see https://github.com/opencontainers/image-spec/issues/288
-		out.Print("WARNING: no descriptors found")
 	}
 
 	if len(refs) == 0 {
-		for ref := range ds {
-			refs = append(refs, ref)
+		out.Print("No ref specified, verify all refs")
+		descs, err = listReferences(w)
+		if err != nil {
+			return err
+		}
+		if len(descs) == 0 {
+			// TODO(runcom): ugly, we'll need a better way and library
+			// to express log levels.
+			// see https://github.com/opencontainers/image-spec/issues/288
+			out.Print("WARNING: no descriptors found")
+			return nil
+		}
+	} else {
+		descs, err = findDescriptor(w, refs)
+		if err != nil {
+			return err
 		}
 	}
 
-	for _, ref := range refs {
-		d, ok := ds[ref]
-		if !ok {
-			// TODO(runcom):
-			// soften this error to a warning if the user didn't ask for any specific reference
-			// with --ref but she's just validating the whole image.
-			return fmt.Errorf("reference %s not found", ref)
-		}
-
+	for _, desc := range descs {
+		d := &desc
 		if err = validateDescriptor(d, w, validRefMediaTypes); err != nil {
 			return err
 		}
@@ -136,10 +135,10 @@ func validate(w walker, refs []string, out *log.Logger) error {
 				}
 			}
 		}
+	}
 
-		if out != nil {
-			out.Printf("reference %q: OK", ref)
-		}
+	if out != nil && len(refs) > 0 {
+		out.Printf("reference %v: OK", refs)
 	}
 
 	return nil
@@ -148,46 +147,47 @@ func validate(w walker, refs []string, out *log.Logger) error {
 // UnpackLayout walks through the file tree given by src and, using the layers
 // specified in the manifest pointed to by the given ref, unpacks all layers in
 // the given destination directory or returns an error if the unpacking failed.
-func UnpackLayout(src, dest, ref, platform string) error {
-	return unpack(newPathWalker(src), dest, ref, platform)
+func UnpackLayout(src, dest, platform string, refs []string) error {
+	return unpack(newPathWalker(src), dest, platform, refs)
 }
 
 // UnpackZip opens and walks through the zip file given by src and, using the layers
 // specified in the manifest pointed to by the given ref, unpacks all layers in
 // the given destination directory or returns an error if the unpacking failed.
-func UnpackZip(src, dest, ref, platform string) error {
-	return unpack(newZipWalker(src), dest, ref, platform)
+func UnpackZip(src, dest, platform string, refs []string) error {
+	return unpack(newZipWalker(src), dest, platform, refs)
 }
 
 // UnpackFile opens the file pointed by tarFileName and calls Unpack on it.
-func UnpackFile(tarFileName, dest, ref, platform string) error {
+func UnpackFile(tarFileName, dest, platform string, refs []string) error {
 	f, err := os.Open(tarFileName)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
 	}
 	defer f.Close()
 
-	return Unpack(f, dest, ref, platform)
+	return Unpack(f, dest, platform, refs)
 }
 
 // Unpack walks through the tar stream and, using the layers specified in
 // the manifest pointed to by the given ref, unpacks all layers in the given
 // destination directory or returns an error if the unpacking failed.
 // The destination will be created if it does not exist.
-func Unpack(r io.ReadSeeker, dest, refName, platform string) error {
-	return unpack(newTarWalker(r), dest, refName, platform)
+func Unpack(r io.ReadSeeker, dest, platform string, refs []string) error {
+	return unpack(newTarWalker(r), dest, platform, refs)
 }
 
-func unpack(w walker, dest, refName, platform string) error {
+func unpack(w walker, dest, platform string, refs []string) error {
 	if err := layoutValidate(w); err != nil {
 		return err
 	}
 
-	ref, err := findDescriptor(w, refName)
+	descs, err := findDescriptor(w, refs)
 	if err != nil {
 		return err
 	}
 
+	ref := &descs[0]
 	if err = validateDescriptor(ref, w, validRefMediaTypes); err != nil {
 		return err
 	}
@@ -231,46 +231,47 @@ func unpack(w walker, dest, refName, platform string) error {
 // CreateRuntimeBundleLayout walks through the file tree given by src and
 // creates an OCI runtime bundle in the given destination dest
 // or returns an error if the unpacking failed.
-func CreateRuntimeBundleLayout(src, dest, ref, root, platform string) error {
-	return createRuntimeBundle(newPathWalker(src), dest, ref, root, platform)
+func CreateRuntimeBundleLayout(src, dest, root, platform string, refs []string) error {
+	return createRuntimeBundle(newPathWalker(src), dest, root, platform, refs)
 }
 
 // CreateRuntimeBundleZip opens and walks through the zip file given by src
 // and creates an OCI runtime bundle in the given destination dest
 // or returns an error if the unpacking failed.
-func CreateRuntimeBundleZip(src, dest, ref, root, platform string) error {
-	return createRuntimeBundle(newZipWalker(src), dest, ref, root, platform)
+func CreateRuntimeBundleZip(src, dest, root, platform string, refs []string) error {
+	return createRuntimeBundle(newZipWalker(src), dest, root, platform, refs)
 }
 
 // CreateRuntimeBundleFile opens the file pointed by tarFile and calls
 // CreateRuntimeBundle.
-func CreateRuntimeBundleFile(tarFile, dest, ref, root, platform string) error {
+func CreateRuntimeBundleFile(tarFile, dest, root, platform string, refs []string) error {
 	f, err := os.Open(tarFile)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
 	}
 	defer f.Close()
 
-	return createRuntimeBundle(newTarWalker(f), dest, ref, root, platform)
+	return createRuntimeBundle(newTarWalker(f), dest, root, platform, refs)
 }
 
 // CreateRuntimeBundle walks through the given tar stream and
 // creates an OCI runtime bundle in the given destination dest
 // or returns an error if the unpacking failed.
-func CreateRuntimeBundle(r io.ReadSeeker, dest, ref, root, platform string) error {
-	return createRuntimeBundle(newTarWalker(r), dest, ref, root, platform)
+func CreateRuntimeBundle(r io.ReadSeeker, dest, root, platform string, refs []string) error {
+	return createRuntimeBundle(newTarWalker(r), dest, root, platform, refs)
 }
 
-func createRuntimeBundle(w walker, dest, refName, rootfs, platform string) error {
+func createRuntimeBundle(w walker, dest, rootfs, platform string, refs []string) error {
 	if err := layoutValidate(w); err != nil {
 		return err
 	}
 
-	ref, err := findDescriptor(w, refName)
+	descs, err := findDescriptor(w, refs)
 	if err != nil {
 		return err
 	}
 
+	ref := &descs[0]
 	if err = validateDescriptor(ref, w, validRefMediaTypes); err != nil {
 		return err
 	}

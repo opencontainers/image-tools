@@ -108,7 +108,7 @@ func validatePath(name string) error {
 	}
 
 	if len(v.refs) != 0 {
-		fmt.Printf("WARNING: type %q does not support refs, which are only appropriate if type is image or imageLayout.\n", typ)
+		fmt.Printf("WARNING: type %q does not support ref, which are only appropriate if type is image or imageLayout.\n", typ)
 	}
 
 	f, err := os.Open(name)
@@ -143,7 +143,7 @@ var validateCommand = cli.Command{
 		},
 		cli.StringSliceFlag{
 			Name:  "ref",
-			Usage: "A set of refs pointing to the manifests to be validated. Each reference must be present in the refs subdirectory of the image. Only applicable if type is image or imageLayout.",
+			Usage: "A set of ref specify the search criteria for the validated reference. Format is A=B. Only support 'name', 'platform.os' and 'digest' three cases. Only applicable if type is image or imageLayout.",
 		},
 	},
 }
