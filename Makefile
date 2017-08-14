@@ -59,14 +59,17 @@ lint:
 	@echo "checking lint"
 	@./.tool/lint
 
-.PHONY: .gofmt .gotest
+.PHONY: .gofmt .govet .gotest
 
 PACKAGES = $(shell go list ./... | grep -v /vendor/)
-test: .gofmt .gotest
+test: .gofmt .govet .gotest
 
 FILES = $(shell find ./ -name *.go | grep -v vendor)
 .gofmt:
 	OUT=$$(gofmt -s -d $(FILES)); if test -n "$${OUT}"; then echo "$${OUT}" && exit 1; fi
+
+.govet:
+	go vet -x $(PACKAGES)
 
 .gotest:
 	go test -v -race -cover $(PACKAGES)
