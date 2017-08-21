@@ -54,6 +54,14 @@ func validateAction(context *cli.Context) error {
 		refs: context.StringSlice("ref"),
 	}
 
+	for index, ref := range v.refs {
+		for i := index + 1; i < len(v.refs); i++ {
+			if ref == v.refs[i] {
+				fmt.Printf("WARNING: refs contains duplicate reference %q.\n", v.refs[i])
+			}
+		}
+	}
+
 	var errs []string
 	for _, arg := range context.Args() {
 		err := validatePath(arg)
