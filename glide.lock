@@ -1,5 +1,5 @@
-hash: 05767d798fff367f75f75499c5b04dd44f7072102d1444862c0a556251040a37
-updated: 2017-08-22T09:22:06.648647878+08:00
+hash: 6a0c87b1f0083df1808b319687d593bde5c92202cf69d4241c3ecab43c503bc5
+updated: 2017-08-29T22:16:59.106122487+02:00
 imports:
 - name: github.com/opencontainers/go-digest
   version: aa2ec055abd10d26d539eb630a92241b781ce4bc
@@ -15,7 +15,7 @@ imports:
   - specs-go
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
-- name: github.com/Sirupsen/logrus
+- name: github.com/sirupsen/logrus
   version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
 - name: github.com/urfave/cli
   version: 0bdeddeeb0f650497d603c4ad7b20cfe685682f6
@@ -24,17 +24,17 @@ imports:
 - name: github.com/xeipuuv/gojsonreference
   version: e02fc20de94c78484cd5ffb007f8af96be030a45
 - name: github.com/xeipuuv/gojsonschema
-  version: d5336c75940ef31c9ceeb0ae64cf92944bccb4ee
+  version: 0c8571ac0ce161a5feb57375a9cdf148c98c0f70
 - name: go4.org
   version: 034d17a462f7b2dcd1a4a73553ec5357ff6e6c6e
   subpackages:
   - errorutil
 - name: golang.org/x/crypto
-  version: eb71ad9bd329b5ac0fd0148dd99bd62e8be8e035
+  version: 81e90905daefcd6fd217b62423c0908922eadb30
   subpackages:
   - ssh/terminal
 - name: golang.org/x/sys
-  version: a55a76086885b80f79961eacb876ebd8caf3868d
+  version: ab9e364efd8b52800ff7ee48a9ffba4e0ed78dfb
   subpackages:
   - unix
   - windows

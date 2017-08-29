@@ -29,7 +29,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/opencontainers/image-spec/schema"
 	"github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
