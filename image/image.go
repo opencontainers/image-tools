@@ -221,8 +221,9 @@ func CreateRuntimeBundleLayout(src, dest, ref, root, platform string) error {
 	return createRuntimeBundle(newPathWalker(src), dest, ref, root, platform)
 }
 
-// CreateRuntimeBundleFile opens the file pointed by tarFile and calls
-// CreateRuntimeBundle.
+// CreateRuntimeBundleFile walks through the tar file given by tarFile
+// and creates an OCI runtime bundle in the given destination dest
+// or returns an error if the unpacking failed.
 func CreateRuntimeBundleFile(tarFile, dest, ref, root, platform string) error {
 	f, err := os.Open(tarFile)
 	if err != nil {
@@ -231,13 +232,6 @@ func CreateRuntimeBundleFile(tarFile, dest, ref, root, platform string) error {
 	defer f.Close()
 
 	return createRuntimeBundle(newTarWalker(f), dest, ref, root, platform)
-}
-
-// CreateRuntimeBundle walks through the given tar stream and
-// creates an OCI runtime bundle in the given destination dest
-// or returns an error if the unpacking failed.
-func CreateRuntimeBundle(r io.ReadSeeker, dest, ref, root, platform string) error {
-	return createRuntimeBundle(newTarWalker(r), dest, ref, root, platform)
 }
 
 func createRuntimeBundle(w walker, dest, refName, rootfs, platform string) error {
