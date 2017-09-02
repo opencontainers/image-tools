@@ -346,14 +346,6 @@ func filterManifest(w walker, Manifests []v1.Descriptor, platform string) ([]*ma
 	}
 
 	for _, manifest := range Manifests {
-		m, err := findManifest(w, &manifest)
-		if err != nil {
-			return manifests, err
-		}
-
-		if err := m.validate(w); err != nil {
-			return manifests, err
-		}
 		if strings.EqualFold(manifest.Platform.OS, argsParts[0]) && strings.EqualFold(manifest.Platform.Architecture, argsParts[1]) {
 			manifests = append(manifests, m)
 		}
