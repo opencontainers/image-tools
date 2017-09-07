@@ -29,6 +29,7 @@ import (
 const (
 	TypeImageLayout = "imageLayout"
 	TypeImage       = "image"
+	TypeImageZip    = "imageZip"
 	TypeManifest    = "manifest"
 	TypeImageIndex  = "imageIndex"
 	TypeConfig      = "config"
@@ -60,8 +61,10 @@ func Autodetect(path string) (string, error) {
 	mimeType := http.DetectContentType(buf)
 
 	switch mimeType {
-	case "application/x-gzip", "application/octet-stream":
+	case "application/x-gzip", "application/x-rar-compressed", "application/octet-stream":
 		return TypeImage, nil
+	case "application/zip":
+		return TypeImageZip, nil
 
 	case "text/plain; charset=utf-8":
 		// might be a JSON file, will be handled below

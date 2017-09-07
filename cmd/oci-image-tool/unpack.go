@@ -26,6 +26,7 @@ import (
 var unpackTypes = []string{
 	image.TypeImageLayout,
 	image.TypeImage,
+	image.TypeImageZip,
 }
 
 type unpackCmd struct {
@@ -57,6 +58,9 @@ func unpackHandle(context *cli.Context) error {
 	switch v.typ {
 	case image.TypeImageLayout:
 		err = image.UnpackLayout(context.Args()[0], context.Args()[1], v.ref, v.platform)
+
+	case image.TypeImageZip:
+		err = image.UnpackZip(context.Args()[0], context.Args()[1], v.ref, v.platform)
 
 	case image.TypeImage:
 		err = image.UnpackFile(context.Args()[0], context.Args()[1], v.ref, v.platform)

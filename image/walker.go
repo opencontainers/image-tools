@@ -16,6 +16,7 @@ package image
 
 import (
 	"archive/tar"
+	"archive/zip"
 	"fmt"
 	"io"
 	"os"
@@ -100,7 +101,7 @@ func (w *tarWalker) get(desc v1.Descriptor, dst io.Writer) (int64, error) {
 			return nil
 		}
 
-		if path == expectedPath && !info.IsDir() {
+		if filepath.Clean(path) == expectedPath && !info.IsDir() {
 			if bytes, err = io.Copy(dst, rdr); err != nil {
 				return errors.Wrapf(err, "get failed: failed to copy blob to destination")
 			}
@@ -185,4 +186,66 @@ func (w *pathWalker) get(desc v1.Descriptor, dst io.Writer) (int64, error) {
 		return 0, errors.Wrapf(err, "get failed: failed to copy blob to destination")
 	}
 	return nbytes, nil
+}
+
+type zipWalker struct {
+	fileName string
+}
+
+// newWalkWalker returns a Walker that walks through .zip files.
+func newZipWalker(fileName string) walker {
+	return &zipWalker{fileName}
+}
+
+func (w *zipWalker) walk(f walkFunc) error {
+	r, err := zip.OpenReader(w.fileName)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	for _, file := range r.File {
+		rc, err := file.Open()
+		if err != nil {
+			return err
+		}
+		defer rc.Close()
+		info := file.FileInfo()
+		if err := f(file.Name, info, rc); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (w *zipWalker) get(desc v1.Descriptor, dst io.Writer) (int64, error) {
+	var bytes int64
+	done := false
+
+	expectedPath := filepath.Join("blobs", string(desc.Digest.Algorithm()), desc.Digest.Hex())
+
+	f := func(path string, info os.FileInfo, rdr io.Reader) error {
+		var err error
+		if done {
+			return nil
+		}
+
+		if path == expectedPath && !info.IsDir() {
+			if bytes, err = io.Copy(dst, rdr); err != nil {
+				return errors.Wrapf(err, "get failed: failed to copy blob to destination")
+			}
+			done = true
+		}
+		return nil
+	}
+
+	if err := w.walk(f); err != nil {
+		return 0, errors.Wrapf(err, "get failed: unable to walk")
+	}
+	if !done {
+		return 0, os.ErrNotExist
+	}
+
+	return bytes, nil
 }

@@ -103,6 +103,7 @@ __oci-image-tool_complete_common_types() {
 	COMPREPLY=( $( compgen -W "
 		image
 		imageLayout
+		imageZip
 	" -- "$cur" ) )
 }
 
@@ -113,6 +114,7 @@ __oci-image-tool_complete_validate_types() {
 		image
 		imageIndex
 		imageLayout
+		imageZip
 		manifest
 	" -- "$cur" ) )
 }
