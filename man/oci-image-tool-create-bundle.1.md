@@ -2,13 +2,13 @@
 % OCI Community
 % JULY 2016
 # NAME
-oci-image-tool create \- Create an OCI runtime bundle
+oci-image-tool create-bundle \- Create an OCI runtime bundle
 
 # SYNOPSIS
-**oci-image-tool create** [src] [dest] [OPTIONS]
+**oci-image-tool create-bundle** [src] [dest] [OPTIONS]
 
 # DESCRIPTION
-`oci-image-tool create` validates an application/vnd.oci.image.manifest.v1+json and unpacks its layered filesystem to `dest/rootfs`, although the target directory is configurable with `--rootfs`. See **oci-image-tool unpack**(1) for more details on this process.
+`oci-image-tool create-bundle` validates an application/vnd.oci.image.manifest.v1+json and unpacks its layered filesystem to `dest/rootfs`, although the target directory is configurable with `--rootfs`. See **oci-image-tool unpack**(1) for more details on this process.
 
 Also translates the referenced config from application/vnd.oci.image.config.v1+json to a
 runtime-spec-compatible `dest/config.json`.
@@ -35,7 +35,7 @@ runtime-spec-compatible `dest/config.json`.
 ```
 $ skopeo copy docker://busybox oci:busybox-oci
 $ mkdir busybox-bundle
-$ oci-image-tool create --ref latest busybox-oci busybox-bundle
+$ oci-image-tool create-bundle --ref latest busybox-oci busybox-bundle
 $ cd busybox-bundle && sudo runc run busybox
 [...]
 ```

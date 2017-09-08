@@ -76,7 +76,7 @@ func createHandle(context *cli.Context) error {
 }
 
 var createCommand = cli.Command{
-	Name:   "create",
+	Name:   "create-bundle",
 	Usage:  "Create an OCI image runtime bundle",
 	Action: createHandle,
 	Flags: []cli.Flag{
