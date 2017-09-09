@@ -113,8 +113,6 @@ __oci-image-tool_complete_validate_types() {
 		config
 		image
 		imageIndex
-		imageLayout
-		imageZip
 		manifest
 	" -- "$cur" ) )
 }

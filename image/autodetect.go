@@ -15,13 +15,11 @@
 package image
 
 import (
-	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 
-	"github.com/opencontainers/image-spec/schema"
 	"github.com/pkg/errors"
 )
 
@@ -65,48 +63,7 @@ func Autodetect(path string) (string, error) {
 		return TypeImage, nil
 	case "application/zip":
 		return TypeImageZip, nil
-
-	case "text/plain; charset=utf-8":
-		// might be a JSON file, will be handled below
-
-	default:
-		return "", errors.New("unknown file type")
 	}
 
-	if _, err := f.Seek(0, io.SeekStart); err != nil {
-		return "", errors.Wrap(err, "unable to seek")
-	}
-
-	header := struct {
-		SchemaVersion int         `json:"schemaVersion"`
-		MediaType     string      `json:"mediaType"`
-		Config        interface{} `json:"config"`
-	}{}
-
-	if err := json.NewDecoder(f).Decode(&header); err != nil {
-		if _, errSeek := f.Seek(0, io.SeekStart); errSeek != nil {
-			return "", errors.Wrap(err, "unable to seek")
-		}
-
-		e := errors.Wrap(
-			schema.WrapSyntaxError(f, err),
-			"unable to parse JSON",
-		)
-
-		return "", e
-	}
-
-	switch {
-	case header.MediaType == string(schema.ValidatorMediaTypeManifest):
-		return TypeManifest, nil
-
-	case header.MediaType == string(schema.ValidatorMediaTypeImageIndex):
-		return TypeImageIndex, nil
-
-	case header.MediaType == "" && header.SchemaVersion == 0 && header.Config != nil:
-		// config files don't have mediaType/schemaVersion header
-		return TypeConfig, nil
-	}
-
-	return "", errors.New("unknown media type")
+	return "", errors.New("unknown file type")
 }

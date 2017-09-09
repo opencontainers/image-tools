@@ -20,15 +20,15 @@ oci-image-tool validate \- Validate one or more image files
   Reference should point to a manifest or index.
   e.g. --ref name=v1.0 --ref platform.os=latest
   Only support `name`, `platform.os` and `digest` three cases.
-  Only applicable if type is image or imageLayout.
+  Only applicable if type is image.
 
 **--type**=""
-  Type of the file to validate. If unset, oci-image-tool will try to auto-detect the type. One of "imageLayout,image,imageZip,manifest,imageIndex,config"
+  Type of the file to validate. One of "image,manifest,imageIndex,config"
 
 # EXAMPLES
 ```
 $ skopeo copy docker://busybox oci:busybox-oci:latest
-$ oci-image-tool validate --type imageLayout --ref name=latest busybox-oci
+$ oci-image-tool validate --type image --ref name=latest busybox-oci
 busybox-oci: OK
 ```
 

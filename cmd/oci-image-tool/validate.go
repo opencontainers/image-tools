@@ -28,9 +28,7 @@ import (
 
 // supported validation types
 var validateTypes = []string{
-	image.TypeImageLayout,
 	image.TypeImage,
-	image.TypeImageZip,
 	image.TypeManifest,
 	image.TypeImageIndex,
 	image.TypeConfig,
@@ -54,6 +52,10 @@ func validateAction(context *cli.Context) error {
 		refs: context.StringSlice("ref"),
 	}
 
+	if v.typ == "" {
+		return fmt.Errorf("--type must be set")
+	}
+
 	for index, ref := range v.refs {
 		for i := index + 1; i < len(v.refs); i++ {
 			if ref == v.refs[i] {
@@ -74,9 +76,9 @@ func validateAction(context *cli.Context) error {
 		if verr, ok := errors.Cause(err).(schema.ValidationError); ok {
 			errs = append(errs, fmt.Sprintf("%v", verr.Errs))
 		} else if serr, ok := errors.Cause(err).(*schema.SyntaxError); ok {
-			errs = append(errs, fmt.Sprintf("%s:%d:%d: validation failed: %v", arg, serr.Line, serr.Col, err))
+			errs = append(errs, fmt.Sprintf("%s:%d:%d: %v", arg, serr.Line, serr.Col, err))
 		} else {
-			errs = append(errs, fmt.Sprintf("%s: validation failed: %v", arg, err))
+			errs = append(errs, fmt.Sprintf("%s: %v", arg, err))
 		}
 
 	}
@@ -95,29 +97,29 @@ func validatePath(name string) error {
 		typ = v.typ
 	)
 
-	if typ == "" {
-		if typ, err = image.Autodetect(name); err != nil {
-			return errors.Wrap(err, "unable to determine type")
-		}
-	}
-
 	if v.stdout == nil {
 		v.stdout = log.New(os.Stdout, "oci-image-tool: ", 0)
 	}
 
-	switch typ {
-	case image.TypeImageLayout:
-		return image.ValidateLayout(name, v.refs, v.stdout)
-	case image.TypeImageZip:
-		return image.ValidateZip(name, v.refs, v.stdout)
-	case image.TypeImage:
-		return image.ValidateFile(name, v.refs, v.stdout)
+	if typ == image.TypeImage {
+		imageType, err := image.Autodetect(name)
+		if err != nil {
+			return errors.Wrap(err, "unable to determine image type")
+		}
+		fmt.Println("autodetected image file type is:", imageType)
+		switch imageType {
+		case image.TypeImageLayout:
+			return image.ValidateLayout(name, v.refs, v.stdout)
+		case image.TypeImageZip:
+			return image.ValidateZip(name, v.refs, v.stdout)
+		case image.TypeImage:
+			return image.ValidateFile(name, v.refs, v.stdout)
+		}
 	}
 
 	if len(v.refs) != 0 {
-		fmt.Printf("WARNING: type %q does not support ref, which are only appropriate if type is image or imageLayout.\n", typ)
+		fmt.Println("WARNING: refs are only appropriate if type is image")
 	}
-
 	f, err := os.Open(name)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
@@ -144,13 +146,13 @@ var validateCommand = cli.Command{
 		cli.StringFlag{
 			Name: "type",
 			Usage: fmt.Sprintf(
-				`Type of the file to validate. If unset, oci-image-tool will try to auto-detect the type. One of "%s".`,
+				`Type of the file to validate. One of "%s".`,
 				strings.Join(validateTypes, ","),
 			),
 		},
 		cli.StringSliceFlag{
 			Name:  "ref",
-			Usage: "A set of ref specify the search criteria for the validated reference. Format is A=B. Only support 'name', 'platform.os' and 'digest' three cases. Only applicable if type is image or imageLayout.",
+			Usage: "A set of ref specify the search criteria for the validated reference. Format is A=B. Only support 'name', 'platform.os' and 'digest' three cases. Only applicable if type is image",
 		},
 	},
 }
