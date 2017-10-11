@@ -48,14 +48,13 @@ func layoutValidate(w walker) error {
 				return fmt.Errorf("index.json is a directory")
 			}
 
-			var index v1.Index
 			buf, err := ioutil.ReadAll(r)
 			if err != nil {
 				return errors.Wrap(err, "error reading index.json")
 			}
 
-			if err := json.Unmarshal(buf, &index); err != nil {
-				return errors.Wrap(err, "index.json format mismatch")
+			if err := schema.ValidatorMediaTypeImageIndex.Validate(bytes.NewReader(buf)); err != nil {
+				return errors.Wrap(err, "index.json validation failed")
 			}
 
 			return nil
@@ -74,7 +73,7 @@ func layoutValidate(w walker) error {
 			}
 
 			if err := schema.ValidatorMediaTypeLayoutHeader.Validate(bytes.NewReader(buf)); err != nil {
-				return errors.Wrap(err, "oci-layout: imageLayout validation failed")
+				return errors.Wrap(err, "oci-layout validation failed")
 			}
 
 			if err := json.Unmarshal(buf, &imageLayout); err != nil {
