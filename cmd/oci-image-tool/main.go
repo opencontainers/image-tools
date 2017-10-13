@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sirupsen/logrus"
 	"github.com/opencontainers/image-tools/version"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
