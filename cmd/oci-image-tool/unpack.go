@@ -69,7 +69,12 @@ func unpackHandle(context *cli.Context) error {
 		err = fmt.Errorf("cannot unpack %q", v.typ)
 	}
 
-	return err
+	if err != nil {
+		return fmt.Errorf("Unpacking failed: %v", err)
+	}
+
+	fmt.Println("Unpacking succeeded")
+	return nil
 }
 
 var unpackCommand = cli.Command{
