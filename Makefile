@@ -35,7 +35,7 @@ all: tool man
 .PHONY: man
 man:
 	go-md2man -in "man/oci-image-tool.1.md" -out "oci-image-tool.1"
-	go-md2man -in "man/oci-image-tool-create.1.md" -out "oci-image-tool-create.1"
+	go-md2man -in "man/oci-image-tool-create-bundle.1.md" -out "oci-image-tool-create-bundle.1"
 	go-md2man -in "man/oci-image-tool-unpack.1.md" -out "oci-image-tool-unpack.1"
 	go-md2man -in "man/oci-image-tool-validate.1.md" -out "oci-image-tool-validate.1"
 
