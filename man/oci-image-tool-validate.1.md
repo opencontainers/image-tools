@@ -1,4 +1,4 @@
-% OCI(1) OCI-IMAGE-TOOL User Manuals
+% OCI-IMAGE-TOOL-VALIDATE(1) OCI Image Tool User Manuals
 % OCI Community
 % JULY 2016
 # NAME
