@@ -79,8 +79,8 @@ func Autodetect(path string) (string, error) {
 
 	header := struct {
 		SchemaVersion int         `json:"schemaVersion"`
-		MediaType     string      `json:"mediaType"`
 		Config        interface{} `json:"config"`
+		Manifests     interface{} `json:"manifests"`
 	}{}
 
 	if err := json.NewDecoder(f).Decode(&header); err != nil {
@@ -97,13 +97,13 @@ func Autodetect(path string) (string, error) {
 	}
 
 	switch {
-	case header.MediaType == string(schema.ValidatorMediaTypeManifest):
+	case header.SchemaVersion == 2 && header.Config != nil:
 		return TypeManifest, nil
 
-	case header.MediaType == string(schema.ValidatorMediaTypeImageIndex):
+	case header.Manifests != nil:
 		return TypeImageIndex, nil
 
-	case header.MediaType == "" && header.SchemaVersion == 0 && header.Config != nil:
+	case header.SchemaVersion == 0 && header.Config != nil:
 		// config files don't have mediaType/schemaVersion header
 		return TypeConfig, nil
 	}
