@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/opencontainers/image-tools/image"
 	"github.com/opencontainers/image-tools/version"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -53,6 +54,11 @@ func main() {
 		unpackCommand,
 		createCommand,
 	}
+
+	cli.AppHelpTemplate = fmt.Sprintf(`%sMore information:
+		references	%s
+		bug report	%s
+	`, cli.AppHelpTemplate, image.SpecURL, image.IssuesURL)
 
 	if err := app.Run(os.Args); err != nil {
 		logrus.Fatal(err)
