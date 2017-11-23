@@ -57,8 +57,20 @@ lint:
 	@echo "checking lint"
 	@./.tool/lint
 
-test:
-	go test -v -race -cover $(shell go list ./... | grep -v /vendor/)
+.PHONY: .gofmt .govet .gotest
+
+PACKAGES = $(shell go list ./... | grep -v /vendor/)
+test: .gofmt .govet .gotest
+
+FILES = $(shell find ./ -name *.go | grep -v vendor)
+.gofmt:
+	OUT=$$(gofmt -s -d $(FILES)); if test -n "$${OUT}"; then echo "$${OUT}" && exit 1; fi
+
+.govet:
+	go vet -x $(PACKAGES)
+
+.gotest:
+	go test -v -race -cover $(PACKAGES)
 
 
 ## this uses https://github.com/Masterminds/glide and https://github.com/sgotti/glide-vc
