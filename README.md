@@ -28,7 +28,7 @@ The following examples assume you have a [image-layout](https://github.com/openc
 One way to acquire that image is with [skopeo](https://github.com/projectatomic/skopeo#installing):
 
 ```
-$ skopeo copy docker://busybox oci:busybox-oci
+$ skopeo copy docker://busybox oci:busybox-oci:latest
 ```
 
 ### oci-image-tool-create
