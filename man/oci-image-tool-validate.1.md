@@ -26,7 +26,7 @@ oci-image-tool validate \- Validate one or more image files
 
 # EXAMPLES
 ```
-$ skopeo copy docker://busybox oci:busybox-oci
+$ skopeo copy docker://busybox oci:busybox-oci:latest
 $ oci-image-tool validate --type imageLayout --ref latest busybox-oci
 busybox-oci: OK
 ```

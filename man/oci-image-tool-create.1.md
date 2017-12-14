@@ -33,7 +33,7 @@ runtime-spec-compatible `dest/config.json`.
 
 # EXAMPLES
 ```
-$ skopeo copy docker://busybox oci:busybox-oci
+$ skopeo copy docker://busybox oci:busybox-oci:latest
 $ mkdir busybox-bundle
 $ oci-image-tool create --ref latest busybox-oci busybox-bundle
 $ cd busybox-bundle && sudo runc run busybox

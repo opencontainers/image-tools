@@ -27,7 +27,7 @@ oci-image-tool unpack \- Unpack an image or image source layout
 
 # EXAMPLES
 ```
-$ skopeo copy docker://busybox oci:busybox-oci
+$ skopeo copy docker://busybox oci:busybox-oci:latest
 $ mkdir busybox-bundle
 $ oci-image-tool unpack --ref latest busybox-oci busybox-bundle
 $ tree busybox-bundle
