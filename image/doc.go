@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package image defines methods for validating, and unpacking OCI images.
+// Package image defines methods for validating, unpacking OCI images and creating OCI runtime bundle.
 package image
