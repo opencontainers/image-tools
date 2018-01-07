@@ -86,10 +86,6 @@ func (c *config) runtimeSpec(rootfs string) (*specs.Spec, error) {
 	s.Process.Args = append(s.Process.Args, c.Config.Entrypoint...)
 	s.Process.Args = append(s.Process.Args, c.Config.Cmd...)
 
-	if len(s.Process.Args) == 0 {
-		s.Process.Args = append(s.Process.Args, "sh")
-	}
-
 	if uid, err := strconv.Atoi(c.Config.User); err == nil {
 		s.Process.User.UID = uint32(uid)
 	} else if ug := strings.Split(c.Config.User, ":"); len(ug) == 2 {
