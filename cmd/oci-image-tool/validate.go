@@ -67,10 +67,8 @@ func validateHandler(context *cli.Context) error {
 			errs = append(errs, fmt.Sprintf("%v", verr.Errs))
 		} else if serr, ok := errors.Cause(err).(*schema.SyntaxError); ok {
 			errs = append(errs, fmt.Sprintf("%s:%d:%d: validation failed: %v", arg, serr.Line, serr.Col, err))
-			continue
 		} else {
 			errs = append(errs, fmt.Sprintf("%s: validation failed: %v", arg, err))
-			continue
 		}
 
 	}
@@ -78,6 +76,7 @@ func validateHandler(context *cli.Context) error {
 	if len(errs) > 0 {
 		return fmt.Errorf("%d errors detected: \n%s", len(errs), strings.Join(errs, "\n"))
 	}
+
 	fmt.Println("Validation succeeded")
 	return nil
 }
