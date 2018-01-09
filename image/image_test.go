@@ -237,7 +237,7 @@ func TestImageLayout(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = ValidateLayout(root, refTag, nil)
+	err = ValidateLayout(root, refTag)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -16,7 +16,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -37,9 +36,8 @@ var validateTypes = []string{
 }
 
 type validateCmd struct {
-	stdout *log.Logger
-	typ    string // the type to validate, can be empty string
-	refs   []string
+	typ  string // the type to validate, can be empty string
+	refs []string
 }
 
 var v validateCmd
@@ -94,17 +92,13 @@ func validatePath(name string) error {
 		}
 	}
 
-	if v.stdout == nil {
-		v.stdout = log.New(os.Stdout, "oci-image-tool: ", 0)
-	}
-
 	switch typ {
 	case image.TypeImageLayout:
-		return image.ValidateLayout(name, v.refs, v.stdout)
+		return image.ValidateLayout(name, v.refs)
 	case image.TypeImageZip:
-		return image.ValidateZip(name, v.refs, v.stdout)
+		return image.ValidateZip(name, v.refs)
 	case image.TypeImage:
-		return image.ValidateFile(name, v.refs, v.stdout)
+		return image.ValidateFile(name, v.refs)
 	}
 
 	if len(v.refs) != 0 {

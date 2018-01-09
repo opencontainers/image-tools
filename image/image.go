@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -29,25 +28,25 @@ import (
 
 // ValidateLayout walks through the given file tree and validates the manifest
 // pointed to by the given refs or returns an error if the validation failed.
-func ValidateLayout(src string, refs []string, out *log.Logger) error {
-	return validate(newPathWalker(src), refs, out)
+func ValidateLayout(src string, refs []string) error {
+	return validate(newPathWalker(src), refs)
 }
 
 // ValidateZip walks through the given file tree and validates the manifest
 // pointed to by the given refs or returns an error if the validation failed.
-func ValidateZip(src string, refs []string, out *log.Logger) error {
-	return validate(newZipWalker(src), refs, out)
+func ValidateZip(src string, refs []string) error {
+	return validate(newZipWalker(src), refs)
 }
 
 // ValidateFile opens the tar file given by the filename, then calls ValidateReader
-func ValidateFile(tarFile string, refs []string, out *log.Logger) error {
+func ValidateFile(tarFile string, refs []string) error {
 	f, err := os.Open(tarFile)
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
 	}
 	defer f.Close()
 
-	return Validate(f, refs, out)
+	return Validate(f, refs)
 }
 
 // Validate walks through a tar stream and validates the manifest.
@@ -55,8 +54,8 @@ func ValidateFile(tarFile string, refs []string, out *log.Logger) error {
 // * Checks that all referred blobs are valid
 // * Checks that mime-types are correct
 // returns error on validation failure
-func Validate(r io.ReadSeeker, refs []string, out *log.Logger) error {
-	return validate(newTarWalker(r), refs, out)
+func Validate(r io.ReadSeeker, refs []string) error {
+	return validate(newTarWalker(r), refs)
 }
 
 var validRefMediaTypes = []string{
@@ -64,7 +63,7 @@ var validRefMediaTypes = []string{
 	v1.MediaTypeImageIndex,
 }
 
-func validate(w walker, refs []string, out *log.Logger) error {
+func validate(w walker, refs []string) error {
 	if err := layoutValidate(w); err != nil {
 		return err
 	}
@@ -77,7 +76,7 @@ func validate(w walker, refs []string, out *log.Logger) error {
 		// TODO(runcom): ugly, we'll need a better way and library
 		// to express log levels.
 		// see https://github.com/opencontainers/image-spec/issues/288
-		out.Print("WARNING: no descriptors found")
+		fmt.Println("WARNING: no descriptors found")
 	}
 
 	if len(refs) == 0 {
@@ -137,9 +136,7 @@ func validate(w walker, refs []string, out *log.Logger) error {
 			}
 		}
 
-		if out != nil {
-			out.Printf("reference %q: OK", ref)
-		}
+		fmt.Printf("reference %q: OK\n", ref)
 	}
 
 	return nil
