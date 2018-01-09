@@ -143,7 +143,7 @@ var validateCommand = cli.Command{
 		},
 		cli.StringSliceFlag{
 			Name:  "ref",
-			Usage: "A set of refs pointing to the manifests to be validated. Each reference must be present in the refs subdirectory of the image. Only applicable if type is image or imageLayout.",
+			Usage: "A set of refs pointing to the manifests to be validated. Each reference must be match 'org.opencontainers.image.ref.name' annotations in index.json. Only applicable if type is image or imageLayout.",
 		},
 	},
 }

@@ -15,7 +15,7 @@ oci-image-tool unpack \- Unpack an image or image source layout
   Print usage statement
 
 **--ref**=""
-  The ref pointing to the manifest to be unpacked. This must be present in the "refs" subdirectory of the image. (default "v1.0")
+  The ref pointing to the manifest to be unpacked. This must be match 'org.opencontainers.image.ref.name' annotations in index.json. (default "v1.0")
 
 **--type**=""
   Type of the file to unpack. If unset, oci-image-tool will try to auto-detect the type. One of "imageLayout,image,imageZip"
