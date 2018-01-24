@@ -53,12 +53,9 @@ func listReferences(w walker) ([]v1.Descriptor, error) {
 func findDescriptor(w walker, names []string) ([]v1.Descriptor, error) {
 	var descs []v1.Descriptor
 	var index v1.Index
+	dpath := "index.json"
 
-	if err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
-		if info.IsDir() || filepath.Clean(path) != indexPath {
-			return nil
-		}
-
+	if err := w.find(dpath, func(path string, r io.Reader) error {
 		if err := json.NewDecoder(r).Decode(&index); err != nil {
 			return err
 		}

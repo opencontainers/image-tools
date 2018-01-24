@@ -34,6 +34,8 @@ var (
 // walkFunc is a function type that gets called for each file or directory visited by the Walker.
 type walkFunc func(path string, _ os.FileInfo, _ io.Reader) error
 
+type findFunc func(path string, r io.Reader) error
+
 // walker is the interface that defines how to access a given archival format
 type walker interface {
 
@@ -43,6 +45,9 @@ type walker interface {
 	// get will copy an arbitrary blob, defined by desc, in to dst. returns
 	// the number of bytes copied on success.
 	get(desc v1.Descriptor, dst io.Writer) (int64, error)
+
+	// find calls findFunc for handling content of path
+	find(path string, ff findFunc) error
 }
 
 // tarWalker exposes access to image layouts in a tar file.
@@ -120,6 +125,34 @@ func (w *tarWalker) get(desc v1.Descriptor, dst io.Writer) (int64, error) {
 	return bytes, nil
 }
 
+func (w *tarWalker) find(path string, ff findFunc) error {
+	done := false
+
+	f := func(relpath string, info os.FileInfo, rdr io.Reader) error {
+		var err error
+		if done {
+			return nil
+		}
+
+		if filepath.Clean(relpath) == path && !info.IsDir() {
+			if err = ff(relpath, rdr); err != nil {
+				return err
+			}
+			done = true
+		}
+		return nil
+	}
+
+	if err := w.walk(f); err != nil {
+		return errors.Wrapf(err, "find failed: unable to walk")
+	}
+	if !done {
+		return os.ErrNotExist
+	}
+
+	return nil
+}
+
 type eofReader struct{}
 
 func (eofReader) Read(_ []byte) (int, error) {
@@ -188,6 +221,27 @@ func (w *pathWalker) get(desc v1.Descriptor, dst io.Writer) (int64, error) {
 	return nbytes, nil
 }
 
+func (w *pathWalker) find(path string, ff findFunc) error {
+	name := filepath.Join(w.root, path)
+
+	info, err := os.Stat(name)
+	if err != nil {
+		return err
+	}
+
+	if info.IsDir() {
+		return fmt.Errorf("object is dir")
+	}
+
+	file, err := os.Open(name)
+	if err != nil {
+		return errors.Wrap(err, "unable to open file") // os.Open includes the path
+	}
+	defer file.Close()
+
+	return ff(name, file)
+}
+
 type zipWalker struct {
 	fileName string
 }
@@ -248,4 +302,32 @@ func (w *zipWalker) get(desc v1.Descriptor, dst io.Writer) (int64, error) {
 	}
 
 	return bytes, nil
+}
+
+func (w *zipWalker) find(path string, ff findFunc) error {
+	done := false
+
+	f := func(relpath string, info os.FileInfo, rdr io.Reader) error {
+		var err error
+		if done {
+			return nil
+		}
+
+		if filepath.Clean(relpath) == path && !info.IsDir() {
+			if err = ff(relpath, rdr); err != nil {
+				return err
+			}
+			done = true
+		}
+		return nil
+	}
+
+	if err := w.walk(f); err != nil {
+		return errors.Wrapf(err, "find failed: unable to walk")
+	}
+	if !done {
+		return os.ErrNotExist
+	}
+
+	return nil
 }
