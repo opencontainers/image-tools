@@ -35,7 +35,7 @@ type unpackCmd struct {
 	platform string
 }
 
-func unpackHandle(context *cli.Context) error {
+func unpackAction(context *cli.Context) error {
 	if len(context.Args()) != 2 {
 		return fmt.Errorf("both src and dest must be provided")
 	}
@@ -79,7 +79,7 @@ func unpackHandle(context *cli.Context) error {
 var unpackCommand = cli.Command{
 	Name:   "unpack",
 	Usage:  "Unpack an image or image source layout",
-	Action: unpackHandle,
+	Action: unpackAction,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name: "type",
