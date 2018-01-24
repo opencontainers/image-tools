@@ -31,7 +31,7 @@ var unpackTypes = []string{
 
 type unpackCmd struct {
 	typ      string // the type to unpack, can be empty string
-	ref      string
+	refs     []string
 	platform string
 }
 
@@ -42,8 +42,12 @@ func unpackHandle(context *cli.Context) error {
 
 	v := unpackCmd{
 		typ:      context.String("type"),
-		ref:      context.String("ref"),
+		refs:     context.StringSlice("ref"),
 		platform: context.String("platform"),
+	}
+
+	if len(v.refs) == 0 {
+		return fmt.Errorf("ref must be provided")
 	}
 
 	if v.typ == "" {
@@ -57,13 +61,13 @@ func unpackHandle(context *cli.Context) error {
 	var err error
 	switch v.typ {
 	case image.TypeImageLayout:
-		err = image.UnpackLayout(context.Args()[0], context.Args()[1], v.ref, v.platform)
+		err = image.UnpackLayout(context.Args()[0], context.Args()[1], v.platform, v.refs)
 
 	case image.TypeImageZip:
-		err = image.UnpackZip(context.Args()[0], context.Args()[1], v.ref, v.platform)
+		err = image.UnpackZip(context.Args()[0], context.Args()[1], v.platform, v.refs)
 
 	case image.TypeImage:
-		err = image.UnpackFile(context.Args()[0], context.Args()[1], v.ref, v.platform)
+		err = image.UnpackFile(context.Args()[0], context.Args()[1], v.platform, v.refs)
 
 	default:
 		err = fmt.Errorf("cannot unpack %q", v.typ)
@@ -84,10 +88,9 @@ var unpackCommand = cli.Command{
 				strings.Join(unpackTypes, ","),
 			),
 		},
-		cli.StringFlag{
+		cli.StringSliceFlag{
 			Name:  "ref",
-			Value: "v1.0",
-			Usage: "The ref pointing to the manifest of the OCI image. This must be present in the 'refs' subdirectory of the image.",
+			Usage: "A set of ref specify the search criteria for the validated reference, format is A=B. Only support 'name', 'platform.os' and 'digest' three cases.",
 		},
 		cli.StringFlag{
 			Name:  "platform",

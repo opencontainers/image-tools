@@ -88,9 +88,14 @@ const (
 )
 
 var (
-	refTag = []string{
-		"latest",
-		"v1.0",
+	ref1 = []string{
+		"name=latest",
+		"platform.os=linux",
+	}
+
+	ref2 = []string{
+		"name=v1.0",
+		"platform.os=linux",
 	}
 
 	indexJSON = `{
@@ -221,7 +226,7 @@ func TestImageLayout(t *testing.T) {
 	il := imageLayout{
 		rootDir:   root,
 		layout:    layoutStr,
-		ref:       refTag,
+		ref:       ref1,
 		manifest:  manifestStr,
 		index:     indexStr,
 		indexjson: indexJSON,
@@ -237,24 +242,24 @@ func TestImageLayout(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = ValidateLayout(root, refTag, nil)
+	err = ValidateLayout(root, ref1, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = UnpackLayout(root, dest1, refTag[0], "")
+	err = UnpackLayout(root, dest1, "", ref1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = UnpackLayout(root, dest2, refTag[1], "linux:amd64")
+	err = UnpackLayout(root, dest2, "linux:amd64", ref2)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = CreateRuntimeBundleLayout(root, dest3, refTag[0], "rootfs", "")
+	err = CreateRuntimeBundleLayout(root, dest3, "rootfs", "", ref1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = CreateRuntimeBundleLayout(root, dest4, refTag[1], "rootfs", "linux:amd64")
+	err = CreateRuntimeBundleLayout(root, dest4, "rootfs", "linux:amd64", ref2)
 	if err != nil {
 		t.Fatal(err)
 	}
