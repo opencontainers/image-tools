@@ -52,6 +52,14 @@ func createAction(context *cli.Context) error {
 		return fmt.Errorf("ref must be provided")
 	}
 
+	for index, ref := range v.refs {
+		for i := index + 1; i < len(v.refs); i++ {
+			if ref == v.refs[i] {
+				fmt.Printf("WARNING: refs contains duplicate reference %q.\n", v.refs[i])
+			}
+		}
+	}
+
 	if v.typ == "" {
 		typ, err := image.Autodetect(context.Args()[0])
 		if err != nil {
