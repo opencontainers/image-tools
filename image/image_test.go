@@ -16,16 +16,10 @@ package image
 
 import (
 	"archive/tar"
-	"bytes"
-	"compress/gzip"
-	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
 	"testing"
-
+  
 	"github.com/opencontainers/go-digest"
 	"github.com/opencontainers/image-spec/specs-go/v1"
 )
