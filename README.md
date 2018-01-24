@@ -1,6 +1,7 @@
-# oci-image-tool [![Build Status](https://travis-ci.org/opencontainers/image-tools.svg?branch=master)](https://travis-ci.org/opencontainers/image-tools)
+# oci-image-tool [![Build Status](https://travis-ci.org/opencontainers/image-tools.svg?branch=master)](https://travis-ci.org/opencontainers/image-tools)[![Go Report Card](https://goreportcard.com/badge/github.com/opencontainers/image-tools)](https://goreportcard.com/report/github.com/opencontainers/image-tools)
 
 `oci-image-tool` is a collection of tools for working with the [OCI image format specification](https://github.com/opencontainers/image-spec).
+To build from source code, image-tools requires Go 1.7.x or above.
 
 ## Install
 
@@ -27,7 +28,7 @@ The following examples assume you have a [image-layout](https://github.com/openc
 One way to acquire that image is with [skopeo](https://github.com/projectatomic/skopeo#installing):
 
 ```
-$ skopeo copy docker://busybox oci:busybox-oci
+$ skopeo copy docker://busybox oci:busybox-oci:latest
 ```
 
 ### oci-image-tool-create

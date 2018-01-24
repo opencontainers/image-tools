@@ -1,4 +1,4 @@
-% OCI(1) OCI-IMAGE-TOOL User Manuals
+% OCI-IMAGE-TOOL-CREATE(1) OCI Image Tool User Manuals
 % OCI Community
 % JULY 2016
 # NAME
@@ -17,20 +17,28 @@ runtime-spec-compatible `dest/config.json`.
 **--help**
   Print usage statement
 
-**--ref**=""
-  The ref pointing to the manifest of the OCI image. This must be present in the "refs" subdirectory of the image. (default "v1.0")
+**--ref**=[]
+  Specify the search criteria for the validated reference, format is A=B.
+  Reference should point to a manifest or index.
+  e.g. --ref name=v1.0 --ref platform.os=latest
+  Only support `name`, `platform.os` and `digest` three cases.
 
 **--rootfs**=""
   A directory representing the root filesystem of the container in the OCI runtime bundle. It is strongly recommended to keep the default value. (default "rootfs")
 
 **--type**=""
-  Type of the file to unpack. If unset, oci-image-tool will try to auto-detect the type. One of "imageLayout,image"
+  Type of the file to unpack. If unset, oci-image-tool will try to auto-detect the type. One of "imageLayout,image,imageZip"
+
+**--platform**=""
+  Specify the os and architecture of the manifest, format is OS:Architecture.
+  e.g. --platform linux:amd64
+  Only applicable if reftype is index.
 
 # EXAMPLES
 ```
-$ skopeo copy docker://busybox oci:busybox-oci
+$ skopeo copy docker://busybox oci:busybox-oci:latest
 $ mkdir busybox-bundle
-$ oci-image-tool create --ref latest busybox-oci busybox-bundle
+$ oci-image-tool create --ref name=latest busybox-oci busybox-bundle
 $ cd busybox-bundle && sudo runc run busybox
 [...]
 ```

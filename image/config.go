@@ -31,11 +31,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-type config v1.Image
-
-func findConfig(w walker, d *descriptor) (*config, error) {
-	var c config
-	cpath := filepath.Join("blobs", d.algo(), d.hash())
+func findConfig(w walker, d *v1.Descriptor) (*v1.Image, error) {
+	var c v1.Image
+	cpath := filepath.Join("blobs", string(d.Digest.Algorithm()), d.Digest.Hex())
 
 	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
 		if info.IsDir() || filepath.Clean(path) != cpath {
@@ -65,7 +63,7 @@ func findConfig(w walker, d *descriptor) (*config, error) {
 	}
 }
 
-func (c *config) runtimeSpec(rootfs string) (*specs.Spec, error) {
+func runtimeSpec(c *v1.Image, rootfs string) (*specs.Spec, error) {
 	if c.OS != "linux" {
 		return nil, fmt.Errorf("%s: unsupported OS", c.OS)
 	}
@@ -73,8 +71,11 @@ func (c *config) runtimeSpec(rootfs string) (*specs.Spec, error) {
 	var s specs.Spec
 	s.Version = specs.Version
 	// we should at least apply the default spec, otherwise this is totally useless
-	s.Process.Terminal = true
+	s.Root = &specs.Root{}
 	s.Root.Path = rootfs
+
+	s.Process = &specs.Process{}
+	s.Process.Terminal = true
 	s.Process.Cwd = "/"
 	if c.Config.WorkingDir != "" {
 		s.Process.Cwd = c.Config.WorkingDir
@@ -105,9 +106,6 @@ func (c *config) runtimeSpec(rootfs string) (*specs.Spec, error) {
 	} else if c.Config.User != "" {
 		return nil, errors.New("config.User: unsupported format")
 	}
-
-	s.Platform.OS = c.OS
-	s.Platform.Arch = c.Architecture
 
 	s.Linux = &specs.Linux{}
 

@@ -103,6 +103,7 @@ __oci-image-tool_complete_common_types() {
 	COMPREPLY=( $( compgen -W "
 		image
 		imageLayout
+		imageZip
 	" -- "$cur" ) )
 }
 
@@ -113,6 +114,7 @@ __oci-image-tool_complete_validate_types() {
 		image
 		imageIndex
 		imageLayout
+		imageZip
 		manifest
 	" -- "$cur" ) )
 }
@@ -150,7 +152,7 @@ _oci-image-tool_create() {
 
 	case "$cur" in
 		-*)
-			COMPREPLY=( $( compgen -W "--type --ref --rootfs --help -h" -- "$cur" ) )
+			COMPREPLY=( $( compgen -W "--type --ref --rootfs --platform --help -h" -- "$cur" ) )
 			;;
 	esac
 
@@ -166,7 +168,7 @@ _oci-image-tool_unpack() {
 
 	case "$cur" in
 		-*)
-			COMPREPLY=( $( compgen -W "--type --ref --help -h" -- "$cur" ) )
+			COMPREPLY=( $( compgen -W "--type --ref --platform --help -h" -- "$cur" ) )
 			;;
 	esac
 

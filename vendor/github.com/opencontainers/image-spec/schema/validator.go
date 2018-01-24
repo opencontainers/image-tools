@@ -20,7 +20,9 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"regexp"
 
+	digest "github.com/opencontainers/go-digest"
 	"github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 	"github.com/xeipuuv/gojsonschema"
@@ -30,10 +32,13 @@ import (
 // and implements validation against a JSON schema.
 type Validator string
 
-type validateDescendantsFunc func(r io.Reader) error
+type validateFunc func(r io.Reader) error
 
-var mapValidateDescendants = map[Validator]validateDescendantsFunc{
-	ValidatorMediaTypeManifest: validateManifestDescendants,
+var mapValidate = map[Validator]validateFunc{
+	ValidatorMediaTypeImageConfig: validateConfig,
+	ValidatorMediaTypeDescriptor:  validateDescriptor,
+	ValidatorMediaTypeImageIndex:  validateIndex,
+	ValidatorMediaTypeManifest:    validateManifest,
 }
 
 // ValidationError contains all the errors that happened during validation.
@@ -52,9 +57,9 @@ func (v Validator) Validate(src io.Reader) error {
 		return errors.Wrap(err, "unable to read the document file")
 	}
 
-	if f, ok := mapValidateDescendants[v]; ok {
+	if f, ok := mapValidate[v]; ok {
 		if f == nil {
-			return fmt.Errorf("internal error: mapValidateDescendents[%q] is nil", v)
+			return fmt.Errorf("internal error: mapValidate[%q] is nil", v)
 		}
 		err = f(bytes.NewReader(buf))
 		if err != nil {
@@ -92,7 +97,7 @@ func (v unimplemented) Validate(src io.Reader) error {
 	return fmt.Errorf("%s: unimplemented", v)
 }
 
-func validateManifestDescendants(r io.Reader) error {
+func validateManifest(r io.Reader) error {
 	header := v1.Manifest{}
 
 	buf, err := ioutil.ReadAll(r)
@@ -111,9 +116,109 @@ func validateManifestDescendants(r io.Reader) error {
 
 	for _, layer := range header.Layers {
 		if layer.MediaType != string(v1.MediaTypeImageLayer) &&
-			layer.MediaType != string(v1.MediaTypeImageLayerNonDistributable) {
+			layer.MediaType != string(v1.MediaTypeImageLayerGzip) &&
+			layer.MediaType != string(v1.MediaTypeImageLayerNonDistributable) &&
+			layer.MediaType != string(v1.MediaTypeImageLayerNonDistributableGzip) {
 			fmt.Printf("warning: layer %s has an unknown media type: %s\n", layer.Digest, layer.MediaType)
 		}
 	}
 	return nil
+}
+
+func validateDescriptor(r io.Reader) error {
+	header := v1.Descriptor{}
+
+	buf, err := ioutil.ReadAll(r)
+	if err != nil {
+		return errors.Wrapf(err, "error reading the io stream")
+	}
+
+	err = json.Unmarshal(buf, &header)
+	if err != nil {
+		return errors.Wrap(err, "descriptor format mismatch")
+	}
+
+	err = header.Digest.Validate()
+	if err == digest.ErrDigestUnsupported {
+		// we ignore unsupported algorithms
+		fmt.Printf("warning: unsupported digest: %q: %v\n", header.Digest, err)
+		return nil
+	}
+	return err
+}
+
+func validateIndex(r io.Reader) error {
+	header := v1.Index{}
+
+	buf, err := ioutil.ReadAll(r)
+	if err != nil {
+		return errors.Wrapf(err, "error reading the io stream")
+	}
+
+	err = json.Unmarshal(buf, &header)
+	if err != nil {
+		return errors.Wrap(err, "manifestlist format mismatch")
+	}
+
+	for _, manifest := range header.Manifests {
+		if manifest.MediaType != string(v1.MediaTypeImageManifest) {
+			fmt.Printf("warning: manifest %s has an unknown media type: %s\n", manifest.Digest, manifest.MediaType)
+		}
+		if manifest.Platform != nil {
+			checkPlatform(manifest.Platform.OS, manifest.Platform.Architecture)
+		}
+
+	}
+
+	return nil
+}
+
+func validateConfig(r io.Reader) error {
+	header := v1.Image{}
+
+	buf, err := ioutil.ReadAll(r)
+	if err != nil {
+		return errors.Wrapf(err, "error reading the io stream")
+	}
+
+	err = json.Unmarshal(buf, &header)
+	if err != nil {
+		return errors.Wrap(err, "config format mismatch")
+	}
+
+	checkPlatform(header.OS, header.Architecture)
+
+	envRegexp := regexp.MustCompile(`^[^=]+=.*$`)
+	for _, e := range header.Config.Env {
+		if !envRegexp.MatchString(e) {
+			return errors.Errorf("unexpected env: %q", e)
+		}
+	}
+
+	return nil
+}
+
+func checkPlatform(OS string, Architecture string) {
+	validCombins := map[string][]string{
+		"android":   {"arm"},
+		"darwin":    {"386", "amd64", "arm", "arm64"},
+		"dragonfly": {"amd64"},
+		"freebsd":   {"386", "amd64", "arm"},
+		"linux":     {"386", "amd64", "arm", "arm64", "ppc64", "ppc64le", "mips64", "mips64le", "s390x"},
+		"netbsd":    {"386", "amd64", "arm"},
+		"openbsd":   {"386", "amd64", "arm"},
+		"plan9":     {"386", "amd64"},
+		"solaris":   {"amd64"},
+		"windows":   {"386", "amd64"}}
+	for os, archs := range validCombins {
+		if os == OS {
+			for _, arch := range archs {
+				if arch == Architecture {
+					return
+				}
+			}
+			fmt.Printf("warning: combination of %q and %q is invalid.", OS, Architecture)
+		}
+	}
+	fmt.Printf("warning: operating system %q of the bundle is not supported yet.", OS)
 }

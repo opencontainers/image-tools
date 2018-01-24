@@ -26,23 +26,38 @@ import (
 var bundleTypes = []string{
 	image.TypeImageLayout,
 	image.TypeImage,
+	image.TypeImageZip,
 }
 
 type bundleCmd struct {
-	typ  string // the type to bundle, can be empty string
-	ref  string
-	root string
+	typ      string // the type to bundle, can be empty string
+	refs     []string
+	root     string
+	platform string
 }
 
-func createHandle(context *cli.Context) error {
+func createAction(context *cli.Context) error {
 	if len(context.Args()) != 2 {
 		return fmt.Errorf("both src and dest must be provided")
 	}
 
 	v := bundleCmd{
-		typ:  context.String("type"),
-		ref:  context.String("ref"),
-		root: context.String("rootfs"),
+		typ:      context.String("type"),
+		refs:     context.StringSlice("ref"),
+		root:     context.String("rootfs"),
+		platform: context.String("platform"),
+	}
+
+	if len(v.refs) == 0 {
+		return fmt.Errorf("ref must be provided")
+	}
+
+	for index, ref := range v.refs {
+		for i := index + 1; i < len(v.refs); i++ {
+			if ref == v.refs[i] {
+				fmt.Printf("WARNING: refs contains duplicate reference %q.\n", v.refs[i])
+			}
+		}
 	}
 
 	if v.typ == "" {
@@ -56,18 +71,17 @@ func createHandle(context *cli.Context) error {
 	var err error
 	switch v.typ {
 	case image.TypeImageLayout:
-		err = image.CreateRuntimeBundleLayout(context.Args()[0], context.Args()[1], v.ref, v.root)
+		err = image.CreateRuntimeBundleLayout(context.Args()[0], context.Args()[1], v.root, v.platform, v.refs)
+
+	case image.TypeImageZip:
+		err = image.CreateRuntimeBundleZip(context.Args()[0], context.Args()[1], v.root, v.platform, v.refs)
 
 	case image.TypeImage:
-		err = image.CreateRuntimeBundleFile(context.Args()[0], context.Args()[1], v.ref, v.root)
+		err = image.CreateRuntimeBundleFile(context.Args()[0], context.Args()[1], v.root, v.platform, v.refs)
 
 	default:
 		err = fmt.Errorf("cannot create %q", v.typ)
 
-	}
-
-	if err != nil {
-		fmt.Printf("creating failed: %v\n", err)
 	}
 
 	return err
@@ -76,24 +90,27 @@ func createHandle(context *cli.Context) error {
 var createCommand = cli.Command{
 	Name:   "create",
 	Usage:  "Create an OCI image runtime bundle",
-	Action: createHandle,
+	Action: createAction,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name: "type",
 			Usage: fmt.Sprintf(
-				`Type of the file to unpack. If unset, oci-image-tool-validate will try to auto-detect the type. One of "%s".`,
+				`Type of the file to unpack. If unset, oci-image-tool will try to auto-detect the type. One of "%s".`,
 				strings.Join(bundleTypes, ","),
 			),
 		},
-		cli.StringFlag{
+		cli.StringSliceFlag{
 			Name:  "ref",
-			Value: "v1.0",
-			Usage: "The ref pointing to the manifest of the OCI image. This must be present in the 'refs' subdirectory of the image.",
+			Usage: "A set of ref specify the search criteria for the validated reference, format is A=B. Only support 'name', 'platform.os' and 'digest' three cases.",
 		},
 		cli.StringFlag{
 			Name:  "rootfs",
 			Value: "rootfs",
 			Usage: "A directory representing the root filesystem of the container in the OCI runtime bundle. It is strongly recommended to keep the default value.",
+		},
+		cli.StringFlag{
+			Name:  "platform",
+			Usage: "Specify the os and architecture of the manifest, format is OS:Architecture. Only applicable if reftype is index.",
 		},
 	},
 }

@@ -25,9 +25,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/opencontainers/go-digest"
+	"github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 
 	bz2 "github.com/dsnet/compress/bzip2"
 )
@@ -140,13 +141,15 @@ func testUnpackLayer(t *testing.T, compression string, invalid bool) {
 		mediatype += "+" + compression
 	}
 
-	testManifest := manifest{
-		Layers: []descriptor{descriptor{
-			MediaType: mediatype,
-			Digest:    digester.Digest().String(),
-		}},
+	testManifest := v1.Manifest{
+		Layers: []v1.Descriptor{
+			{
+				MediaType: mediatype,
+				Digest:    digester.Digest(),
+			},
+		},
 	}
-	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
+	err = unpackManifest(&testManifest, newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
 	if err != nil {
 		t.Fatal(errors.Wrapf(err, "%q / %s", blobPath, compression))
 	}
@@ -166,7 +169,7 @@ func TestUnpackLayer(t *testing.T) {
 	testUnpackLayer(t, "bzip2", false)
 }
 
-func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {
+func TestUnpackLayerRemovePartiallyUnpackedFile(t *testing.T) {
 	// generate a tar file has duplicate entry which will failed on unpacking
 	tmp1, err := ioutil.TempDir("", "test-layer")
 	if err != nil {
@@ -209,13 +212,15 @@ func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testManifest := manifest{
-		Layers: []descriptor{descriptor{
-			MediaType: "application/vnd.oci.image.layer.v1.tar+gzip",
-			Digest:    digester.Digest().String(),
-		}},
+	testManifest := v1.Manifest{
+		Layers: []v1.Descriptor{
+			{
+				MediaType: "application/vnd.oci.image.layer.v1.tar+gzip",
+				Digest:    digester.Digest(),
+			},
+		},
 	}
-	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
+	err = unpackManifest(&testManifest, newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
 	if err != nil && !strings.Contains(err.Error(), "duplicate entry for") {
 		t.Fatal(err)
 	}
@@ -225,6 +230,6 @@ func TestUnpackLayerRemovePartialyUnpackedFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err == nil {
-		t.Fatal("Execpt partialy unpacked file has been removed")
+		t.Fatal("Except partially unpacked file has been removed")
 	}
 }

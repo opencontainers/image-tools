@@ -26,21 +26,36 @@ import (
 var unpackTypes = []string{
 	image.TypeImageLayout,
 	image.TypeImage,
+	image.TypeImageZip,
 }
 
 type unpackCmd struct {
-	typ string // the type to unpack, can be empty string
-	ref string
+	typ      string // the type to unpack, can be empty string
+	refs     []string
+	platform string
 }
 
-func unpackHandle(context *cli.Context) error {
+func unpackAction(context *cli.Context) error {
 	if len(context.Args()) != 2 {
 		return fmt.Errorf("both src and dest must be provided")
 	}
 
 	v := unpackCmd{
-		typ: context.String("type"),
-		ref: context.String("ref"),
+		typ:      context.String("type"),
+		refs:     context.StringSlice("ref"),
+		platform: context.String("platform"),
+	}
+
+	if len(v.refs) == 0 {
+		return fmt.Errorf("ref must be provided")
+	}
+
+	for index, ref := range v.refs {
+		for i := index + 1; i < len(v.refs); i++ {
+			if ref == v.refs[i] {
+				fmt.Printf("WARNING: refs contains duplicate reference %q.\n", v.refs[i])
+			}
+		}
 	}
 
 	if v.typ == "" {
@@ -54,37 +69,40 @@ func unpackHandle(context *cli.Context) error {
 	var err error
 	switch v.typ {
 	case image.TypeImageLayout:
-		err = image.UnpackLayout(context.Args()[0], context.Args()[1], v.ref)
+		err = image.UnpackLayout(context.Args()[0], context.Args()[1], v.platform, v.refs)
+
+	case image.TypeImageZip:
+		err = image.UnpackZip(context.Args()[0], context.Args()[1], v.platform, v.refs)
 
 	case image.TypeImage:
-		err = image.UnpackFile(context.Args()[0], context.Args()[1], v.ref)
+		err = image.UnpackFile(context.Args()[0], context.Args()[1], v.platform, v.refs)
 
 	default:
 		err = fmt.Errorf("cannot unpack %q", v.typ)
 	}
 
-	if err != nil {
-		fmt.Printf("unpacking failed: %v\n", err)
-	}
 	return err
 }
 
 var unpackCommand = cli.Command{
 	Name:   "unpack",
 	Usage:  "Unpack an image or image source layout",
-	Action: unpackHandle,
+	Action: unpackAction,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name: "type",
 			Usage: fmt.Sprintf(
-				`Type of the file to unpack. If unset, oci-image-tool-validate will try to auto-detect the type. One of "%s".`,
+				`Type of the file to unpack. If unset, oci-image-tool will try to auto-detect the type. One of "%s".`,
 				strings.Join(unpackTypes, ","),
 			),
 		},
-		cli.StringFlag{
+		cli.StringSliceFlag{
 			Name:  "ref",
-			Value: "v1.0",
-			Usage: "The ref pointing to the manifest of the OCI image. This must be present in the 'refs' subdirectory of the image.",
+			Usage: "A set of ref specify the search criteria for the validated reference, format is A=B. Only support 'name', 'platform.os' and 'digest' three cases.",
+		},
+		cli.StringFlag{
+			Name:  "platform",
+			Usage: "Specify the os and architecture of the manifest, format is OS:Architecture. Only applicable if reftype is index.",
 		},
 	},
 }

@@ -30,6 +30,7 @@ import (
 var validateTypes = []string{
 	image.TypeImageLayout,
 	image.TypeImage,
+	image.TypeImageZip,
 	image.TypeManifest,
 	image.TypeImageIndex,
 	image.TypeConfig,
@@ -43,7 +44,7 @@ type validateCmd struct {
 
 var v validateCmd
 
-func validateHandler(context *cli.Context) error {
+func validateAction(context *cli.Context) error {
 	if len(context.Args()) < 1 {
 		return fmt.Errorf("no files specified")
 	}
@@ -51,6 +52,14 @@ func validateHandler(context *cli.Context) error {
 	v = validateCmd{
 		typ:  context.String("type"),
 		refs: context.StringSlice("ref"),
+	}
+
+	for index, ref := range v.refs {
+		for i := index + 1; i < len(v.refs); i++ {
+			if ref == v.refs[i] {
+				fmt.Printf("WARNING: refs contains duplicate reference %q.\n", v.refs[i])
+			}
+		}
 	}
 
 	var errs []string
@@ -66,10 +75,8 @@ func validateHandler(context *cli.Context) error {
 			errs = append(errs, fmt.Sprintf("%v", verr.Errs))
 		} else if serr, ok := errors.Cause(err).(*schema.SyntaxError); ok {
 			errs = append(errs, fmt.Sprintf("%s:%d:%d: validation failed: %v", arg, serr.Line, serr.Col, err))
-			continue
 		} else {
 			errs = append(errs, fmt.Sprintf("%s: validation failed: %v", arg, err))
-			continue
 		}
 
 	}
@@ -77,6 +84,7 @@ func validateHandler(context *cli.Context) error {
 	if len(errs) > 0 {
 		return fmt.Errorf("%d errors detected: \n%s", len(errs), strings.Join(errs, "\n"))
 	}
+
 	fmt.Println("Validation succeeded")
 	return nil
 }
@@ -100,12 +108,14 @@ func validatePath(name string) error {
 	switch typ {
 	case image.TypeImageLayout:
 		return image.ValidateLayout(name, v.refs, v.stdout)
+	case image.TypeImageZip:
+		return image.ValidateZip(name, v.refs, v.stdout)
 	case image.TypeImage:
 		return image.ValidateFile(name, v.refs, v.stdout)
 	}
 
 	if len(v.refs) != 0 {
-		fmt.Printf("WARNING: type %q does not support refs, which are only appropriate if type is image or imageLayout.\n", typ)
+		fmt.Printf("WARNING: type %q does not support ref, which are only appropriate if type is image or imageLayout.\n", typ)
 	}
 
 	f, err := os.Open(name)
@@ -129,18 +139,18 @@ func validatePath(name string) error {
 var validateCommand = cli.Command{
 	Name:   "validate",
 	Usage:  "Validate one or more image files",
-	Action: validateHandler,
+	Action: validateAction,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name: "type",
 			Usage: fmt.Sprintf(
-				`Type of the file to validate. If unset, oci-image-tool-validate will try to auto-detect the type. One of "%s".`,
+				`Type of the file to validate. If unset, oci-image-tool will try to auto-detect the type. One of "%s".`,
 				strings.Join(validateTypes, ","),
 			),
 		},
 		cli.StringSliceFlag{
 			Name:  "ref",
-			Usage: "A set of refs pointing to the manifests to be validated. Each reference must be present in the refs subdirectory of the image. Only applicable if type is image or imageLayout.",
+			Usage: "A set of ref specify the search criteria for the validated reference. Format is A=B. Only support 'name', 'platform.os' and 'digest' three cases. Only applicable if type is image or imageLayout.",
 		},
 	},
 }
