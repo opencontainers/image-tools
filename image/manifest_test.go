@@ -141,7 +141,7 @@ func testUnpackLayer(t *testing.T, compression string, invalid bool) {
 		mediatype += "+" + compression
 	}
 
-	testManifest := manifest{
+	testManifest := v1.Manifest{
 		Layers: []v1.Descriptor{
 			{
 				MediaType: mediatype,
@@ -149,7 +149,7 @@ func testUnpackLayer(t *testing.T, compression string, invalid bool) {
 			},
 		},
 	}
-	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
+	err = unpackManifest(&testManifest, newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
 	if err != nil {
 		t.Fatal(errors.Wrapf(err, "%q / %s", blobPath, compression))
 	}
@@ -212,7 +212,7 @@ func TestUnpackLayerRemovePartiallyUnpackedFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testManifest := manifest{
+	testManifest := v1.Manifest{
 		Layers: []v1.Descriptor{
 			{
 				MediaType: "application/vnd.oci.image.layer.v1.tar+gzip",
@@ -220,7 +220,7 @@ func TestUnpackLayerRemovePartiallyUnpackedFile(t *testing.T) {
 			},
 		},
 	}
-	err = testManifest.unpack(newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
+	err = unpackManifest(&testManifest, newPathWalker(tmp1), filepath.Join(tmp1, "rootfs"))
 	if err != nil && !strings.Contains(err.Error(), "duplicate entry for") {
 		t.Fatal(err)
 	}

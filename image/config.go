@@ -31,10 +31,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-type config v1.Image
-
-func findConfig(w walker, d *v1.Descriptor) (*config, error) {
-	var c config
+func findConfig(w walker, d *v1.Descriptor) (*v1.Image, error) {
+	var c v1.Image
 	cpath := filepath.Join("blobs", string(d.Digest.Algorithm()), d.Digest.Hex())
 
 	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
@@ -65,7 +63,7 @@ func findConfig(w walker, d *v1.Descriptor) (*config, error) {
 	}
 }
 
-func (c *config) runtimeSpec(rootfs string) (*specs.Spec, error) {
+func runtimeSpec(c *v1.Image, rootfs string) (*specs.Spec, error) {
 	if c.OS != "linux" {
 		return nil, fmt.Errorf("%s: unsupported OS", c.OS)
 	}

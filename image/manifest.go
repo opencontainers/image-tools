@@ -35,13 +35,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type manifest struct {
-	Config v1.Descriptor   `json:"config"`
-	Layers []v1.Descriptor `json:"layers"`
-}
-
-func findManifest(w walker, d *v1.Descriptor) (*manifest, error) {
-	var m manifest
+func findManifest(w walker, d *v1.Descriptor) (*v1.Manifest, error) {
+	var m v1.Manifest
 	mpath := filepath.Join("blobs", string(d.Digest.Algorithm()), d.Digest.Hex())
 
 	switch err := w.walk(func(path string, info os.FileInfo, r io.Reader) error {
@@ -73,7 +68,7 @@ func findManifest(w walker, d *v1.Descriptor) (*manifest, error) {
 	}
 }
 
-func (m *manifest) validate(w walker) error {
+func validateManifest(m *v1.Manifest, w walker) error {
 	if err := validateDescriptor(&m.Config, w, []string{v1.MediaTypeImageConfig}); err != nil {
 		return errors.Wrap(err, "config validation failed")
 	}
@@ -94,7 +89,7 @@ func (m *manifest) validate(w walker) error {
 	return nil
 }
 
-func (m *manifest) unpack(w walker, dest string) (retErr error) {
+func unpackManifest(m *v1.Manifest, w walker, dest string) (retErr error) {
 	// error out if the dest directory is not empty
 	s, err := ioutil.ReadDir(dest)
 	if err != nil && !os.IsNotExist(err) { // We'll create the dir later
