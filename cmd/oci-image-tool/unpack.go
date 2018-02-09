@@ -31,7 +31,7 @@ var unpackTypes = []string{
 
 type unpackCmd struct {
 	typ      string // the type to unpack, can be empty string
-	refs     []string
+	selects  []string
 	platform string
 }
 
@@ -42,18 +42,18 @@ func unpackAction(context *cli.Context) error {
 
 	v := unpackCmd{
 		typ:      context.String("type"),
-		refs:     context.StringSlice("ref"),
+		selects:  context.StringSlice("select"),
 		platform: context.String("platform"),
 	}
 
-	if len(v.refs) == 0 {
-		return fmt.Errorf("ref must be provided")
+	if len(v.selects) == 0 {
+		return fmt.Errorf("select must be provided")
 	}
 
-	for index, ref := range v.refs {
-		for i := index + 1; i < len(v.refs); i++ {
-			if ref == v.refs[i] {
-				fmt.Printf("WARNING: refs contains duplicate reference %q.\n", v.refs[i])
+	for index, sel := range v.selects {
+		for i := index + 1; i < len(v.selects); i++ {
+			if sel == v.selects[i] {
+				fmt.Printf("WARNING: selects contains duplicate selection %q.\n", v.selects[i])
 			}
 		}
 	}
@@ -69,13 +69,13 @@ func unpackAction(context *cli.Context) error {
 	var err error
 	switch v.typ {
 	case image.TypeImageLayout:
-		err = image.UnpackLayout(context.Args()[0], context.Args()[1], v.platform, v.refs)
+		err = image.UnpackLayout(context.Args()[0], context.Args()[1], v.platform, v.selects)
 
 	case image.TypeImageZip:
-		err = image.UnpackZip(context.Args()[0], context.Args()[1], v.platform, v.refs)
+		err = image.UnpackZip(context.Args()[0], context.Args()[1], v.platform, v.selects)
 
 	case image.TypeImage:
-		err = image.UnpackFile(context.Args()[0], context.Args()[1], v.platform, v.refs)
+		err = image.UnpackFile(context.Args()[0], context.Args()[1], v.platform, v.selects)
 
 	default:
 		err = fmt.Errorf("cannot unpack %q", v.typ)
@@ -97,8 +97,8 @@ var unpackCommand = cli.Command{
 			),
 		},
 		cli.StringSliceFlag{
-			Name:  "ref",
-			Usage: "A set of ref specify the search criteria for the validated reference, format is A=B. Only support 'name', 'platform.os' and 'digest' three cases.",
+			Name:  "select",
+			Usage: "Select the search criteria for the validated reference, format is A=B. Only support 'org.opencontainers.ref.name', 'platform.os' and 'digest' three cases.",
 		},
 		cli.StringFlag{
 			Name:  "platform",

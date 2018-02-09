@@ -17,11 +17,11 @@ runtime-spec-compatible `dest/config.json`.
 **--help**
   Print usage statement
 
-**--ref**=[]
-  Specify the search criteria for the validated reference, format is A=B.
+**--select**=[]
+  Select the search criteria for the validated reference, format is A=B.
   Reference should point to a manifest or index.
-  e.g. --ref name=v1.0 --ref platform.os=latest
-  Only support `name`, `platform.os` and `digest` three cases.
+  e.g. --select org.opencontainers.ref.name=v1.0 --select platform.os=latest
+  Only support `org.opencontainers.ref.name`, `platform.os` and `digest` three cases.
 
 **--rootfs**=""
   A directory representing the root filesystem of the container in the OCI runtime bundle. It is strongly recommended to keep the default value. (default "rootfs")
@@ -38,7 +38,7 @@ runtime-spec-compatible `dest/config.json`.
 ```
 $ skopeo copy docker://busybox oci:busybox-oci:latest
 $ mkdir busybox-bundle
-$ oci-image-tool create --ref name=latest busybox-oci busybox-bundle
+$ oci-image-tool create --select org.opencontainers.ref.name=latest busybox-oci busybox-bundle
 $ cd busybox-bundle && sudo runc run busybox
 [...]
 ```

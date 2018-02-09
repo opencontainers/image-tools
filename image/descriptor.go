@@ -68,7 +68,7 @@ func findDescriptor(w walker, names []string) ([]v1.Descriptor, error) {
 			}
 
 			switch argsParts[0] {
-			case "name":
+			case "org.opencontainers.ref.name":
 				for i := 0; i < len(descs); i++ {
 					if descs[i].Annotations[v1.AnnotationRefName] != argsParts[1] {
 						descs = append(descs[:i], descs[i+1:]...)
@@ -97,9 +97,9 @@ func findDescriptor(w walker, names []string) ([]v1.Descriptor, error) {
 	}
 
 	if len(descs) == 0 {
-		return nil, fmt.Errorf("index.json: descriptor retrieved by refs %v is not match", names)
+		return nil, fmt.Errorf("index.json: descriptor retrieved by selects %v is not match", names)
 	} else if len(descs) > 1 {
-		return nil, fmt.Errorf("index.json: descriptor retrieved by refs %v is not unique", names)
+		return nil, fmt.Errorf("index.json: descriptor retrieved by selects %v is not unique", names)
 	}
 
 	return descs, nil

@@ -14,11 +14,11 @@ oci-image-tool unpack \- Unpack an image or image source layout
 **--help**
   Print usage statement
 
-**--ref**=[]
-  Specify the search criteria for the validated reference, format is A=B.
+**--select**=[]
+  Select the search criteria for the validated reference, format is A=B.
   Reference should point to a manifest or index.
-  e.g. --ref name=v1.0 --ref platform.os=latest
-  Only support `name`, `platform.os` and `digest` three cases.
+  e.g. --select org.opencontainers.ref.name=v1.0 --select platform.os=latest
+  Only support `org.opencontainers.ref.name`, `platform.os` and `digest` three cases.
 
 **--type**=""
   Type of the file to unpack. If unset, oci-image-tool will try to auto-detect the type. One of "imageLayout,image,imageZip"
@@ -32,7 +32,7 @@ oci-image-tool unpack \- Unpack an image or image source layout
 ```
 $ skopeo copy docker://busybox oci:busybox-oci:latest
 $ mkdir busybox-bundle
-$ oci-image-tool unpack --ref name=latest busybox-oci busybox-bundle
+$ oci-image-tool unpack --select org.opencontainers.ref.name=latest busybox-oci busybox-bundle
 $ tree busybox-bundle
 busybox-bundle
 ├── bin

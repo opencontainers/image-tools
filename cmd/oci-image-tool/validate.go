@@ -35,9 +35,9 @@ var validateTypes = []string{
 }
 
 type validateCmd struct {
-	stdout *log.Logger
-	typ    string // the type to validate, can be empty string
-	refs   []string
+	stdout  *log.Logger
+	typ     string // the type to validate, can be empty string
+	selects []string
 }
 
 var v validateCmd
@@ -48,18 +48,18 @@ func validateAction(context *cli.Context) error {
 	}
 
 	v = validateCmd{
-		typ:  context.String("type"),
-		refs: context.StringSlice("ref"),
+		typ:     context.String("type"),
+		selects: context.StringSlice("select"),
 	}
 
 	if v.typ == "" {
 		return fmt.Errorf("--type must be set")
 	}
 
-	for index, ref := range v.refs {
-		for i := index + 1; i < len(v.refs); i++ {
-			if ref == v.refs[i] {
-				fmt.Printf("WARNING: refs contains duplicate reference %q.\n", v.refs[i])
+	for index, sel := range v.selects {
+		for i := index + 1; i < len(v.selects); i++ {
+			if sel == v.selects[i] {
+				fmt.Printf("WARNING: selects contains duplicate selection %q.\n", v.selects[i])
 			}
 		}
 	}
@@ -109,16 +109,16 @@ func validatePath(name string) error {
 		fmt.Println("autodetected image file type is:", imageType)
 		switch imageType {
 		case image.TypeImageLayout:
-			return image.ValidateLayout(name, v.refs, v.stdout)
+			return image.ValidateLayout(name, v.selects, v.stdout)
 		case image.TypeImageZip:
-			return image.ValidateZip(name, v.refs, v.stdout)
+			return image.ValidateZip(name, v.selects, v.stdout)
 		case image.TypeImage:
-			return image.ValidateFile(name, v.refs, v.stdout)
+			return image.ValidateFile(name, v.selects, v.stdout)
 		}
 	}
 
-	if len(v.refs) != 0 {
-		fmt.Println("WARNING: refs are only appropriate if type is image")
+	if len(v.selects) != 0 {
+		fmt.Println("WARNING: selects are only appropriate if type is image")
 	}
 	f, err := os.Open(name)
 	if err != nil {
@@ -151,8 +151,8 @@ var validateCommand = cli.Command{
 			),
 		},
 		cli.StringSliceFlag{
-			Name:  "ref",
-			Usage: "A set of ref specify the search criteria for the validated reference. Format is A=B. Only support 'name', 'platform.os' and 'digest' three cases. Only applicable if type is image",
+			Name:  "select",
+			Usage: "Select the search criteria for the validated reference, format is A=B. Only support 'org.opencontainers.ref.name', 'platform.os' and 'digest' three cases. Only applicable if type is image",
 		},
 	},
 }

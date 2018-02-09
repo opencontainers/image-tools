@@ -31,7 +31,7 @@ var bundleTypes = []string{
 
 type bundleCmd struct {
 	typ      string // the type to bundle, can be empty string
-	refs     []string
+	selects  []string
 	root     string
 	platform string
 }
@@ -43,19 +43,19 @@ func createAction(context *cli.Context) error {
 
 	v := bundleCmd{
 		typ:      context.String("type"),
-		refs:     context.StringSlice("ref"),
+		selects:  context.StringSlice("select"),
 		root:     context.String("rootfs"),
 		platform: context.String("platform"),
 	}
 
-	if len(v.refs) == 0 {
-		return fmt.Errorf("ref must be provided")
+	if len(v.selects) == 0 {
+		return fmt.Errorf("select must be provided")
 	}
 
-	for index, ref := range v.refs {
-		for i := index + 1; i < len(v.refs); i++ {
-			if ref == v.refs[i] {
-				fmt.Printf("WARNING: refs contains duplicate reference %q.\n", v.refs[i])
+	for index, sel := range v.selects {
+		for i := index + 1; i < len(v.selects); i++ {
+			if sel == v.selects[i] {
+				fmt.Printf("WARNING: selects contains duplicate selection %q.\n", v.selects[i])
 			}
 		}
 	}
@@ -71,13 +71,13 @@ func createAction(context *cli.Context) error {
 	var err error
 	switch v.typ {
 	case image.TypeImageLayout:
-		err = image.CreateRuntimeBundleLayout(context.Args()[0], context.Args()[1], v.root, v.platform, v.refs)
+		err = image.CreateRuntimeBundleLayout(context.Args()[0], context.Args()[1], v.root, v.platform, v.selects)
 
 	case image.TypeImageZip:
-		err = image.CreateRuntimeBundleZip(context.Args()[0], context.Args()[1], v.root, v.platform, v.refs)
+		err = image.CreateRuntimeBundleZip(context.Args()[0], context.Args()[1], v.root, v.platform, v.selects)
 
 	case image.TypeImage:
-		err = image.CreateRuntimeBundleFile(context.Args()[0], context.Args()[1], v.root, v.platform, v.refs)
+		err = image.CreateRuntimeBundleFile(context.Args()[0], context.Args()[1], v.root, v.platform, v.selects)
 
 	default:
 		err = fmt.Errorf("cannot create %q", v.typ)
@@ -100,8 +100,8 @@ var createCommand = cli.Command{
 			),
 		},
 		cli.StringSliceFlag{
-			Name:  "ref",
-			Usage: "A set of ref specify the search criteria for the validated reference, format is A=B. Only support 'name', 'platform.os' and 'digest' three cases.",
+			Name:  "select",
+			Usage: "Select the search criteria for the validated reference, format is A=B. Only support 'org.opencontainers.ref.name', 'platform.os' and 'digest' three cases.",
 		},
 		cli.StringFlag{
 			Name:  "rootfs",
