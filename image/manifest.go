@@ -22,6 +22,7 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	gopath "path"
 	"io"
 	"io/ioutil"
 	"os"
@@ -229,6 +230,27 @@ loop:
 	return nil
 }
 
+
+func checkParentDirPerm(parentDir string) (os.FileMode, bool, error) {
+	altered := false
+
+	parentDirInfo, err := os.Stat(parentDir)
+	if err != nil {
+		return 0, altered, err
+	}
+
+	parentDirPerm := parentDirInfo.Mode()
+
+	/* Check if we will be able to write as user */
+	if parentDirPerm.Perm() & (1 << (uint(7))) == 0{
+		os.Chmod(parentDir, parentDirPerm.Perm() | (1 << (uint(7))))
+		altered = true
+	}
+
+	return parentDirPerm, altered, nil
+}
+
+
 // unpackLayerEntry unpacks a single entry from a layer.
 func unpackLayerEntry(dest string, header *tar.Header, reader io.Reader, entries *map[string]bool) (whiteout bool, err error) {
 	header.Name = filepath.Clean(header.Name)
@@ -271,6 +293,17 @@ func unpackLayerEntry(dest string, header *tar.Header, reader io.Reader, entries
 		if err != nil && !os.IsNotExist(err) {
 			return false, err
 		}
+	}
+
+	parentDir := gopath.Dir(path)
+	sourceMode, alteredMode, err := checkParentDirPerm(parentDir)
+
+	if err != nil {
+		return false, err
+	}
+
+	if alteredMode {
+		defer os.Chmod(parentDir, sourceMode)
 	}
 
 	switch header.Typeflag {
