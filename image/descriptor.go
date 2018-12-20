@@ -72,18 +72,21 @@ func findDescriptor(w walker, names []string) ([]v1.Descriptor, error) {
 				for i := 0; i < len(descs); i++ {
 					if descs[i].Annotations[v1.AnnotationRefName] != argsParts[1] {
 						descs = append(descs[:i], descs[i+1:]...)
+						i--
 					}
 				}
 			case "platform.os":
 				for i := 0; i < len(descs); i++ {
 					if descs[i].Platform != nil && index.Manifests[i].Platform.OS != argsParts[1] {
 						descs = append(descs[:i], descs[i+1:]...)
+						i--
 					}
 				}
 			case "digest":
 				for i := 0; i < len(descs); i++ {
 					if string(descs[i].Digest) != argsParts[1] {
 						descs = append(descs[:i], descs[i+1:]...)
+						i--
 					}
 				}
 			default:
