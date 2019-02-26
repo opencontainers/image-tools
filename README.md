@@ -71,12 +71,11 @@ busybox-bundle
 # Contributing
 
 Development happens on GitHub. Issues are used for bugs and actionable items and longer discussions can happen on the [mailing list](#mailing-list).
-
 The code is licensed under the Apache 2.0 license found in the `LICENSE` file of this repository.
 
 ## Code of Conduct
 
-Participation in the OpenContainers community is governed by [OpenContainer's Code of Conduct](code-of-conduct).
+Participation in the OpenContainers community is governed by [OpenContainer's Code of Conduct][code-of-conduct].
 
 ## Security
 
