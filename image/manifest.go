@@ -237,7 +237,7 @@ func unpackLayerEntry(dest string, header *tar.Header, reader io.Reader, entries
 		parent := filepath.Dir(header.Name)
 		parentPath := filepath.Join(dest, parent)
 		if _, err2 := os.Lstat(parentPath); err2 != nil && os.IsNotExist(err2) {
-			if err3 := os.MkdirAll(parentPath, 0755); err3 != nil {
+			if err3 := os.MkdirAll(parentPath, 0750); err3 != nil {
 				return false, err3
 			}
 		}
@@ -297,10 +297,10 @@ func unpackLayerEntry(dest string, header *tar.Header, reader io.Reader, entries
 		}
 
 		if _, err := io.Copy(f, reader); err != nil {
-			f.Close()
+			defer f.Close()
 			return false, errors.Wrap(err, "unable to copy")
 		}
-		f.Close()
+		defer f.Close()
 
 	case tar.TypeLink:
 		target := filepath.Join(dest, header.Linkname)

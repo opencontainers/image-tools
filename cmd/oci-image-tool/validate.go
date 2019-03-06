@@ -92,10 +92,7 @@ func validateAction(context *cli.Context) error {
 }
 
 func validatePath(name string) error {
-	var (
-		err error
-		typ = v.typ
-	)
+	var typ = v.typ
 
 	if v.stdout == nil {
 		v.stdout = log.New(os.Stdout, "oci-image-tool: ", 0)
@@ -120,7 +117,7 @@ func validatePath(name string) error {
 	if len(v.refs) != 0 {
 		fmt.Println("WARNING: refs are only appropriate if type is image")
 	}
-	f, err := os.Open(name)
+	f, err := os.Open(name) // nolint: errcheck, gosec
 	if err != nil {
 		return errors.Wrap(err, "unable to open file")
 	}
