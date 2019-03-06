@@ -430,7 +430,7 @@ func createHashedBlob(name string) (v1.Descriptor, error) {
 		return v1.Descriptor{}, err
 	}
 
-	if err := desc.Digest.Validate(); err != nil {
+	if err = desc.Digest.Validate(); err != nil {
 		return v1.Descriptor{}, err
 	}
 
