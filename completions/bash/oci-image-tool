@@ -22,7 +22,7 @@
 # options immediately following their corresponding long form.
 # This order should be applied to lists, alternatives and code blocks.
 
-__oci-image-tool_previous_extglob_setting=$(shopt -p extglob)
+__oci_image_tool_previous_extglob_setting=$(shopt -p extglob)
 shopt -s extglob
 
 __oci-image-tool_pos_first_nonflag() {
@@ -234,7 +234,7 @@ _oci-image-tool() {
 	return 0
 }
 
-eval "$__oci-image-tool_previous_extglob_setting"
-unset __oci-image-tool_previous_extglob_setting
+eval "$__oci_image_tool_previous_extglob_setting"
+unset __oci_image_tool_previous_extglob_setting
 
 complete -F _oci-image-tool oci-image-tool
