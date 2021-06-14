@@ -3,6 +3,42 @@
 `oci-image-tool` is a collection of tools for working with the [OCI image format specification](https://github.com/opencontainers/image-spec).
 To build from source code, image-tools requires Go 1.7.x or above.
 
+## Project Status
+
+**This project is no longer actively maintained, and has had major deficiencies
+for several years. This project may be archived in the future, depending on
+community feedback.**
+
+The `oci-image-tools` repository has two classes of tools, and our
+recommendation is different based on which tools you need:
+
+* Conformance testing tools (`oci-image-tool validate`). Currently there is no
+  replacement for this functionality in a different OCI project, so users
+  should continue to use this tool -- but should be aware that it is unlikely
+  to be updated to future versions of the OCI Image Specification.
+
+* Image manipulation tools (`oci-image-tool create` and `oci-image-tool
+  validate`). These tools have had many long-standing correctness and
+  functionality issues (see [1][p1], [2][p2], [3][p3], [4][p4], [5][p5],
+  [6][p6], [7][p7], [8][p8], [9][p9], [10][p10]), and we have not recommended
+  their use for a fairly long time. Users should instead use [umoci][umoci] for
+  these tasks, which is a production-grade reference implementation of the OCI
+  Image Specification that is actively maintained and does not suffer from the
+  same deficiencies as this project.
+
+[umoci]: https://github.com/opencontainers/umoci
+[p1]: https://github.com/opencontainers/image-tools/issues/17
+[p2]: https://github.com/opencontainers/image-tools/pull/8
+[p3]: https://github.com/opencontainers/image-tools/issues/59
+[p4]: https://github.com/opencontainers/image-tools/issues/74
+[p5]: https://github.com/opencontainers/image-tools/issues/76
+[p6]: https://github.com/opencontainers/image-tools/issues/193
+[p7]: https://github.com/opencontainers/image-tools/issues/218
+[p8]: https://github.com/opencontainers/image-tools/issues/219
+[p9]: https://github.com/opencontainers/image-tools/issues/223
+[p10]: https://github.com/opencontainers/image-tools/issues/188
+
+
 ## Install
 
 It is recommended that use `go get` to download a single command tools.
