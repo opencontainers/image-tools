@@ -193,6 +193,10 @@ func unpack(w walker, dest, platform string, refs []string) error {
 	}
 
 	if ref.MediaType == validRefMediaTypes[0] {
+		if platform != "" {
+			fmt.Println("WARNING: reftype manifest does not support platform option, which are only applicable if reftype is index.")
+		}
+
 		m, err := findManifest(w, ref)
 		if err != nil {
 			return err
@@ -277,6 +281,10 @@ func createRuntimeBundle(w walker, dest, rootfs, platform string, refs []string)
 	}
 
 	if ref.MediaType == validRefMediaTypes[0] {
+		if platform != "" {
+			fmt.Println("WARNING: reftype manifest does not support platform option, which are only applicable if reftype is index.")
+		}
+
 		m, err := findManifest(w, ref)
 		if err != nil {
 			return err
