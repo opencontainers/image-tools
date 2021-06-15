@@ -96,23 +96,26 @@ $ oci-image-tool unpack --ref latest busybox-oci busybox-bundle
 $ tree busybox-bundle
 busybox-bundle
 ├── bin
-│   ├── [
-│   ├── [[
-│   ├── acpid
-│   ├── addgroup
-│   ├── add-shell
+│   ├── [
+│   ├── [[
+│   ├── acpid
+│   ├── addgroup
+│   ├── add-shell
 [...]
 ```
 
 # Contributing
 
 Development happens on GitHub. Issues are used for bugs and actionable items and longer discussions can happen on the [mailing list](#mailing-list).
-
 The code is licensed under the Apache 2.0 license found in the `LICENSE` file of this repository.
 
 ## Code of Conduct
 
-Participation in the OpenContainers community is governed by [OpenContainer's Code of Conduct](https://github.com/opencontainers/tob/blob/d2f9d68c1332870e40693fe077d311e0742bc73d/code-of-conduct.md).
+Participation in the OpenContainers community is governed by [OpenContainer's Code of Conduct][code-of-conduct].
+
+## Security
+
+If you find an issue, please follow the [security][security] protocol to report it.
 
 ## Discuss your design
 
@@ -210,5 +213,7 @@ Read more on [How to Write a Git Commit Message](http://chris.beams.io/posts/git
 8. When possible, one keyword to scope the change in the subject (i.e. "README: ...", "runtime: ...")
 
 
+[security]: https://github.com/opencontainers/org/blob/master/security
+[code-of-conduct]: https://github.com/opencontainers/org/blob/master/CODE_OF_CONDUCT.md
 [UberConference]: https://www.uberconference.com/opencontainers
 [irc-logs]: http://ircbot.wl.linuxfoundation.org/eavesdrop/%23opencontainers/
