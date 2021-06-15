@@ -53,6 +53,7 @@ func main() {
 		validateCommand,
 		unpackCommand,
 		createCommand,
+		casCommand,
 	}
 
 	cli.AppHelpTemplate = fmt.Sprintf(`%sMore information:
