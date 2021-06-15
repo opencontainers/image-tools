@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -48,11 +49,11 @@ func findConfig(w walker, d *v1.Descriptor) (*v1.Image, error) {
 			return err
 		}
 
-		return errEOW
+		return nil
 	}); err {
-	case nil:
+	case os.ErrNotExist:
 		return nil, fmt.Errorf("%s: config not found", cpath)
-	case errEOW:
+	case nil:
 		return &c, nil
 	default:
 		return nil, err

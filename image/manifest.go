@@ -53,11 +53,11 @@ func findManifest(w walker, d *v1.Descriptor) (*v1.Manifest, error) {
 			return err
 		}
 
-		return errEOW
+		return nil
 	}); err {
-	case nil:
+	case os.ErrNotExist:
 		return nil, fmt.Errorf("%s: manifest not found", mpath)
-	case errEOW:
+	case nil:
 		return &m, nil
 	default:
 		return nil, err
@@ -110,11 +110,10 @@ func unpackManifest(m *v1.Manifest, w walker, dest string) (retErr error) {
 				return errors.Wrap(err, "unpack: error extracting layer")
 			}
 
-			return errEOW
+			return nil
 		}); err {
-		case nil:
+		case os.ErrNotExist:
 			return fmt.Errorf("%s: layer not found", dest)
-		case errEOW:
 		default:
 			return err
 		}

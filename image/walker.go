@@ -126,28 +126,24 @@ func (w *tarWalker) get(desc v1.Descriptor, dst io.Writer) (int64, error) {
 }
 
 func (w *tarWalker) find(path string, ff findFunc) error {
-	done := false
-
 	f := func(relpath string, info os.FileInfo, rdr io.Reader) error {
 		var err error
-		if done {
-			return nil
-		}
 
 		if filepath.Clean(relpath) == path && !info.IsDir() {
 			if err = ff(relpath, rdr); err != nil {
 				return err
 			}
-			done = true
+			return errEOW
 		}
 		return nil
 	}
 
-	if err := w.walk(f); err != nil {
-		return errors.Wrapf(err, "find failed: unable to walk")
-	}
-	if !done {
+	switch err := w.walk(f); err {
+	case nil:
 		return os.ErrNotExist
+	case errEOW:
+	default:
+		return errors.Wrapf(err, "find failed: unable to walk")
 	}
 
 	return nil
@@ -305,28 +301,24 @@ func (w *zipWalker) get(desc v1.Descriptor, dst io.Writer) (int64, error) {
 }
 
 func (w *zipWalker) find(path string, ff findFunc) error {
-	done := false
-
 	f := func(relpath string, info os.FileInfo, rdr io.Reader) error {
 		var err error
-		if done {
-			return nil
-		}
 
 		if filepath.Clean(relpath) == path && !info.IsDir() {
 			if err = ff(relpath, rdr); err != nil {
 				return err
 			}
-			done = true
+			return errEOW
 		}
 		return nil
 	}
 
-	if err := w.walk(f); err != nil {
-		return errors.Wrapf(err, "find failed: unable to walk")
-	}
-	if !done {
+	switch err := w.walk(f); err {
+	case nil:
 		return os.ErrNotExist
+	case errEOW:
+	default:
+		return errors.Wrapf(err, "find failed: unable to walk")
 	}
 
 	return nil
