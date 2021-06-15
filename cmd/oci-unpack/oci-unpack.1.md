@@ -9,7 +9,7 @@ oci-unpack \- Unpack an image or image source layout
 **oci-unpack** [--help|-v|--version]
 
 # DESCRIPTION
-`oci-unpack` validates an application/vnd.oci.image.manifest.v1+json and unpacks its layered filesystem to `dest`.
+`oci-unpack` validates an application/vnd.oci.image.manifest.v1+json, and the entire Merkle tree rooted on it, and unpacks its layered filesystem to `dest`.
 
 # FLAGS
 **--help**
