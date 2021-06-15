@@ -84,7 +84,12 @@ func createAction(context *cli.Context) error {
 
 	}
 
-	return err
+	if err != nil {
+		return fmt.Errorf("Creating failed: %v", err)
+	}
+
+	fmt.Println("Creating succeeded")
+	return nil
 }
 
 var createCommand = cli.Command{
