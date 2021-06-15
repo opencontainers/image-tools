@@ -16,10 +16,10 @@ oci-image-tool validate \- Validate one or more image files
   Print usage statement
 
 **--ref**=[]
-  Specify the search criteria for the validated reference, format is A=B.
+  Select the search criteria for the validated reference, format is A=B.
   Reference should point to a manifest or index.
-  e.g. --ref name=v1.0 --ref platform.os=latest
-  Only support `name`, `platform.os` and `digest` three cases.
+  e.g. --select org.opencontainers.ref.name=v1.0 --select platform.os=latest
+  Only support `org.opencontainers.ref.name`, `platform.os` and `digest` three cases.
   Only applicable if type is image.
 
 **--type**=""
@@ -28,7 +28,7 @@ oci-image-tool validate \- Validate one or more image files
 # EXAMPLES
 ```
 $ skopeo copy docker://busybox oci:busybox-oci:latest
-$ oci-image-tool validate --type image --ref name=latest busybox-oci
+$ oci-image-tool validate --type image --select org.opencontainers.ref.name=latest busybox-oci
 busybox-oci: OK
 ```
 

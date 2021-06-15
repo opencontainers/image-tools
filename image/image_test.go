@@ -88,13 +88,13 @@ const (
 )
 
 var (
-	ref1 = []string{
-		"name=latest",
+	select1 = []string{
+		"org.opencontainers.ref.name=latest",
 		"platform.os=linux",
 	}
 
-	ref2 = []string{
-		"name=v1.0",
+	select2 = []string{
+		"org.opencontainers.ref.name=v1.0",
 		"platform.os=linux",
 	}
 
@@ -184,7 +184,7 @@ type tarContent struct {
 type imageLayout struct {
 	rootDir   string
 	layout    string
-	ref       []string
+	selects   []string
 	manifest  string
 	index     string
 	config    string
@@ -226,7 +226,7 @@ func TestImageLayout(t *testing.T) {
 	il := imageLayout{
 		rootDir:   root,
 		layout:    layoutStr,
-		ref:       ref1,
+		selects:   select1,
 		manifest:  manifestStr,
 		index:     indexStr,
 		indexjson: indexJSON,
@@ -242,24 +242,24 @@ func TestImageLayout(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = ValidateLayout(root, ref1, nil)
+	err = ValidateLayout(root, select1, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = UnpackLayout(root, dest1, "", ref1)
+	err = UnpackLayout(root, dest1, "", select1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = UnpackLayout(root, dest2, "linux:amd64", ref2)
+	err = UnpackLayout(root, dest2, "linux:amd64", select2)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = CreateRuntimeBundleLayout(root, dest3, "rootfs", "", ref1)
+	err = CreateRuntimeBundleLayout(root, dest3, "rootfs", "", select1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = CreateRuntimeBundleLayout(root, dest4, "rootfs", "linux:amd64", ref2)
+	err = CreateRuntimeBundleLayout(root, dest4, "rootfs", "linux:amd64", select2)
 	if err != nil {
 		t.Fatal(err)
 	}
