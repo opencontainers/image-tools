@@ -73,7 +73,7 @@ More information about `oci-image-tool-create` can be found in its [man page](./
 
 ```
 $ mkdir busybox-bundle
-$ oci-image-tool create --ref latest busybox-oci busybox-bundle
+$ oci-image-tool create --ref name=latest busybox-oci busybox-bundle
 $ cd busybox-bundle && sudo runc run busybox
 ```
 
@@ -82,7 +82,7 @@ $ cd busybox-bundle && sudo runc run busybox
 More information about `oci-image-tool-validate` can be found in its [man page](./man/oci-image-tool-validate.1.md)
 
 ```
-$ oci-image-tool validate --type imageLayout --ref latest busybox-oci
+$ oci-image-tool validate --type imageLayout --ref name=latest busybox-oci
 busybox-oci: OK
 ```
 
@@ -92,7 +92,7 @@ More information about `oci-image-tool-unpack` can be found in its [man page](./
 
 ```
 $ mkdir busybox-bundle
-$ oci-image-tool unpack --ref latest busybox-oci busybox-bundle
+$ oci-image-tool unpack --ref name=latest busybox-oci busybox-bundle
 $ tree busybox-bundle
 busybox-bundle
 ├── bin
