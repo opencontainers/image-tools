@@ -60,11 +60,18 @@ func findConfig(w walker, d *v1.Descriptor) (*v1.Image, error) {
 }
 
 func runtimeSpec(c *v1.Image, rootfs string) (*specs.Spec, error) {
-	if c.OS != "linux" {
+	var s specs.Spec
+
+	switch c.OS {
+	case "linux":
+		s.Linux = &specs.Linux{}
+	case "solaris":
+		s.Solaris = &specs.Solaris{}
+	case "windows":
+		s.Windows = &specs.Windows{}
 		return nil, fmt.Errorf("%s: unsupported OS", c.OS)
 	}
 
-	var s specs.Spec
 	s.Version = specs.Version
 	// we should at least apply the default spec, otherwise this is totally useless
 	s.Root = &specs.Root{}
@@ -102,8 +109,6 @@ func runtimeSpec(c *v1.Image, rootfs string) (*specs.Spec, error) {
 	} else if c.Config.User != "" {
 		return nil, errors.New("config.User: unsupported format")
 	}
-
-	s.Linux = &specs.Linux{}
 
 	for vol := range c.Config.Volumes {
 		s.Mounts = append(
