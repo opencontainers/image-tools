@@ -73,7 +73,7 @@ More information about `oci-image-tool-create` can be found in its [man page](./
 
 ```
 $ mkdir busybox-bundle
-$ oci-image-tool create --ref latest busybox-oci busybox-bundle
+$ oci-image-tool create --ref name=latest busybox-oci busybox-bundle
 $ cd busybox-bundle && sudo runc run busybox
 ```
 
